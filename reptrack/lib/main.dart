@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:reptrack/pages/profile.dart';
 import 'package:reptrack/pages/schedules.dart';
 import 'package:reptrack/pages/track.dart';
-import 'package:reptrack/pages/workout.dart';
 
 /// Flutter code sample for [NavigationBar].
 
@@ -35,7 +34,6 @@ class _NavigationExampleState extends State<NavigationExample> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         backgroundColor: Colors.blue,

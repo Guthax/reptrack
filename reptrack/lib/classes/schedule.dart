@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:reptrack/classes/workout.dart';
 
 class Schedule {
