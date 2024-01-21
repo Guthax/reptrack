@@ -4,8 +4,6 @@
 // utility in the flutter_test package. For example, you can send tap and scroll
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:reptrack/main.dart';
@@ -13,9 +11,9 @@ import 'package:reptrack/main.dart';
 void main() {
   testWidgets('Text label', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const NavigationBarApp());
 
     // Verify that our counter starts at 0.
-    expect(find.text('A random idea lol:'), findsOneWidget);
+    expect(find.text('Push Pull Legs 1'), findsOneWidget);
   });
 }

@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
 class SchedulesPage extends StatelessWidget {
@@ -62,7 +61,7 @@ class SchedulesPage extends StatelessWidget {
                return Container(
           height: 50,
           color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-          child: Center(child: Text('${favorites[index]}')),
+          child: Center(child: Text(favorites[index])),
                );
              }
           )

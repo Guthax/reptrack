@@ -1,5 +1,5 @@
 class Exercise {
   String? name;
   String? description;
-  String? Muscles;
+  String? muscles;
 }
