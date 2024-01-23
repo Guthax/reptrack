@@ -1,0 +1,84 @@
+<mxfile host="app.diagrams.net" modified="2024-01-23T09:41:47.389Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36" etag="CjXeAQXX70Rm9bUJz2Yq" version="22.1.21" type="device">
+  <diagram name="Page-1" id="03018318-947c-dd8e-b7a3-06fadd420f32">
+    <mxGraphModel dx="1434" dy="777" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="677b7b8949515195-25" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="80" width="230" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-44" value="Push Pull Legs" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" parent="1" vertex="1">
+          <mxGeometry x="90" y="160" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-45" value="Upper Lower" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" parent="1" vertex="1">
+          <mxGeometry x="90" y="195" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-1" value="&lt;b&gt;Schedule&lt;/b&gt; | Train | Track | Profile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="420" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-2" value="Schedules" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="80" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-3" value="" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#0080F0;shadow=0;dashed=0;shape=mxgraph.ios7.icons.add;" vertex="1" parent="1">
+          <mxGeometry x="250" y="95" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="677b7b8949515195-44">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="280" y="174" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-6" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shadow=0;dashed=0;strokeWidth=1;shape=mxgraph.ios.iDeleteApp;fillColor=#cccccc;fillColor2=#000000;strokeColor=#ffffff;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="265" y="160" width="15" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-7" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shadow=0;dashed=0;strokeWidth=1;shape=mxgraph.ios.iDeleteApp;fillColor=#cccccc;fillColor2=#000000;strokeColor=#ffffff;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="265" y="200" width="15" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-8" value="" style="html=1;dashed=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gmdl.edit;strokeColor=none;fillColor=#737373;shadow=0;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="230" y="160" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-9" value="" style="html=1;dashed=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gmdl.edit;strokeColor=none;fillColor=#737373;shadow=0;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="230" y="200" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-10" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="80" width="230" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-13" value="Schedule | &lt;b&gt;Train&lt;/b&gt; | Track | Profile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="420" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-14" value="Train" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="80" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-21" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="80" width="230" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-24" value="Schedule | Train | &lt;b&gt;Track&lt;/b&gt; | Profile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="420" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-25" value="Track&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;b&gt;Exercise&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="80" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-32" value="Selected workout: Push Pull Legs&lt;br&gt;Current progression: Week 2 day 4" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="168" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-33" value="Start" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="350" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-34" value="23-01-2024" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="140" width="230" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-35" value="Exercises:&lt;br&gt;&lt;br&gt;Bicep curls 3x12&lt;br&gt;Bench 5x12&lt;br&gt;Squats 3x12&lt;br&gt;Hamstring curls 3x12" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="228" width="230" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-36" value="Select exercise to see progression: Bicep Curl" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="140" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-47" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.general.graph" vertex="1" parent="1">
+          <mxGeometry x="850" y="215" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="7Tr_H4P_kCSdgVN_aPmA-49" value="" style="dashed=0;outlineConnect=0;html=1;align=center;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;shape=mxgraph.webicons.mind_body_green;fillColor=#E0EEF8;gradientColor=#4496D5" vertex="1" parent="1">
+          <mxGeometry x="990" y="95" width="42.4" height="31.4" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
