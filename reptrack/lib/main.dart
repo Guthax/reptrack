@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/profile.dart';
 import 'package:reptrack/pages/schedules.dart';
 import 'package:reptrack/pages/track.dart';
@@ -31,6 +32,7 @@ class NavigationExample extends StatefulWidget {
 
 class _NavigationExampleState extends State<NavigationExample> {
   int currentPageIndex = 0;
+  AppState globalState = AppState();
 
   @override
   Widget build(BuildContext context) {
@@ -68,8 +70,8 @@ class _NavigationExampleState extends State<NavigationExample> {
         ],
       ),
       body: <Widget>[
-        SchedulesPage(),
-        SchedulesPage(),
+        SchedulesPage(globalState),
+        SchedulesPage(globalState),
         TrackPage(),
         ProfilePage(),
       ][currentPageIndex],
