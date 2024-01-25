@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:realm/realm.dart';
+import 'package:reptrack/classes/schemas.dart';
 import 'dart:math' as math;
 
 import 'package:reptrack/global_states.dart';
@@ -33,7 +35,7 @@ class AddScheduleForm extends StatefulWidget {
 
 class _AddScheduleFormState extends State<AddScheduleForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
+  WorkoutSchedule schedule = WorkoutSchedule(ObjectId());
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -77,13 +79,31 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               return null;
             },
           ),
-          ElevatedButton(onPressed: (){
-             Navigator.push(context, MaterialPageRoute<void>(
+          ElevatedButton(onPressed: () async {
+             final workout = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
                   return AddWorkoutPage();
                 },
               ));
+
+              setState(() {
+                schedule.workouts.add(workout as Workout);
+              });
           }, child: Text("Add workout day")),
+           SizedBox(
+            height: 200,
+            child: ListView.builder(
+             padding: const EdgeInsets.all(8),
+             itemCount: schedule.workouts.length,
+             itemBuilder: (BuildContext context, int index) {
+               return Container(
+             height: 50,
+             color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+             child: Center(child:Text("${schedule.workouts[index].day.toString()}"))
+                );
+              }
+            )
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ElevatedButton(
@@ -92,6 +112,7 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
                 // the form is invalid.
                 if (_formKey.currentState!.validate()) {
                   // Process data.  
+                  Navigator.pop(context, schedule);
                   
                 }
               },

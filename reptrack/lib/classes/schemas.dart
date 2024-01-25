@@ -3,15 +3,65 @@
 import 'package:realm/realm.dart';
 part 'schemas.g.dart';
 
+
+
+
 @RealmModel()
-class _User {
+class _Exercise {
+  
+  @PrimaryKey()
+  String? name;
+
+  late String? description;
+  late String? muscles;
+}
+
+@RealmModel()
+class _WorkoutExercise {
   @PrimaryKey()
   @MapTo("_id")
-  late final ObjectId userId;
-
-  late final String name = "Jurriaan";
-  late _WorkoutSchedule? activeSchedule;
+  late final ObjectId workoutExerciseId;
+  late _Exercise? exercise;
+  late int sets = 2;
+  late List<int> repsPerSet = List.empty();
 }
+
+
+@RealmModel()
+class _Workout {
+  @PrimaryKey()
+  @MapTo("_id")
+  late final ObjectId workoutId;
+  late final int day;
+  late List<_WorkoutExercise> exercises = List.empty();
+
+}
+
+@RealmModel()
+class _SessionExercise {
+  late _Exercise? exercise;
+  late int sets = 2;
+  late List<int> repsPerSet = List.empty();
+  late List<int> weightPerSetKg = List.empty();
+  late String? comment;
+}
+
+
+@RealmModel()
+class _TrainingSession {
+  @PrimaryKey()
+  @MapTo("_id")
+  late final ObjectId sessionId;
+
+  late DateTime? dateStarted;
+  late DateTime? dateEnded;
+
+  late List<_SessionExercise> exercises = List.empty();
+
+
+
+}
+
 @RealmModel()
 class _WorkoutSchedule {
   @PrimaryKey()
@@ -33,44 +83,11 @@ class _WorkoutSchedule {
 
 
 @RealmModel()
-class _TrainingSession {
+class _User {
   @PrimaryKey()
   @MapTo("_id")
-  late final ObjectId sessionId;
+  late final ObjectId userId;
 
-  late DateTime? dateStarted;
-  late DateTime? dateEnded;
-
-  late List<_SessionExercise> exercises = List.empty();
-
-}
-
-@RealmModel()
-class _SessionExercise {
-  late _Exercise? exercise;
-  late int sets = 2;
-  late List<int> repsPerSet = List.empty();
-  late List<int> weightPerSetKg = List.empty();
-  late String? comment;
-}
-
-@RealmModel()
-class _Workout {
-  @PrimaryKey()
-  @MapTo("_id")
-  late final ObjectId workoutId;
-  late final int day;
-  late List<_Exercise> exercises = List.empty();
-
-}
-
-
-@RealmModel()
-class _Exercise {
-  
-  @PrimaryKey()
-  String? name;
-
-  late String? description;
-  late String? muscles;
+  late final String name = "Jurriaan";
+  late _WorkoutSchedule? activeSchedule;
 }

@@ -70,8 +70,8 @@ class _NavigationExampleState extends State<NavigationExample> {
         ],
       ),
       body: <Widget>[
-        SchedulesPage(globalState),
-        SchedulesPage(globalState),
+        SchedulesPage(),
+        SchedulesPage(),
         TrackPage(),
         ProfilePage(),
       ][currentPageIndex],

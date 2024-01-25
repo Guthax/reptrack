@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:realm/realm.dart';
 import 'package:reptrack/classes/schemas.dart';
 import 'dart:math' as math;
 
@@ -35,6 +36,8 @@ class AddExercise extends StatefulWidget {
 class _AddExerciseState extends State<AddExercise> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String dropdownValue = "Monday";
+  Exercise? selectedExercise = Exercise("Push ups");
+  TextEditingController editingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -43,12 +46,14 @@ class _AddExerciseState extends State<AddExercise> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           TextFormField(
+            controller: editingController,
+            readOnly: true,
             keyboardType: TextInputType.name,
             onTap: () => 
             showSearch(
                   context: context,
                   delegate: SearchPage<Exercise>(
-                    items: [Exercise("Push ups")],
+                    items: [Exercise("Bench Press")],
                     searchLabel: 'Search exercises',
                     suggestion: Center(
                       child: Text('Find exercises by name'),
@@ -60,13 +65,17 @@ class _AddExerciseState extends State<AddExercise> {
                       exercise.name,
                     ],
                     builder: (exercise) => ListTile(
-                      title: Text("test"),
-                      onTap: () => print("hey"),
+                      title: Text(exercise.name!),
+                      onTap: () {
+                        selectedExercise = exercise;
+                        editingController.text = exercise.name!;
+                        Navigator.pop(context);
+                        },
                     ),
                   ),
                 ),
             decoration: const InputDecoration(
-              hintText: 'Enter a name for the workout',
+              hintText: 'Search for an exercise',
             ),
             validator: (String? value) {
               if (value == null || value.isEmpty) {
@@ -90,19 +99,7 @@ class _AddExerciseState extends State<AddExercise> {
           TextFormField(
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
-              hintText: 'Enter the amount of sets',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              hintText: 'Enter the amount of sets',
+              hintText: 'Enter the amount of reps',
             ),
             validator: (String? value) {
               if (value == null || value.isEmpty) {
@@ -117,8 +114,9 @@ class _AddExerciseState extends State<AddExercise> {
               onPressed: () {
                 // Validate will return true if the form is valid, or false if
                 // the form is invalid.
-                if (_formKey.currentState!.validate()) {
-                  // Process data.  
+                if (_formKey.currentState!.validate() && selectedExercise != null) {
+                  WorkoutExercise workoutExercise = WorkoutExercise(ObjectId(), exercise: selectedExercise, repsPerSet: [1,2]);
+                  Navigator.pop(context, workoutExercise); 
                   
                 }
               },
