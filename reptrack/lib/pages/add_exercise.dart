@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:realm/realm.dart';
 import 'package:reptrack/classes/schemas.dart';
 import 'dart:math' as math;
@@ -35,11 +36,11 @@ class AddExercise extends StatefulWidget {
 
 class _AddExerciseState extends State<AddExercise> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String dropdownValue = "Monday";
-  Exercise? selectedExercise = Exercise("Push ups");
+  Exercise? selectedExercise;
   TextEditingController editingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    var state = context.watch<AppState>();
     return Form(
       key: _formKey,
       child: Column(
@@ -53,7 +54,7 @@ class _AddExerciseState extends State<AddExercise> {
             showSearch(
                   context: context,
                   delegate: SearchPage<Exercise>(
-                    items: [Exercise("Bench Press")],
+                    items: state.exercises,
                     searchLabel: 'Search exercises',
                     suggestion: Center(
                       child: Text('Find exercises by name'),
