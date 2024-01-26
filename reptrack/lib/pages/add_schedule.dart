@@ -76,6 +76,9 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
               }
+              setState(() {
+                schedule.name = value;
+              });
               return null;
             },
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/profile.dart';
 import 'package:reptrack/pages/schedules.dart';
@@ -6,7 +7,10 @@ import 'package:reptrack/pages/track.dart';
 
 /// Flutter code sample for [NavigationBar].
 
-void main() => runApp(const NavigationBarApp());
+void main() => runApp(ChangeNotifierProvider(
+  create: (context) => AppState(),
+  child: const NavigationBarApp()
+));
 
 class NavigationBarApp extends StatelessWidget {
   const NavigationBarApp({super.key});

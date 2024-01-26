@@ -6,20 +6,24 @@ import 'package:reptrack/classes/schemas.dart';
 
 class AppState extends ChangeNotifier {
   List<WorkoutSchedule> schedules = List.empty();
-  AppState() {
-    //deleteDb();
-    final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
-    
-    final realm = Realm(config);
 
-    WorkoutSchedule ws = WorkoutSchedule(ObjectId());
-    realm.write(() => realm.add(ws));
+  Realm? realm;
+
+  AppState() {
+    final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
+    realm = Realm(config);
+
     
-    schedules = realm.all<WorkoutSchedule>().toList();
+    readSchedules();
   }
 
+  void readSchedules() {
+    schedules = realm!.all<WorkoutSchedule>().toList();
+  }
   void addSchedule(WorkoutSchedule schedule) {
-    schedules.add(schedule);
+    realm!.write(() => 
+    realm!.add(schedule, update: true));
+    readSchedules();
     notifyListeners();
   }
 }
