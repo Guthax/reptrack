@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:reptrack/classes/schemas.dart';
 import 'dart:math' as math;
 
 import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/add_schedule.dart';
+import 'package:reptrack/schemas/schemas.dart';
 
 class SchedulesPage extends StatefulWidget {
   SchedulesPage() {
@@ -26,14 +26,20 @@ class _SchedulesPageState extends State<SchedulesPage> {
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Go to the next page',
+            tooltip: 'Add a new schedule',
             onPressed: () async {
               final schedule = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
                   return AddSchedulePage();
                 }));
-
-            state.addSchedule(schedule as WorkoutSchedule);
+                try {
+                WorkoutSchedule ws = (schedule as WorkoutSchedule);
+                setState(() {
+                  state.addSchedule(schedule as WorkoutSchedule);
+                });
+              } catch (e) {
+                print("Schedule not defined");
+              }
 
             },
           ),

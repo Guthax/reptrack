@@ -1,21 +1,42 @@
 
 import 'package:flutter/material.dart';
 import 'package:realm/realm.dart';
-import 'package:reptrack/classes/schemas.dart';
 import 'dart:math' as math;
 
-import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/add_exercise.dart';
+import 'package:reptrack/schemas/schemas.dart';
 
-
-class AddWorkoutPage extends StatefulWidget {
-  const AddWorkoutPage({super.key});
-
+class AddWorkoutPage extends StatelessWidget {
   @override
-  State<AddWorkoutPage> createState() => _AddWorkoutPageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+  
+                    appBar: AppBar(
+                      leading: IconButton(
+                        icon: Icon(Icons.chevron_left),
+                        onPressed: () => Navigator.pop(context, null),
+                      ),
+                      title: const Text('Add a new workout'),
+                    ),
+                    body: const Center(
+                      child: Column(
+                        children: [
+                          AddWorkout()
+                        ],
+                      ),
+                    ),
+                  );
+  }
 }
 
-class _AddWorkoutPageState extends State<AddWorkoutPage> {
+class AddWorkout extends StatefulWidget {
+  const AddWorkout({super.key});
+
+  @override
+  State<AddWorkout> createState() => _AddWorkoutPageState();
+}
+
+class _AddWorkoutPageState extends State<AddWorkout> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String dropdownValue = "Monday";
@@ -26,22 +47,24 @@ class _AddWorkoutPageState extends State<AddWorkoutPage> {
 
     return Form(
       key: _formKey,
-      child:
-      Scaffold( 
-      body: Column(
+      child:Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           ElevatedButton(onPressed: () async {
-             final workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
+             var workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
                   return AddExercisePage();
                 },
               ));
-
-              setState(() {
-                workout?.exercises.add(workoutExercise as WorkoutExercise);
-              });
+              try {
+                WorkoutExercise we = (workoutExercise as WorkoutExercise);
+                setState(() {
+                  workout?.exercises.add(we);
+                });
+              } catch (e) {
+                print("Exercise not defined");
+              }
           }, child: Text("Add exercise")),
           SizedBox(
             height: 200,
@@ -73,11 +96,10 @@ class _AddWorkoutPageState extends State<AddWorkoutPage> {
           ),
           
         ],
-      ),
-    ));
+      ));
   }
 }
 
 Text buildText(WorkoutExercise exercise) {
-  return Text("${exercise.exercise!.name}: ${exercise.sets} - ${exercise.repsPerSet[0]}");
+  return Text("${exercise.exercise!.name}: ${exercise.sets} sets - ${exercise.repsPerSet.toString()}");
 }

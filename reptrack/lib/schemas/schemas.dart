@@ -1,5 +1,3 @@
-
-
 import 'package:realm/realm.dart';
 part 'schemas.g.dart';
 
@@ -22,8 +20,10 @@ class _WorkoutExercise {
   @MapTo("_id")
   late final ObjectId workoutExerciseId;
   late _Exercise? exercise;
-  late int sets = 2;
-  late List<int> repsPerSet = List.empty();
+  late int sets = 0;
+
+  late List<int> repsPerSet = <int>[];
+  late int? timer;
 }
 
 
@@ -32,7 +32,7 @@ class _Workout {
   @PrimaryKey()
   @MapTo("_id")
   late final ObjectId workoutId;
-  late final int day;
+  late final int? day;
   late List<_WorkoutExercise> exercises = List.empty();
 
 }
@@ -69,10 +69,10 @@ class _WorkoutSchedule {
   late final ObjectId scheduleId;
   
   late String name = "Push Pull Legs";
-  late int numWeeks = 6;
+  late int numWeeks = 0;
 
-  late int startingWeightKg = 60;
-  late int finishWeightKg = 90;
+  late int startingWeightKg = 0;
+  late int finishWeightKg = 0;
   late DateTime? dateStarted;
 
   late List<_TrainingSession> sessions = List.empty();
@@ -90,4 +90,13 @@ class _User {
 
   late final String name = "Jurriaan";
   late _WorkoutSchedule? activeSchedule;
+}
+
+
+@RealmModel()
+class _BodyWeightLog {
+  @PrimaryKey()
+  @MapTo("_id")
+  late final ObjectId _BodyWeightLogId;
+  late int bodyWeight = 0;
 }

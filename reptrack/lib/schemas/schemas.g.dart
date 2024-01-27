@@ -65,17 +65,19 @@ class WorkoutExercise extends _WorkoutExercise
   WorkoutExercise(
     ObjectId workoutExerciseId, {
     Exercise? exercise,
-    int sets = 2,
+    int sets = 0,
+    int? timer,
     Iterable<int> repsPerSet = const [],
   }) {
     if (!_defaultsSet) {
       _defaultsSet = RealmObjectBase.setDefaults<WorkoutExercise>({
-        'sets': 2,
+        'sets': 0,
       });
     }
     RealmObjectBase.set(this, '_id', workoutExerciseId);
     RealmObjectBase.set(this, 'exercise', exercise);
     RealmObjectBase.set(this, 'sets', sets);
+    RealmObjectBase.set(this, 'timer', timer);
     RealmObjectBase.set<RealmList<int>>(
         this, 'repsPerSet', RealmList<int>(repsPerSet));
   }
@@ -108,6 +110,11 @@ class WorkoutExercise extends _WorkoutExercise
       throw RealmUnsupportedSetError();
 
   @override
+  int? get timer => RealmObjectBase.get<int>(this, 'timer') as int?;
+  @override
+  set timer(int? value) => RealmObjectBase.set(this, 'timer', value);
+
+  @override
   Stream<RealmObjectChanges<WorkoutExercise>> get changes =>
       RealmObjectBase.getChanges<WorkoutExercise>(this);
 
@@ -128,6 +135,7 @@ class WorkoutExercise extends _WorkoutExercise
       SchemaProperty('sets', RealmPropertyType.int),
       SchemaProperty('repsPerSet', RealmPropertyType.int,
           collectionType: RealmCollectionType.list),
+      SchemaProperty('timer', RealmPropertyType.int, optional: true),
     ]);
   }
 }
@@ -350,9 +358,9 @@ class WorkoutSchedule extends _WorkoutSchedule
   WorkoutSchedule(
     ObjectId scheduleId, {
     String name = "Push Pull Legs",
-    int numWeeks = 6,
-    int startingWeightKg = 60,
-    int finishWeightKg = 90,
+    int numWeeks = 0,
+    int startingWeightKg = 0,
+    int finishWeightKg = 0,
     DateTime? dateStarted,
     Workout? activeWorkout,
     Iterable<TrainingSession> sessions = const [],
@@ -361,9 +369,9 @@ class WorkoutSchedule extends _WorkoutSchedule
     if (!_defaultsSet) {
       _defaultsSet = RealmObjectBase.setDefaults<WorkoutSchedule>({
         'name': "Push Pull Legs",
-        'numWeeks': 6,
-        'startingWeightKg': 60,
-        'finishWeightKg': 90,
+        'numWeeks': 0,
+        'startingWeightKg': 0,
+        'finishWeightKg': 0,
       });
     }
     RealmObjectBase.set(this, '_id', scheduleId);
@@ -528,6 +536,46 @@ class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('name', RealmPropertyType.string),
       SchemaProperty('activeSchedule', RealmPropertyType.object,
           optional: true, linkTarget: 'WorkoutSchedule'),
+    ]);
+  }
+}
+
+class BodyWeightLog extends _BodyWeightLog
+    with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
+  BodyWeightLog({
+    int bodyWeight = 0,
+  }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<BodyWeightLog>({
+        'bodyWeight': 0,
+      });
+    }
+    RealmObjectBase.set(this, 'bodyWeight', bodyWeight);
+  }
+
+  BodyWeightLog._();
+
+  @override
+  int get bodyWeight => RealmObjectBase.get<int>(this, 'bodyWeight') as int;
+  @override
+  set bodyWeight(int value) => RealmObjectBase.set(this, 'bodyWeight', value);
+
+  @override
+  Stream<RealmObjectChanges<BodyWeightLog>> get changes =>
+      RealmObjectBase.getChanges<BodyWeightLog>(this);
+
+  @override
+  BodyWeightLog freeze() => RealmObjectBase.freezeObject<BodyWeightLog>(this);
+
+  static SchemaObject get schema => _schema ??= _initSchema();
+  static SchemaObject? _schema;
+  static SchemaObject _initSchema() {
+    RealmObjectBase.registerFactory(BodyWeightLog._);
+    return const SchemaObject(
+        ObjectType.realmObject, BodyWeightLog, 'BodyWeightLog', [
+      SchemaProperty('bodyWeight', RealmPropertyType.int),
     ]);
   }
 }
