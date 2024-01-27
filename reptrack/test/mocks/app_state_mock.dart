@@ -16,9 +16,17 @@ class MockAppState extends Mock implements AppState {
     we1.exercise = exercises[0];
     we1.sets = 3;
     we1.repsPerSet.addAll([12,12,12]);
-
     workout.exercises.add(we1);
-    workoutSchedule.workouts.add(workout);
+
+
+    Workout workout2 = Workout(ObjectId(), 2);
+    WorkoutExercise we2 = WorkoutExercise(ObjectId());
+    we2.exercise = exercises[1];
+    we2.sets = 3;
+    we2.repsPerSet.addAll([12,12,12]);
+    workout2.exercises.add(we2);
+
+    workoutSchedule.workouts.addAll([workout, workout2]);
     return[workoutSchedule];
 
   }

@@ -66,8 +66,31 @@ void main() {
         ),
       ),
     );
-
     expect(find.text("Day: ${mockAppState.schedules[0].workouts[0].day.toString()}", findRichText: true), findsOneWidget);
+  });
+
+  testWidgets('test workout scroll widget', (tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ChangeNotifierProvider<AppState>.value(
+          value: mockAppState,
+          child: WorkoutPage(),
+        ),
+      ),
+    );
+
+    final listFinder = find.byType(Scrollable).first;
+    final itemFinder = find.textContaining(mockAppState.schedules[0].workouts[1].exercises[0]!.exercise!.name!, findRichText: true);
+
+    // Scroll until the item to be found appears.
+    await tester.scrollUntilVisible(
+      itemFinder,
+      500.0,
+      scrollable: listFinder,
+    );
+
+    expect(itemFinder, findsOneWidget);
   });
 
 }
