@@ -142,8 +142,8 @@ class WorkoutExercise extends _WorkoutExercise
 
 class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
   Workout(
-    ObjectId workoutId,
-    int day, {
+    ObjectId workoutId, {
+    int? day,
     Iterable<WorkoutExercise> exercises = const [],
   }) {
     RealmObjectBase.set(this, '_id', workoutId);
@@ -161,9 +161,9 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
   set workoutId(ObjectId value) => throw RealmUnsupportedSetError();
 
   @override
-  int get day => RealmObjectBase.get<int>(this, 'day') as int;
+  int? get day => RealmObjectBase.get<int>(this, 'day') as int?;
   @override
-  set day(int value) => throw RealmUnsupportedSetError();
+  set day(int? value) => RealmObjectBase.set(this, 'day', value);
 
   @override
   RealmList<WorkoutExercise> get exercises =>
@@ -187,7 +187,7 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
     return const SchemaObject(ObjectType.realmObject, Workout, 'Workout', [
       SchemaProperty('workoutId', RealmPropertyType.objectid,
           mapTo: '_id', primaryKey: true),
-      SchemaProperty('day', RealmPropertyType.int),
+      SchemaProperty('day', RealmPropertyType.int, optional: true),
       SchemaProperty('exercises', RealmPropertyType.object,
           linkTarget: 'WorkoutExercise',
           collectionType: RealmCollectionType.list),
@@ -199,7 +199,8 @@ class SessionExercise extends _SessionExercise
     with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
-  SessionExercise({
+  SessionExercise(
+    ObjectId sessionExerciseId, {
     Exercise? exercise,
     int sets = 2,
     String? comment,
@@ -211,6 +212,7 @@ class SessionExercise extends _SessionExercise
         'sets': 2,
       });
     }
+    RealmObjectBase.set(this, '_id', sessionExerciseId);
     RealmObjectBase.set(this, 'exercise', exercise);
     RealmObjectBase.set(this, 'sets', sets);
     RealmObjectBase.set(this, 'comment', comment);
@@ -221,6 +223,12 @@ class SessionExercise extends _SessionExercise
   }
 
   SessionExercise._();
+
+  @override
+  ObjectId get sessionExerciseId =>
+      RealmObjectBase.get<ObjectId>(this, '_id') as ObjectId;
+  @override
+  set sessionExerciseId(ObjectId value) => throw RealmUnsupportedSetError();
 
   @override
   Exercise? get exercise =>
@@ -268,6 +276,8 @@ class SessionExercise extends _SessionExercise
     RealmObjectBase.registerFactory(SessionExercise._);
     return const SchemaObject(
         ObjectType.realmObject, SessionExercise, 'SessionExercise', [
+      SchemaProperty('sessionExerciseId', RealmPropertyType.objectid,
+          mapTo: '_id', primaryKey: true),
       SchemaProperty('exercise', RealmPropertyType.object,
           optional: true, linkTarget: 'Exercise'),
       SchemaProperty('sets', RealmPropertyType.int),

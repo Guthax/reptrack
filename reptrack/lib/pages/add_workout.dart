@@ -40,7 +40,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String dropdownValue = "Monday";
-  Workout? workout = Workout(ObjectId(), 1);
+  Workout workout = Workout(ObjectId());
   
   @override
   Widget build(BuildContext context) {
@@ -60,7 +60,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
               try {
                 WorkoutExercise we = (workoutExercise as WorkoutExercise);
                 setState(() {
-                  workout?.exercises.add(we);
+                  workout.exercises.add(we);
                 });
               } catch (e) {
                 print("Exercise not defined");
@@ -70,7 +70,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
             height: 200,
             child: ListView.builder(
              padding: const EdgeInsets.all(8),
-             itemCount: workout!.exercises.length,
+             itemCount: workout.exercises.length,
              itemBuilder: (BuildContext context, int index) {
                return Container(
              height: 50,

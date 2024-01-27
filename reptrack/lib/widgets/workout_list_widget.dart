@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reptrack/pages/training_session.dart';
 import 'package:reptrack/schemas/schemas.dart';
 
 class WorkoutExerciseCard extends StatelessWidget {
@@ -32,7 +33,12 @@ class WorkoutExerciseCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 50),
-                ElevatedButton(onPressed: () => {}, child: Text("START"))
+                ElevatedButton(onPressed: () => {
+                  Navigator.push(context, MaterialPageRoute<void>(
+                  builder: (BuildContext context) {
+                    return TrainingSessionPage(workout: workout);
+                  }))
+                }, child: Text("START"))
               ],
             ),
             SizedBox(height: 10.0),
