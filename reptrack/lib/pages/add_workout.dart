@@ -1,16 +1,22 @@
 
 import 'package:flutter/material.dart';
+import 'package:realm/realm.dart';
 import 'dart:math' as math;
 
-import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/add_exercise.dart';
+import 'package:reptrack/schemas/schemas.dart';
 
 class AddWorkoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+  
                     appBar: AppBar(
-                      title: const Text('Add a workout'),
+                      leading: IconButton(
+                        icon: Icon(Icons.chevron_left),
+                        onPressed: () => Navigator.pop(context, null),
+                      ),
+                      title: const Text('Add a new workout'),
                     ),
                     body: const Center(
                       child: Column(
@@ -23,55 +29,57 @@ class AddWorkoutPage extends StatelessWidget {
   }
 }
 
-
 class AddWorkout extends StatefulWidget {
   const AddWorkout({super.key});
 
   @override
-  State<AddWorkout> createState() => _AddWorkoutState();
+  State<AddWorkout> createState() => _AddWorkoutPageState();
 }
 
-class _AddWorkoutState extends State<AddWorkout> {
+class _AddWorkoutPageState extends State<AddWorkout> {
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String dropdownValue = "Monday";
+  Workout? workout = Workout(ObjectId(), 1);
+  
   @override
   Widget build(BuildContext context) {
+
     return Form(
       key: _formKey,
-      child: Column(
+      child:Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          TextFormField(
-            keyboardType: TextInputType.name,
-            decoration: const InputDecoration(
-              hintText: 'Enter a name for the workout',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              hintText: 'Enter your starting bodyweight.',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-          ),
-          ElevatedButton(onPressed: (){
-             Navigator.push(context, MaterialPageRoute<void>(
+          ElevatedButton(onPressed: () async {
+             var workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
                   return AddExercisePage();
                 },
               ));
+              try {
+                WorkoutExercise we = (workoutExercise as WorkoutExercise);
+                setState(() {
+                  workout?.exercises.add(we);
+                });
+              } catch (e) {
+                print("Exercise not defined");
+              }
           }, child: Text("Add exercise")),
+          SizedBox(
+            height: 200,
+            child: ListView.builder(
+             padding: const EdgeInsets.all(8),
+             itemCount: workout!.exercises.length,
+             itemBuilder: (BuildContext context, int index) {
+               return Container(
+             height: 50,
+             color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+             child: Center(child: buildText(workout!.exercises[index]))
+                );
+              }
+            )
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ElevatedButton(
@@ -80,14 +88,18 @@ class _AddWorkoutState extends State<AddWorkout> {
                 // the form is invalid.
                 if (_formKey.currentState!.validate()) {
                   // Process data.  
-                  
+                  Navigator.pop(context, workout);
                 }
               },
               child: const Text('Submit'),
             ),
           ),
+          
         ],
-      ),
-    );
+      ));
   }
+}
+
+Text buildText(WorkoutExercise exercise) {
+  return Text("${exercise.exercise!.name}: ${exercise.sets} sets - ${exercise.repsPerSet.toString()}");
 }

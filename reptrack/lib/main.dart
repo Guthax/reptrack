@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/profile.dart';
 import 'package:reptrack/pages/schedules.dart';
@@ -6,10 +7,13 @@ import 'package:reptrack/pages/track.dart';
 
 /// Flutter code sample for [NavigationBar].
 
-void main() => runApp(const NavigationBarApp());
+void main() => runApp(ChangeNotifierProvider(
+  create: (context) => AppState(),
+  child: const ReptrackApp()
+));
 
-class NavigationBarApp extends StatelessWidget {
-  const NavigationBarApp({super.key});
+class ReptrackApp extends StatelessWidget {
+  const ReptrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,19 +22,19 @@ class NavigationBarApp extends StatelessWidget {
         primarySwatch: Colors.red,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const NavigationExample(),
+      home: const AppNavigator(),
     );
   }
 }
 
-class NavigationExample extends StatefulWidget {
-  const NavigationExample({super.key});
+class AppNavigator extends StatefulWidget {
+  const AppNavigator({super.key});
 
   @override
-  State<NavigationExample> createState() => _NavigationExampleState();
+  State<AppNavigator> createState() => _AppNavigatorState();
 }
 
-class _NavigationExampleState extends State<NavigationExample> {
+class _AppNavigatorState extends State<AppNavigator> {
   int currentPageIndex = 0;
   AppState globalState = AppState();
 
@@ -63,15 +67,15 @@ class _NavigationExampleState extends State<NavigationExample> {
           ),
           NavigationDestination(
             icon: Badge(
-              child: Icon(Icons.person_off_outlined),
+              child: Icon(Icons.person),
             ),
             label: 'Profile',
           ),
         ],
       ),
       body: <Widget>[
-        SchedulesPage(globalState),
-        SchedulesPage(globalState),
+        SchedulesPage(),
+        SchedulesPage(),
         TrackPage(),
         ProfilePage(),
       ][currentPageIndex],
