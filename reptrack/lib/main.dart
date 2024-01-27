@@ -4,6 +4,7 @@ import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/profile.dart';
 import 'package:reptrack/pages/schedules.dart';
 import 'package:reptrack/pages/track.dart';
+import 'package:reptrack/pages/workout.dart';
 
 /// Flutter code sample for [NavigationBar].
 
@@ -75,7 +76,7 @@ class _AppNavigatorState extends State<AppNavigator> {
       ),
       body: <Widget>[
         SchedulesPage(),
-        SchedulesPage(),
+        WorkoutPage(),
         TrackPage(),
         ProfilePage(),
       ][currentPageIndex],

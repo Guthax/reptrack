@@ -6,11 +6,7 @@ import 'package:reptrack/global_states.dart'; // Import your real app state clas
 import 'package:reptrack/pages/add_schedule.dart';
 import 'package:reptrack/pages/add_workout.dart';
 import 'package:reptrack/schemas/schemas.dart';
-// Create a mock for the app state
-class MockAppState extends Mock implements AppState {
-  @override
-  List<Exercise> get exercises =>  <Exercise>[Exercise("Push ups"), Exercise("Sit ups"), Exercise("Pull ups")];
-}
+import '../mocks/app_state_mock.dart';
 
 void main() {
   // Mock your dependencies

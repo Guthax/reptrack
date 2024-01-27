@@ -49,6 +49,7 @@ class AppState extends ChangeNotifier {
       
     }
     realm!.write(() => realm!.addAll(exercisesList, update: true));
+    print("Filled");
 
 
   }
