@@ -10,7 +10,7 @@ class MockAppState extends Mock implements AppState {
     WorkoutSchedule workoutSchedule = WorkoutSchedule(ObjectId());
     workoutSchedule.name = "PPL";
     
-    Workout workout = Workout(ObjectId(), 1);
+    Workout workout = Workout(ObjectId());
 
     WorkoutExercise we1 = WorkoutExercise(ObjectId());
     we1.exercise = exercises[0];
@@ -19,7 +19,7 @@ class MockAppState extends Mock implements AppState {
     workout.exercises.add(we1);
 
 
-    Workout workout2 = Workout(ObjectId(), 2);
+    Workout workout2 = Workout(ObjectId());
     WorkoutExercise we2 = WorkoutExercise(ObjectId());
     we2.exercise = exercises[1];
     we2.sets = 3;
