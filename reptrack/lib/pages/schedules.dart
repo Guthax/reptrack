@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/add_schedule.dart';
 import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/widgets/training_schedule_list_widget.dart';
 
 class SchedulesPage extends StatefulWidget {
   SchedulesPage() {
@@ -49,11 +50,10 @@ class _SchedulesPageState extends State<SchedulesPage> {
              padding: const EdgeInsets.all(8),
              itemCount: state.schedules.length,
              itemBuilder: (BuildContext context, int index) {
-               return Container(
-          height: 50,
-          color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-          child: Center(child: Text(state.schedules[index].name)),
-               );
+               return ListTile(
+                title: WorkoutScheduleListCard(state.schedules[index]),
+                onTap: () => {print("Test")},
+                );
              }
           )
     );
