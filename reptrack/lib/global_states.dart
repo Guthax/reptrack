@@ -16,7 +16,8 @@ class AppState extends ChangeNotifier {
     //deleteDb();
     final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
     realm = Realm(config);
-    fillDb();
+    print(Configuration.defaultRealmPath.toString());
+    //fillDb();
 
 
     readSchedules();
@@ -36,6 +37,21 @@ class AppState extends ChangeNotifier {
     realm!.add(schedule, update: true));
     readSchedules();
     notifyListeners();
+  }
+
+  void addTrainingSession(Workout w, TrainingSession s) { 
+    realm!.write(() => w.trainingSessions.add(s));
+    readSchedules();
+  }
+  void updateWorkout(Workout w) {
+    realm!.write(() => 
+    realm!.add(
+      w, update: true)
+    );
+    print("updated");
+    readSchedules();
+    
+
   }
 
 

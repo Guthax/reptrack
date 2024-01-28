@@ -34,6 +34,7 @@ class _Workout {
   late final ObjectId workoutId;
   late int? day;
   late List<_WorkoutExercise> exercises = List.empty();
+  late List<_TrainingSession> trainingSessions = List.empty();
 
 }
 

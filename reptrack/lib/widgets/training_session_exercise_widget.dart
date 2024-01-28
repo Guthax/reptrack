@@ -7,20 +7,38 @@ import 'package:reptrack/schemas/schemas.dart';
 import 'package:reptrack/widgets/training_session_exercise_set_widget.dart';
 
 class TrainingSessionExercise extends StatefulWidget {
-  final WorkoutExercise? exercise;
-  SessionExercise? result;
+  final WorkoutExercise exercise;
+  final SessionExercise? previousSessionExercise;
 
-  TrainingSessionExercise ({ Key? key, this.exercise }): super(key: key);
+  SessionExercise result = SessionExercise(ObjectId());
+
+  TrainingSessionExercise (this.exercise, this.previousSessionExercise ) {
+    result.exercise = exercise.exercise;
+    result.sets = exercise.sets;
+
+    for(int i = 0; i < result.sets; i++) {
+      if(this.previousSessionExercise != null && this.previousSessionExercise!.weightPerSetKg.length > i) {
+        result.weightPerSetKg.add(this.previousSessionExercise!.weightPerSetKg[i]);
+        result.repsPerSet.add(this.previousSessionExercise!.repsPerSet[i]);
+      } else {
+        result.weightPerSetKg.add(0);
+        result.repsPerSet.add(exercise.repsPerSet[i]);
+      }
+    }
+  }
   @override
   _TrainingSessionExerciseState createState() => _TrainingSessionExerciseState();
 
-  void setSession(SessionExercise se) {
-    result = se;
+  void setSet(int i, int weight, int reps) {
+    result.weightPerSetKg.setAll(i, [weight]);
+    result.repsPerSet.setAll(i, [reps]);
+    print(result.weightPerSetKg);
+    print(result.repsPerSet);
   }
 
 }
 
-class _TrainingSessionExerciseState extends State<TrainingSessionExercise> {
+class _TrainingSessionExerciseState extends State<TrainingSessionExercise> with AutomaticKeepAliveClientMixin {
   SessionExercise sessionExercise = SessionExercise(ObjectId());
   Exercise? exercise;
 
@@ -31,7 +49,7 @@ class _TrainingSessionExerciseState extends State<TrainingSessionExercise> {
     return Container(
         width: double.infinity,
         padding: EdgeInsets.all(16.0),
-        child: ExerciseCard(exercise: widget.exercise, calllback: addSet)
+        child: ExerciseCard(widget.result, addSet)
     );
   }
 
@@ -39,23 +57,22 @@ class _TrainingSessionExerciseState extends State<TrainingSessionExercise> {
     return sessionExercise;
   }
 
-  void addSet(int weight, int reps) {
-    sessionExercise.exercise = widget.exercise!.exercise;
-    
-    sessionExercise.sets = widget.exercise!.sets;
-    sessionExercise.weightPerSetKg.add(weight);
-    sessionExercise.repsPerSet.add(reps);
-    widget.setSession(sessionExercise);
+  void addSet(int index, int weight, int reps) {
+    widget.setSet(index, weight, reps);
   }
+  @override
+  bool get wantKeepAlive => true;
+
 }
 
 class ExerciseCard extends StatelessWidget {
-  final WorkoutExercise? exercise;
-  final calllback;
-  const ExerciseCard ({ Key? key, this.exercise, this.calllback }): super(key: key);
+  SessionExercise exercise;
+  final callback;
+  ExerciseCard (this.exercise, this.callback);
 
   @override
   Widget build(BuildContext context) {
+    print("Building");
     return Column(children: 
     [Card(
       color: Colors.blue,
@@ -79,7 +96,7 @@ class ExerciseCard extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Column(
-              children: generateSetList(exercise!, calllback),
+              children: generateSetList(exercise, callback),
             ),
           ],
           
@@ -104,13 +121,12 @@ class ExerciseCard extends StatelessWidget {
 
 }
 
-List<Widget> generateSetList(WorkoutExercise exercise, func) {
+List<Widget> generateSetList(SessionExercise exercise, func) {
   List<Widget> setListWidgets = List.empty(growable: true);
   for (var i = 0; i < exercise.sets; i++) {
    int amountReps = exercise.repsPerSet[i];
-   setListWidgets.add(TrainingSessionExerciseSetWidget(i, func));
+    setListWidgets.add(TrainingSessionExerciseSetWidget(i, exercise.weightPerSetKg[i], exercise.repsPerSet[i], func));
+   }
    setListWidgets.add(SizedBox(height: 5));
-
+    return setListWidgets;
   }
-  return setListWidgets;
-}

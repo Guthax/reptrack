@@ -10,6 +10,8 @@ class TrainingSessionPage extends StatefulWidget {
   const TrainingSessionPage ({ Key? key, this.workout }): super(key: key);
   @override
   State<TrainingSessionPage> createState() => _TrainingSessionPageState();
+
+
 }
 
 class _TrainingSessionPageState extends State<TrainingSessionPage> {
@@ -31,22 +33,30 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
                 child: PageView(
                     controller: controller,
                     children: widget.workout!.exercises.map((exercise) {
-                              TrainingSessionExercise widget = TrainingSessionExercise(exercise: exercise);
-                              sessionWidgets.add(widget);
-                              return widget;
+                              SessionExercise? previousSessionExercise = null;
+                              if (widget.workout!.trainingSessions.length > 0) {
+                                List<SessionExercise> previousRecords = widget.workout!.trainingSessions.last.exercises.where((element) => element.exercise == exercise.exercise).toList();
+                                if (previousRecords.length > 0) {
+                                  print(previousRecords[0].weightPerSetKg);
+                                  previousSessionExercise = previousRecords[0];
+                                  
+                                }
+                              }
+                              TrainingSessionExercise tewidget = TrainingSessionExercise( exercise, previousSessionExercise);
+                              sessionWidgets.add(tewidget);
+                              return tewidget;
                             }).toList(),
                   )),
               Row(children: [
               ElevatedButton(onPressed: (() {}), child: Text("Stop workout")),
               ElevatedButton(onPressed: (() {
                 sessionWidgets.forEach((widget) {
-                  print(session);
-                  print(widget.result);
+
                   session.exercises.add(widget.result!);
                 });
                 Navigator.push(context, MaterialPageRoute<void>(
                   builder: (BuildContext context) {
-                    return TrainingSessionCompletePage(session);
+                    return TrainingSessionCompletePage(session, widget.workout!);
                   }));
                }), child: Text("Finish workout"))
               ])

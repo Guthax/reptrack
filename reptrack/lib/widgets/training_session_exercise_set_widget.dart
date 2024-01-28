@@ -4,9 +4,8 @@ class TrainingSessionExerciseSetWidget extends StatefulWidget {
   int setNumber = 0;
   int weight = 0;
   int reps = 0;
-  bool enabled = true;
   var callback;
-  TrainingSessionExerciseSetWidget(this.setNumber, this.callback);
+  TrainingSessionExerciseSetWidget(this.setNumber, this.weight, this.reps, this.callback);
 
   @override
   _TrainingSessionExerciseSetWidgetState createState() => _TrainingSessionExerciseSetWidgetState();
@@ -18,9 +17,12 @@ class TrainingSessionExerciseSetWidget extends StatefulWidget {
 class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerciseSetWidget> {
   final weightTextController = TextEditingController();
   final repsTextController = TextEditingController();
+  bool enabled = true;
 
 @override
   Widget build(BuildContext context) {
+    weightTextController.text = widget.weight.toString();
+    repsTextController.text = widget.reps.toString();
     return Row(
               children: [
                 Text(
@@ -33,7 +35,7 @@ class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerci
                 Expanded(
                   child: TextField(
                     controller: weightTextController,
-                    readOnly: !widget.enabled,
+                    readOnly: !enabled,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: 'Weight (kg)',
@@ -56,7 +58,7 @@ class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerci
                  Expanded(
                   child: TextField(
                     controller: repsTextController,
-                    readOnly: !widget.enabled,
+                    readOnly: !enabled,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: 'Reps',
@@ -77,18 +79,20 @@ class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerci
                 ),
                 SizedBox(width: 16),
                 ElevatedButton(
-                  onPressed: widget.enabled ? () {
-                      widget.callback(int.parse(weightTextController.text),int.parse(repsTextController.text));
+                  onPressed: enabled ? () {
+                      widget.callback(widget.setNumber, int.parse(weightTextController.text),int.parse(repsTextController.text));
                       setState(() {
-                        widget.enabled = false;
+                        enabled = false;
+                        widget.weight = int.parse(weightTextController.text);
+                        widget.reps = int.parse(repsTextController.text);
                       });
                   }: null,
                   style: ElevatedButton.styleFrom(
                     disabledBackgroundColor: Colors.green,
                     backgroundColor: Colors.white,
                   ),
-                  child: widget.enabled ? Text(
-                    'Register',
+                  child: enabled ? Text(
+                    'Log set',
                     style: TextStyle(
                       color: Colors.blue,
                     ),

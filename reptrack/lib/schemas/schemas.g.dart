@@ -145,11 +145,14 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
     ObjectId workoutId, {
     int? day,
     Iterable<WorkoutExercise> exercises = const [],
+    Iterable<TrainingSession> trainingSessions = const [],
   }) {
     RealmObjectBase.set(this, '_id', workoutId);
     RealmObjectBase.set(this, 'day', day);
     RealmObjectBase.set<RealmList<WorkoutExercise>>(
         this, 'exercises', RealmList<WorkoutExercise>(exercises));
+    RealmObjectBase.set<RealmList<TrainingSession>>(
+        this, 'trainingSessions', RealmList<TrainingSession>(trainingSessions));
   }
 
   Workout._();
@@ -174,6 +177,14 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
       throw RealmUnsupportedSetError();
 
   @override
+  RealmList<TrainingSession> get trainingSessions =>
+      RealmObjectBase.get<TrainingSession>(this, 'trainingSessions')
+          as RealmList<TrainingSession>;
+  @override
+  set trainingSessions(covariant RealmList<TrainingSession> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
   Stream<RealmObjectChanges<Workout>> get changes =>
       RealmObjectBase.getChanges<Workout>(this);
 
@@ -190,6 +201,9 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('day', RealmPropertyType.int, optional: true),
       SchemaProperty('exercises', RealmPropertyType.object,
           linkTarget: 'WorkoutExercise',
+          collectionType: RealmCollectionType.list),
+      SchemaProperty('trainingSessions', RealmPropertyType.object,
+          linkTarget: 'TrainingSession',
           collectionType: RealmCollectionType.list),
     ]);
   }

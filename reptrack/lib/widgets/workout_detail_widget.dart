@@ -17,11 +17,11 @@ class _WorkoutCardState extends State<WorkoutCard> {
   Widget build(BuildContext context) {
     AppState state = context.watch<AppState>();
     final PageController controller = PageController();
-    selectedSchedule ??= state.schedules[0];
+    selectedSchedule ??= state.schedules.length > 0 ? state.schedules[0] : null;
     return Container(
         width: double.infinity,
         padding: EdgeInsets.all(16.0),
-        child: Card(
+        child: selectedSchedule == null ? Text("No schedules") : Card(
           elevation: 4.0,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
