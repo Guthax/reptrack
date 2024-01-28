@@ -1,21 +1,30 @@
-
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:reptrack/widgets/current_date_widget.dart';
+import 'package:reptrack/widgets/workout_detail_widget.dart';
 
-class WorkoutPage extends StatelessWidget {
+class WorkoutPage extends StatefulWidget {
+  SchedulesPage() {
+    super.key;
+
+  }
+  @override
+  State<WorkoutPage> createState() => _WorkoutPagePageState();
+}
+
+class _WorkoutPagePageState extends State<WorkoutPage> {
   @override
   Widget build(BuildContext context) {
-    var favorites = ["test", "hey"];
-    return ListView.builder(
-             padding: const EdgeInsets.all(8),
-             itemCount: favorites.length,
-             itemBuilder: (BuildContext context, int index) {
-               return Container(
-          height: 50,
-          color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-          child: Center(child: Text(favorites[index])),
-               );
-             }
-           );
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text("Workout")),
+      ),
+      body: Center(
+        child: Column(
+          children: [
+            CurrentDateWidget(context: context),
+            WorkoutCard()
+        ]),
+      ),
+    );
   }
 }

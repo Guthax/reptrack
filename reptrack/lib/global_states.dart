@@ -16,7 +16,8 @@ class AppState extends ChangeNotifier {
     //deleteDb();
     final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
     realm = Realm(config);
-    fillDb();
+    print(Configuration.defaultRealmPath.toString());
+    //fillDb();
 
 
     readSchedules();
@@ -38,6 +39,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addTrainingSession(Workout w, TrainingSession s) { 
+    realm!.write(() => w.trainingSessions.add(s));
+    readSchedules();
+  }
+  void updateWorkout(Workout w) {
+    realm!.write(() => 
+    realm!.add(
+      w, update: true)
+    );
+    print("updated");
+    readSchedules();
+    
+
+  }
+
 
   Future<void> fillDb() async {
     final input = File('/home/jurriaan/Documents/Programming/reptrack/reptrack/lib/data/exercises.csv').openRead();
@@ -49,6 +65,7 @@ class AppState extends ChangeNotifier {
       
     }
     realm!.write(() => realm!.addAll(exercisesList, update: true));
+    print("Filled");
 
 
   }

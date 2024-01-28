@@ -6,7 +6,8 @@ void main() {
   test("create_workout", () {
     Exercise ex1 = Exercise("Push ups");
     Exercise ex2 = Exercise("Sit ups");
-    Workout workout = Workout(ObjectId(), 1);
-    expect(workout.day, 1);
+    Workout workout = Workout(ObjectId());
+    workout.day = 2;
+    expect(workout.day, 2);
   });
 }

@@ -32,13 +32,17 @@ class _Workout {
   @PrimaryKey()
   @MapTo("_id")
   late final ObjectId workoutId;
-  late final int? day;
+  late int? day;
   late List<_WorkoutExercise> exercises = List.empty();
+  late List<_TrainingSession> trainingSessions = List.empty();
 
 }
 
 @RealmModel()
 class _SessionExercise {
+  @PrimaryKey()
+  @MapTo("_id")
+  late final ObjectId sessionExerciseId;
   late _Exercise? exercise;
   late int sets = 2;
   late List<int> repsPerSet = List.empty();

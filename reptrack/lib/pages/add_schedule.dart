@@ -1,4 +1,6 @@
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
@@ -84,6 +86,8 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               ));
               try {
                 Workout w = (workout as Workout);
+                print(w);
+                w.day = schedule.workouts.length + 1;
                 setState(() {
                   schedule.workouts.add(w);
                 });
