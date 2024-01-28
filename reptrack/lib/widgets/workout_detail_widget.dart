@@ -49,7 +49,7 @@ class _WorkoutCardState extends State<WorkoutCard> {
                   },
                 ),
                 SizedBox(height: 16.0),
-                SizedBox(height: 200,
+                SizedBox(height: 300,
                 child: PageView(
                     controller: controller,
                     children: selectedSchedule!.workouts.map((value) {

@@ -32,8 +32,6 @@ class TrainingSessionExercise extends StatefulWidget {
   void setSet(int i, int weight, int reps) {
     result.weightPerSetKg.setAll(i, [weight]);
     result.repsPerSet.setAll(i, [reps]);
-    print(result.weightPerSetKg);
-    print(result.repsPerSet);
   }
 
 }
@@ -72,7 +70,6 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Building");
     return Column(children: 
     [Card(
       color: Colors.blue,

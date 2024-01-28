@@ -37,7 +37,6 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
                               if (widget.workout!.trainingSessions.length > 0) {
                                 List<SessionExercise> previousRecords = widget.workout!.trainingSessions.last.exercises.where((element) => element.exercise == exercise.exercise).toList();
                                 if (previousRecords.length > 0) {
-                                  print(previousRecords[0].weightPerSetKg);
                                   previousSessionExercise = previousRecords[0];
                                   
                                 }
