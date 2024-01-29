@@ -27,6 +27,7 @@ class TrainingSessionCompletePage extends StatelessWidget {
             icon: const Icon(Icons.save),
             tooltip: 'Save',
             onPressed: () { 
+              session.dateEnded = DateTime.now();
               state.addTrainingSession(workout,session);
               Navigator.of(context).popUntil((route) => route.isFirst);
               // handle the press

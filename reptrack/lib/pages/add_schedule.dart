@@ -104,7 +104,7 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
                return Container(
              height: 50,
              color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-             child: Center(child:Text(schedule.workouts[index].day.toString()))
+             child: Center(child:Text(schedule.workouts[index].name.toString()))
                 );
               }
             )

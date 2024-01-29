@@ -9,10 +9,10 @@ import 'package:reptrack/widgets/training_session_exercise_set_widget.dart';
 class TrainingSessionExercise extends StatefulWidget {
   final WorkoutExercise exercise;
   final SessionExercise? previousSessionExercise;
-
+  final timerCallback;
   SessionExercise result = SessionExercise(ObjectId());
 
-  TrainingSessionExercise (this.exercise, this.previousSessionExercise ) {
+  TrainingSessionExercise (this.exercise, this.previousSessionExercise, this.timerCallback) {
     result.exercise = exercise.exercise;
     result.sets = exercise.sets;
 
@@ -32,6 +32,9 @@ class TrainingSessionExercise extends StatefulWidget {
   void setSet(int i, int weight, int reps) {
     result.weightPerSetKg.setAll(i, [weight]);
     result.repsPerSet.setAll(i, [reps]);
+    if (exercise.timer != null) {
+      timerCallback(exercise.timer);
+    }
   }
 
 }
@@ -100,20 +103,7 @@ class ExerciseCard extends StatelessWidget {
         ),
         
       ),
-    ),             ElevatedButton(
-                  onPressed: () {
-                    // Implement the registration logic here
-                  },
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                  ),
-                  child: Text(
-                    'Next excercise',
-                    style: TextStyle(
-                      color: Colors.blue,
-                    ),
-                  ),
-                ),]);
+    ),         ]);
   }
 
 }

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
 import 'dart:math' as math;
 
@@ -51,6 +52,19 @@ class _AddWorkoutPageState extends State<AddWorkout> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          TextFormField(
+            keyboardType: TextInputType.name,
+            decoration: const InputDecoration(
+              hintText: 'Enter a name for this workout',
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
+              workout.name  = value;
+              return null;
+            },
+          ),
           ElevatedButton(onPressed: () async {
              var workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {

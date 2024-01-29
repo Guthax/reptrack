@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
 import 'package:reptrack/pages/training_session_complete.dart';
 import 'package:reptrack/schemas/schemas.dart';
@@ -15,10 +18,13 @@ class TrainingSessionPage extends StatefulWidget {
 }
 
 class _TrainingSessionPageState extends State<TrainingSessionPage> {
-  TrainingSession session = TrainingSession(ObjectId());
-  int exerciseIndex = 0;
+  TrainingSession session = TrainingSession(ObjectId(), dateStarted: DateTime.now());
+  
 
   List<TrainingSessionExercise> sessionWidgets = List.empty(growable: true);
+  int currentCountDown = 0;
+
+  Timer? _timer;
   @override
   Widget build(BuildContext context) {
     final PageController controller = PageController();
@@ -41,27 +47,50 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
                                   
                                 }
                               }
-                              TrainingSessionExercise tewidget = TrainingSessionExercise( exercise, previousSessionExercise);
+                              TrainingSessionExercise tewidget = TrainingSessionExercise( exercise, previousSessionExercise, startTimer);
                               sessionWidgets.add(tewidget);
                               return tewidget;
                             }).toList(),
                   )),
-              Row(children: [
-              ElevatedButton(onPressed: (() {}), child: Text("Stop workout")),
-              ElevatedButton(onPressed: (() {
-                sessionWidgets.forEach((widget) {
+              Visibility(
+              visible: currentCountDown > 0,
+                child: Text(currentCountDown.toString())
+              ),
+          Row(children: [
+            ElevatedButton(onPressed: (() {}), child: Text("Stop workout")),
+            ElevatedButton(onPressed: (() {
+              sessionWidgets.forEach((widget) {
 
-                  session.exercises.add(widget.result!);
-                });
-                Navigator.push(context, MaterialPageRoute<void>(
-                  builder: (BuildContext context) {
-                    return TrainingSessionCompletePage(session, widget.workout!);
-                  }));
-               }), child: Text("Finish workout"))
-              ])
-                
+                session.exercises.add(widget.result!);
+              });
+              Navigator.push(context, MaterialPageRoute<void>(
+                builder: (BuildContext context) {
+                  return TrainingSessionCompletePage(session, widget.workout!);
+                }));
+            }), child: Text("Finish workout"))
+          ])
+            
         ]),
       ),
     );
+  }
+
+  void startTimer(int timerDuration) {
+    if(_timer != null) {
+      _timer!.cancel();
+    }
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if(timerDuration - timer.tick < 0) {
+          timer.cancel();
+        } else {
+          if(timerDuration - timer.tick <= 5) {
+            SystemSound.play(SystemSoundType.alert);
+          }
+          setState(() {
+            currentCountDown = timerDuration - timer.tick;
+          });
+        }
+      });
   }
 }

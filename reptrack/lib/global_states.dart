@@ -3,9 +3,10 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:realm/realm.dart';
 import 'package:reptrack/schemas/schemas.dart';
-
+import 'package:flutter/services.dart' show ByteData, rootBundle;
 class AppState extends ChangeNotifier {
   List<WorkoutSchedule> schedules = List.empty();
   List<Exercise> exercises = List.empty();
@@ -16,8 +17,10 @@ class AppState extends ChangeNotifier {
     //deleteDb();
     final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
     realm = Realm(config);
-    print(Configuration.defaultRealmPath.toString());
-    //fillDb();
+    //print(Configuration.defaultRealmPath.toString());
+    if (realm!.all<Exercise>().isEmpty) {
+      fillDb();
+    }
 
 
     readSchedules();
@@ -54,22 +57,24 @@ class AppState extends ChangeNotifier {
 
   }
 
-
   Future<void> fillDb() async {
-    final input = File('/home/jurriaan/Documents/Programming/reptrack/reptrack/lib/data/exercises.csv').openRead();
-    final exercises = await input.transform(utf8.decoder).transform(CsvToListConverter()).toList();
+
+    //path.join(root.path, relativePath);
+    String data  = await rootBundle.loadString('assets/exercises.csv');
+    List<List<dynamic>> exercises = const CsvToListConverter().convert(data).toList();
     List<Exercise> exercisesList = List.empty(growable: true);
+
     for (var exercise in exercises) {
       Exercise exerciseObj = Exercise(exercise[1].toString());
       exercisesList.add(exerciseObj);
       
     }
     realm!.write(() => realm!.addAll(exercisesList, update: true));
-    print("Filled");
-
-
+    readExercises();
+    notifyListeners();
   }
 }
+
 void deleteDb() {
       String defaultPath = Configuration.defaultRealmPath.toString();
       try {

@@ -32,6 +32,8 @@ class _Workout {
   @PrimaryKey()
   @MapTo("_id")
   late final ObjectId workoutId;
+
+  late String name;
   late int? day;
   late List<_WorkoutExercise> exercises = List.empty();
   late List<_TrainingSession> trainingSessions = List.empty();
