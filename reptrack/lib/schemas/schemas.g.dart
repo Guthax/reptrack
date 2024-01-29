@@ -142,12 +142,14 @@ class WorkoutExercise extends _WorkoutExercise
 
 class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
   Workout(
-    ObjectId workoutId, {
+    ObjectId workoutId,
+    String name, {
     int? day,
     Iterable<WorkoutExercise> exercises = const [],
     Iterable<TrainingSession> trainingSessions = const [],
   }) {
     RealmObjectBase.set(this, '_id', workoutId);
+    RealmObjectBase.set(this, 'name', name);
     RealmObjectBase.set(this, 'day', day);
     RealmObjectBase.set<RealmList<WorkoutExercise>>(
         this, 'exercises', RealmList<WorkoutExercise>(exercises));
@@ -162,6 +164,11 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
       RealmObjectBase.get<ObjectId>(this, '_id') as ObjectId;
   @override
   set workoutId(ObjectId value) => throw RealmUnsupportedSetError();
+
+  @override
+  String get name => RealmObjectBase.get<String>(this, 'name') as String;
+  @override
+  set name(String value) => RealmObjectBase.set(this, 'name', value);
 
   @override
   int? get day => RealmObjectBase.get<int>(this, 'day') as int?;
@@ -198,6 +205,7 @@ class Workout extends _Workout with RealmEntity, RealmObjectBase, RealmObject {
     return const SchemaObject(ObjectType.realmObject, Workout, 'Workout', [
       SchemaProperty('workoutId', RealmPropertyType.objectid,
           mapTo: '_id', primaryKey: true),
+      SchemaProperty('name', RealmPropertyType.string),
       SchemaProperty('day', RealmPropertyType.int, optional: true),
       SchemaProperty('exercises', RealmPropertyType.object,
           linkTarget: 'WorkoutExercise',

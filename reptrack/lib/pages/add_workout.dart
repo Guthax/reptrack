@@ -41,7 +41,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String dropdownValue = "Monday";
-  Workout workout = Workout(ObjectId());
+  Workout workout = Workout(ObjectId(), "");
   
   @override
   Widget build(BuildContext context) {
