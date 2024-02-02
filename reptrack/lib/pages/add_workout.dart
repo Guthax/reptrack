@@ -8,6 +8,7 @@ import 'package:reptrack/pages/add_exercise.dart';
 import 'package:reptrack/schemas/schemas.dart';
 
 class AddWorkoutPage extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,7 +69,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
           ElevatedButton(onPressed: () async {
              var workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
-                  return AddExercisePage();
+                  return AddExerciseDialog(print);
                 },
               ));
               try {

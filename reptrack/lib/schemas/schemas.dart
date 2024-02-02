@@ -11,6 +11,9 @@ class _Exercise {
   String? name;
 
   late String? description;
+  late String? type;
+  late String? image_url;
+  late String? equipment;
   late String? muscles;
 }
 
@@ -103,5 +106,6 @@ class _BodyWeightLog {
   @PrimaryKey()
   @MapTo("_id")
   late final ObjectId _BodyWeightLogId;
-  late int bodyWeight = 0;
+  late final DateTime dateLogged;
+  late final int bodyWeight;
 }

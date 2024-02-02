@@ -8,49 +8,32 @@ import 'package:reptrack/global_states.dart';
 import 'package:reptrack/schemas/schemas.dart';
 import 'package:search_page/search_page.dart';
 
-class AddExercisePage extends StatelessWidget {
+
+
+
+class AddExerciseDialog extends StatefulWidget {
+  final callback;
+  const AddExerciseDialog(this.callback);
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Add a new exercise'),
-                      leading: IconButton(
-                        icon: Icon(Icons.chevron_left),
-                        onPressed: () => Navigator.pop(context, null),
-                      ),
-                    ),
-                    body: const Center(
-                      child: Column(
-                        children: [
-                          AddExercise()
-                        ],
-                      ),
-                    ),
-                  );
-  }
+  State<AddExerciseDialog> createState() => _AddExerciseState();
 }
 
-
-class AddExercise extends StatefulWidget {
-  const AddExercise({super.key});
-
-  @override
-  State<AddExercise> createState() => _AddExerciseState();
-}
-
-class _AddExerciseState extends State<AddExercise> {
+class _AddExerciseState extends State<AddExerciseDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   Exercise? selectedExercise;
   WorkoutExercise workoutExercise = WorkoutExercise(ObjectId());
   TextEditingController editingController = TextEditingController();
+
+  TextEditingController setsController = TextEditingController();
+  TextEditingController repsController = TextEditingController();
+  TextEditingController timerController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     var state = context.watch<AppState>();
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+    return AlertDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(children: [
           TextFormField(
             controller: editingController,
             readOnly: true,
@@ -82,47 +65,34 @@ class _AddExerciseState extends State<AddExercise> {
                 ),
             decoration: const InputDecoration(
               hintText: 'Search for an exercise',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
+            )
           ),
           TextFormField(
+            controller: setsController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
             ],
             decoration: const InputDecoration(
-              hintText: 'Enter the amount of sets',
+              hintText: "Enter the amoutn of sets",
             ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              workoutExercise.sets = int.parse(value);
-              return null;
-            },
           ),
           TextFormField(
+            controller: repsController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
             ],
             decoration: const InputDecoration(
-              hintText: 'Enter the amount of reps',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              workoutExercise.repsPerSet.clear();
-              workoutExercise.repsPerSet.addAll(List.filled(workoutExercise.sets, int.parse(value)));
-            },
+              hintText: 'Enter the amount of reps per set',
+            )
+           
+            //workoutExercise.repsPerSet.clear();
+            //workoutExercise.repsPerSet.addAll(List.filled(workoutExercise.sets, int.parse(value)));
+            
           ),
           TextFormField(
+            controller: timerController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
@@ -142,17 +112,22 @@ class _AddExerciseState extends State<AddExercise> {
               onPressed: () {
                 // Validate will return true if the form is valid, or false if
                 // the form is invalid.
-                if (_formKey.currentState!.validate() && selectedExercise != null) {
+                if (selectedExercise != null) {
                   workoutExercise.exercise = selectedExercise;
-                  Navigator.pop(context, workoutExercise); 
+                  workoutExercise.sets = int.parse(setsController.text);
+                  
+                  workoutExercise.repsPerSet.clear();
+                  workoutExercise.repsPerSet.addAll(List.filled(workoutExercise.sets, int.parse(repsController.text)));
+                  workoutExercise.timer = int.parse(timerController.text);
+                  widget.callback(workoutExercise, state);
+                  Navigator.of(context).pop(); 
                   
                 }
               },
               child: const Text('Submit'),
             ),
           ),
-        ],
-      ),
-    );
+        ]),
+      ));
   }
 }

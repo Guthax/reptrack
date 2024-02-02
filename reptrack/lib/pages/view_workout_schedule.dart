@@ -1,41 +1,77 @@
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/global_states.dart';
 import 'dart:math' as math;
 
 import 'package:reptrack/pages/add_exercise.dart';
 import 'package:reptrack/schemas/schemas.dart';
 import 'package:reptrack/widgets/training_session_overview_widget.dart';
+import 'package:reptrack/widgets/workout.dart';
 
-class ViewWorkoutSchedulePage extends StatelessWidget {
-  final WorkoutSchedule schedule;
-  List<TrainingSession> trainingSessions = List.empty(growable: true);
+// ignore: must_be_immutable
+class ViewWorkoutSchedulePage extends StatefulWidget {
+  WorkoutSchedule schedule;
 
-  ViewWorkoutSchedulePage(this.schedule) {
+  ViewWorkoutSchedulePage(this.schedule);
 
-    schedule.workouts.forEach((workout) {
-      workout.trainingSessions.forEach((element) {
-        trainingSessions.add(element);
-      });
-      
-    });
-  }
+  @override
+  State<ViewWorkoutSchedulePage> createState() => _ViewWorkoutSchedulePageState();
+}
 
+class _ViewWorkoutSchedulePageState extends State<ViewWorkoutSchedulePage> {
+  List<Workout> workouts =  List.empty(growable: true);
 
   @override
   Widget build(BuildContext context) {
+    workouts = widget.schedule.workouts.toList();
+    AppState state = context.watch<AppState>();
+    TextEditingController textController = TextEditingController();
     return Scaffold(
   
                     appBar: AppBar(
                       title: const Text('View workout'),
                     ),
-                    body: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: trainingSessions.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return TrainingSessionOverviewWidget(trainingSessions[index]);
-                      }
-                    )
-                  );
+                    body: SingleChildScrollView(
+                      child: Column(
+                      children: List<Widget>.from(workouts.map((workout) {
+                                  return WorkoutWidget(workout);
+                                }).toList()) +  
+                                List.from([
+                                  ElevatedButton(
+                                   onPressed: () => showDialog<String>(
+                                      context: context,
+                                      builder: (BuildContext context) => AlertDialog(
+                                        title: const Text('Add workout'),
+                                        content: TextField(
+                                          controller: textController,
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, 'Cancel'),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              addWorkout(textController.text, state);
+                                              Navigator.pop(context, 'OK');
+                                            },
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  child: Text("Add workout"))
+                                ]),
+                  )));
+  }
+
+  void addWorkout(String name, AppState state) {
+    Workout workout = Workout(ObjectId(), name);
+    state.addWorkout(widget.schedule, workout);
+
   }
 }

@@ -16,8 +16,9 @@ class TrainingSessionCompletePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-    AppState state = context.watch<AppState>();
+    print("Test");
+    print(session);
+    AppState state = context.watch<AppState>(); 
     return Scaffold(
       appBar: AppBar(
         title: Center(child: Text("Training session complete")),
@@ -37,6 +38,8 @@ class TrainingSessionCompletePage extends StatelessWidget {
       ),
       body: Column(
         children: session.exercises.map((element) {
+          print(element.sets);
+          print(element.exercise);
           return Text("${element.exercise!.name!}: ${element.sets.toString()} : ${element.repsPerSet.toString()} : ${element.weightPerSetKg.toString()}");
         }).toList()),
     );

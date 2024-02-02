@@ -5,80 +5,74 @@ import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/data_repository.dart';
 import 'package:reptrack/schemas/schemas.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
 class AppState extends ChangeNotifier {
   List<WorkoutSchedule> schedules = List.empty();
   List<Exercise> exercises = List.empty();
 
-  Realm? realm;
-
+  DataRepository dataRepository = DataRepository();
   AppState() {
-    //deleteDb();
-    final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema]);
-    realm = Realm(config);
-    //print(Configuration.defaultRealmPath.toString());
-    if (realm!.all<Exercise>().isEmpty) {
-      fillDb();
-    }
-
-
+    //if (realm!.all<Exercise>().isEmpty) {
+    fillDb();
     readSchedules();
     readExercises();
+    //print(exercises[0].name);
   }
 
-  void readExercises() {
-    exercises = realm!.all<Exercise>().toList();
+  void fillDb() async {
+    await dataRepository.fillDb();
   }
 
-  void readSchedules() {
-    schedules = realm!.all<WorkoutSchedule>().toList();
+  void readSchedules() async {
+    schedules = await dataRepository.getAllSchedules();
   }
 
-  void addSchedule(WorkoutSchedule schedule) {
-    realm!.write(() => 
-    realm!.add(schedule, update: true));
+  void readExercises() async {
+    exercises = await dataRepository.getAllExercises();
+  }
+  
+  void addSchedule(WorkoutSchedule schedule) async {
+    bool success = await dataRepository.addWorkoutSchedule(schedule);
+    print(success);
+    if(success) {
+      readSchedules();
+      notifyListeners();
+    }
+  }
+
+  void addWorkout(WorkoutSchedule schedule, Workout w) async {
+    bool success = await dataRepository.addWorkoutToSchedule(schedule, w);
     readSchedules();
     notifyListeners();
   }
 
-  void addTrainingSession(Workout w, TrainingSession s) { 
-    realm!.write(() => w.trainingSessions.add(s));
+  void addWorkoutExercise(Workout workout, WorkoutExercise workoutExercise) async {
+    bool success = await dataRepository.addWorkoutExerciseToWorkout(workout, workoutExercise);
     readSchedules();
-  }
-  void updateWorkout(Workout w) {
-    realm!.write(() => 
-    realm!.add(
-      w, update: true)
-    );
-    print("updated");
-    readSchedules();
-    
-
+    notifyListeners();
   }
 
-  Future<void> fillDb() async {
+  void addTrainingSession(Workout workout, TrainingSession session) async {
+    bool success = await dataRepository.addTrainingSession(workout, session);
+    readSchedules();
+    notifyListeners();
+  }
 
-    //path.join(root.path, relativePath);
-    String data  = await rootBundle.loadString('assets/exercises.csv');
-    List<List<dynamic>> exercises = const CsvToListConverter().convert(data).toList();
-    List<Exercise> exercisesList = List.empty(growable: true);
-
-    for (var exercise in exercises) {
-      Exercise exerciseObj = Exercise(exercise[1].toString());
-      exercisesList.add(exerciseObj);
-      
-    }
-    realm!.write(() => realm!.addAll(exercisesList, update: true));
-    readExercises();
+  void deleteWorkoutSchedule(WorkoutSchedule schedule) async {
+    bool success = await dataRepository.deleteWorkoutSchedule(schedule);
+    readSchedules();
     notifyListeners();
   }
 }
+
 
 void deleteDb() {
       String defaultPath = Configuration.defaultRealmPath.toString();
       try {
         File(defaultPath).delete();
+        print("deleted");
       } catch (e) {
         print(e);
       }

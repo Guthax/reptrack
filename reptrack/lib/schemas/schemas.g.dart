@@ -11,10 +11,16 @@ class Exercise extends _Exercise
   Exercise(
     String? name, {
     String? description,
+    String? type,
+    String? image_url,
+    String? equipment,
     String? muscles,
   }) {
     RealmObjectBase.set(this, 'name', name);
     RealmObjectBase.set(this, 'description', description);
+    RealmObjectBase.set(this, 'type', type);
+    RealmObjectBase.set(this, 'image_url', image_url);
+    RealmObjectBase.set(this, 'equipment', equipment);
     RealmObjectBase.set(this, 'muscles', muscles);
   }
 
@@ -31,6 +37,23 @@ class Exercise extends _Exercise
   @override
   set description(String? value) =>
       RealmObjectBase.set(this, 'description', value);
+
+  @override
+  String? get type => RealmObjectBase.get<String>(this, 'type') as String?;
+  @override
+  set type(String? value) => RealmObjectBase.set(this, 'type', value);
+
+  @override
+  String? get image_url =>
+      RealmObjectBase.get<String>(this, 'image_url') as String?;
+  @override
+  set image_url(String? value) => RealmObjectBase.set(this, 'image_url', value);
+
+  @override
+  String? get equipment =>
+      RealmObjectBase.get<String>(this, 'equipment') as String?;
+  @override
+  set equipment(String? value) => RealmObjectBase.set(this, 'equipment', value);
 
   @override
   String? get muscles =>
@@ -53,6 +76,9 @@ class Exercise extends _Exercise
       SchemaProperty('name', RealmPropertyType.string,
           optional: true, primaryKey: true),
       SchemaProperty('description', RealmPropertyType.string, optional: true),
+      SchemaProperty('type', RealmPropertyType.string, optional: true),
+      SchemaProperty('image_url', RealmPropertyType.string, optional: true),
+      SchemaProperty('equipment', RealmPropertyType.string, optional: true),
       SchemaProperty('muscles', RealmPropertyType.string, optional: true),
     ]);
   }
@@ -574,25 +600,26 @@ class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
 
 class BodyWeightLog extends _BodyWeightLog
     with RealmEntity, RealmObjectBase, RealmObject {
-  static var _defaultsSet = false;
-
-  BodyWeightLog({
-    int bodyWeight = 0,
-  }) {
-    if (!_defaultsSet) {
-      _defaultsSet = RealmObjectBase.setDefaults<BodyWeightLog>({
-        'bodyWeight': 0,
-      });
-    }
+  BodyWeightLog(
+    DateTime dateLogged,
+    int bodyWeight,
+  ) {
+    RealmObjectBase.set(this, 'dateLogged', dateLogged);
     RealmObjectBase.set(this, 'bodyWeight', bodyWeight);
   }
 
   BodyWeightLog._();
 
   @override
+  DateTime get dateLogged =>
+      RealmObjectBase.get<DateTime>(this, 'dateLogged') as DateTime;
+  @override
+  set dateLogged(DateTime value) => throw RealmUnsupportedSetError();
+
+  @override
   int get bodyWeight => RealmObjectBase.get<int>(this, 'bodyWeight') as int;
   @override
-  set bodyWeight(int value) => RealmObjectBase.set(this, 'bodyWeight', value);
+  set bodyWeight(int value) => throw RealmUnsupportedSetError();
 
   @override
   Stream<RealmObjectChanges<BodyWeightLog>> get changes =>
@@ -607,6 +634,7 @@ class BodyWeightLog extends _BodyWeightLog
     RealmObjectBase.registerFactory(BodyWeightLog._);
     return const SchemaObject(
         ObjectType.realmObject, BodyWeightLog, 'BodyWeightLog', [
+      SchemaProperty('dateLogged', RealmPropertyType.timestamp),
       SchemaProperty('bodyWeight', RealmPropertyType.int),
     ]);
   }

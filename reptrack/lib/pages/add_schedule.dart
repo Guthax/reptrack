@@ -78,37 +78,6 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               return null;
             },
           ),
-          ElevatedButton(onPressed: () async {
-             final workout = await Navigator.push(context, MaterialPageRoute<void>(
-                builder: (BuildContext context) {
-                  return AddWorkoutPage();
-                },
-              ));
-              try {
-                Workout w = (workout as Workout);
-                print(w);
-                w.day = schedule.workouts.length + 1;
-                setState(() {
-                  schedule.workouts.add(w);
-                });
-              } catch (e) {
-                print("Workout not defined");
-              }
-          }, child: Text("Add workout day")),
-           SizedBox(
-            height: 200,
-            child: ListView.builder(
-             padding: const EdgeInsets.all(8),
-             itemCount: schedule.workouts.length,
-             itemBuilder: (BuildContext context, int index) {
-               return Container(
-             height: 50,
-             color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-             child: Center(child:Text(schedule.workouts[index].name.toString()))
-                );
-              }
-            )
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ElevatedButton(

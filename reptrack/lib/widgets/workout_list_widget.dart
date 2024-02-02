@@ -25,7 +25,7 @@ class WorkoutExerciseCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  "Day: ${workout!.day.toString()}",
+                  workout!.name,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20.0,
@@ -49,7 +49,7 @@ class WorkoutExerciseCard extends StatelessWidget {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      "${workout!.exercises[index].exercise!.name!}: ${workout!.exercises[index].sets.toString()} sets of ${workout!.exercises[index].repsPerSet[0]}",
+                      "${workout!.exercises[index].exercise!.name!}: ${workout!.exercises[index].sets.toString()} sets of ${workout!.exercises[index].repsPerSet}",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16.0,

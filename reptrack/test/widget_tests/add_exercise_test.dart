@@ -24,7 +24,7 @@ void main() {
       MaterialApp(
         home: ChangeNotifierProvider<AppState>.value(
           value: mockAppState,
-          child: AddExercisePage(),
+          child: AddExerciseDialog(),
         ),
       ),
     );
@@ -49,7 +49,7 @@ void main() {
       MaterialApp(
         home: ChangeNotifierProvider<AppState>.value(
           value: mockAppState,
-          child: AddExercisePage(),
+          child: AddExerciseDialog(),
         ),
       ),
     );
@@ -77,7 +77,7 @@ void main() {
       MaterialApp(
         home: ChangeNotifierProvider<AppState>.value(
           value: mockAppState,
-          child: AddExercisePage(),
+          child: AddExerciseDialog(),
         ),
       ),
     );

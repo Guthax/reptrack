@@ -80,7 +80,7 @@ class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerci
                 SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: enabled ? () {
-                      widget.callback(widget.setNumber, int.parse(weightTextController.text),int.parse(repsTextController.text));
+                      widget.callback(int.parse(weightTextController.text),int.parse(repsTextController.text));
                       setState(() {
                         enabled = false;
                         widget.weight = int.parse(weightTextController.text);

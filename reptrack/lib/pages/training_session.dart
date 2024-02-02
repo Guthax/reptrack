@@ -10,7 +10,9 @@ import 'package:reptrack/widgets/training_session_exercise_widget.dart';
 class TrainingSessionPage extends StatefulWidget {
   final Workout? workout;
 
-  const TrainingSessionPage ({ Key? key, this.workout }): super(key: key);
+  TrainingSession session = TrainingSession(ObjectId(), dateStarted: DateTime.now());
+
+  TrainingSessionPage ({ Key? key, this.workout }): super(key: key);
   @override
   State<TrainingSessionPage> createState() => _TrainingSessionPageState();
 
@@ -18,7 +20,6 @@ class TrainingSessionPage extends StatefulWidget {
 }
 
 class _TrainingSessionPageState extends State<TrainingSessionPage> {
-  TrainingSession session = TrainingSession(ObjectId(), dateStarted: DateTime.now());
   
 
   List<TrainingSessionExercise> sessionWidgets = List.empty(growable: true);
@@ -59,13 +60,16 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
           Row(children: [
             ElevatedButton(onPressed: (() {}), child: Text("Stop workout")),
             ElevatedButton(onPressed: (() {
-              sessionWidgets.forEach((widget) {
-
-                session.exercises.add(widget.result!);
+              sessionWidgets.forEach((widg) {
+                //print(widget.result);
+                if(widg.result != null) {
+                  widget.session.exercises.add(widg.result!);
+                }
               });
               Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
-                  return TrainingSessionCompletePage(session, widget.workout!);
+
+                  return TrainingSessionCompletePage(widget.session, widget.workout!);
                 }));
             }), child: Text("Finish workout"))
           ])
@@ -92,5 +96,14 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
           });
         }
       });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    if(_timer != null) {
+      _timer!.cancel();
+    }
   }
 }

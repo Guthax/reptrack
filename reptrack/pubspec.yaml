@@ -20,7 +20,8 @@ dependencies:
   csv: ^5.1.1
   logging: ^1.2.0
   path_provider: ^2.1.2
-
+  get: ^4.6.6
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -28,8 +29,9 @@ dev_dependencies:
   test: ^1.24.9
   mockito: ^5.4.4
   path_provider: ^2.1.2
+  get: ^4.6.6
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/exercises.csv
+    - assets/exercises_old.csv
