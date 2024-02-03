@@ -4,6 +4,7 @@ import 'package:realm/realm.dart';
 import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/schedules/controllers/schedules_controller.dart';
 
+/// Controller to handle all business logic regarding workouts for a specific schedule.
 class WorkoutController extends GetxController {
   SchedulesController controller = Get.find<SchedulesController>();
 
@@ -23,7 +24,7 @@ class WorkoutController extends GetxController {
   var repsTextController = TextEditingController();
   var timerController = TextEditingController();
 
-  // Use RxList<Workout> directly
+  // Call  all exercises where the user can choose from.
    void readExercises() async {
     all_exercises.assignAll(await controller.dataRepository.getAllExercises());
   }
@@ -45,8 +46,6 @@ class WorkoutController extends GetxController {
     workoutExercise.repsPerSet.assignAll(List.filled(workoutExercise.sets, int.parse(repsTextController.text)));
     controller.dataRepository.addWorkoutExerciseToWorkout(w, workoutExercise);
     updateWorkouts(schedule);
-
-    // Implement your addExercise logic
   }
 
   void submitWorkout() {
