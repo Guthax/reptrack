@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/global_states.dart';
 import 'package:reptrack/pages/training_session.dart';
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/schedules/controllers/schedules_controller.dart';
 
 
 class WorkoutScheduleListCard extends StatelessWidget {
@@ -10,9 +13,11 @@ class WorkoutScheduleListCard extends StatelessWidget {
 
   const WorkoutScheduleListCard(this.schedule);
 
+  
+
   @override
   Widget build(BuildContext context) {
-    AppState state = context.watch<AppState>();
+    SchedulesController schedulesController = Get.find<SchedulesController>();
     return Card(
       elevation: 4.0,
       margin: EdgeInsets.all(10.0),
@@ -49,7 +54,7 @@ class WorkoutScheduleListCard extends StatelessWidget {
                         icon: const Icon(Icons.delete),
                         color: Colors.white,
                         onPressed: () {
-                          _showDeleteConfirmationDialog(context, state);
+                          _showDeleteConfirmationDialog(context, schedulesController);
                         },
                       ),
                     ],
@@ -92,7 +97,7 @@ class WorkoutScheduleListCard extends StatelessWidget {
     );
   }
 
-  Future<void> _showDeleteConfirmationDialog(BuildContext context, AppState state) async {
+  Future<void> _showDeleteConfirmationDialog(BuildContext context, SchedulesController controller) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -110,7 +115,7 @@ class WorkoutScheduleListCard extends StatelessWidget {
               onPressed: () {
                 // Perform the delete operation here
                 // For now, let's just print a message
-                state.deleteWorkoutSchedule(schedule);
+                controller.deleteWorkoutSchedule(schedule);
                 print("Item deleted!");
                 Navigator.of(context).pop(); // Close the dialog
               },

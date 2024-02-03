@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
    
 class CurrentDateWidget extends StatelessWidget {
-  const CurrentDateWidget({
-    super.key,
-    required this.context,
-  });
-
-  final BuildContext context;
 
 @override
   Widget build(BuildContext context) {

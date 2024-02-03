@@ -1,48 +1,39 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/data_repository.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 
 import 'package:reptrack/global_states.dart';
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/schedules/controllers/workout_controller.dart';
 import 'package:search_page/search_page.dart';
 
 
-
-
-class AddExerciseDialog extends StatefulWidget {
-  final callback;
-  const AddExerciseDialog(this.callback);
-  @override
-  State<AddExerciseDialog> createState() => _AddExerciseState();
-}
-
-class _AddExerciseState extends State<AddExerciseDialog> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+class AddExerciseDialog extends StatelessWidget {
   Exercise? selectedExercise;
-  WorkoutExercise workoutExercise = WorkoutExercise(ObjectId());
-  TextEditingController editingController = TextEditingController();
+  WorkoutController controller = Get.find<WorkoutController>();
 
-  TextEditingController setsController = TextEditingController();
-  TextEditingController repsController = TextEditingController();
-  TextEditingController timerController = TextEditingController();
-  @override
+  Workout workout;
+
+  AddExerciseDialog(this.workout);
+
+@override
   Widget build(BuildContext context) {
-    var state = context.watch<AppState>();
     return AlertDialog(
       content: Form(
-        key: _formKey,
         child: Column(children: [
           TextFormField(
-            controller: editingController,
+            controller: controller.exerciseController,
             readOnly: true,
             keyboardType: TextInputType.name,
             onTap: () => 
             showSearch(
                   context: context,
                   delegate: SearchPage<Exercise>(
-                    items: state.exercises,
+                    items: controller.all_exercises,
                     searchLabel: 'Search exercises',
                     suggestion: Center(
                       child: Text('Find exercises by name'),
@@ -56,8 +47,8 @@ class _AddExerciseState extends State<AddExerciseDialog> {
                     builder: (exercise) => ListTile(
                       title: Text(exercise.name!),
                       onTap: () {
-                        selectedExercise = exercise;
-                        editingController.text = exercise.name!;
+                        controller.selectedExercise.value = exercise;
+                        controller.exerciseController.text = exercise.name!;
                         Navigator.pop(context);
                         },
                     ),
@@ -68,7 +59,7 @@ class _AddExerciseState extends State<AddExerciseDialog> {
             )
           ),
           TextFormField(
-            controller: setsController,
+            controller: controller.setsTextController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
@@ -78,7 +69,7 @@ class _AddExerciseState extends State<AddExerciseDialog> {
             ),
           ),
           TextFormField(
-            controller: repsController,
+            controller: controller.repsTextController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
@@ -92,7 +83,7 @@ class _AddExerciseState extends State<AddExerciseDialog> {
             
           ),
           TextFormField(
-            controller: timerController,
+            controller: controller.timerController,
             keyboardType: TextInputType.number,
             inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly
@@ -101,9 +92,7 @@ class _AddExerciseState extends State<AddExerciseDialog> {
               hintText: 'Enter a timer per rep',
             ),
             validator: (String? value) {
-              if (value != null) {
-                 workoutExercise.timer = int.parse(value);
-              }
+              
             },
           ),
           Padding(
@@ -112,15 +101,17 @@ class _AddExerciseState extends State<AddExerciseDialog> {
               onPressed: () {
                 // Validate will return true if the form is valid, or false if
                 // the form is invalid.
-                if (selectedExercise != null) {
-                  workoutExercise.exercise = selectedExercise;
-                  workoutExercise.sets = int.parse(setsController.text);
+                if (controller.selectedExercise != null) {
+                  //workoutExercise.exercise = selectedExercise;
+                  //workoutExercise.sets = int.parse(setsController.text);
                   
-                  workoutExercise.repsPerSet.clear();
-                  workoutExercise.repsPerSet.addAll(List.filled(workoutExercise.sets, int.parse(repsController.text)));
-                  workoutExercise.timer = int.parse(timerController.text);
-                  widget.callback(workoutExercise, state);
-                  Navigator.of(context).pop(); 
+                  //workoutExercise.repsPerSet.clear();
+                  //workoutExercise.repsPerSet.addAll(List.filled(workoutExercise.sets, int.parse(repsController.text)));
+                  //workoutExercise.timer = int.parse(timerController.text);
+                  //widget.callback(workoutExercise, state);
+                  //Navigator.of(context).pop(); 
+                  controller.addExercise(workout);
+                  Get.back();
                   
                 }
               },

@@ -3,15 +3,20 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/pages/add_workout.dart';
 import 'dart:math' as math;
 
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/schedules/controllers/new_schedules_controller.dart';
 
 class AddSchedulePage extends StatelessWidget {
+  final controller = Get.put(AddScheduleController());
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
                     appBar: AppBar(
                       title: const Text('Add a schedule'),
@@ -20,31 +25,7 @@ class AddSchedulePage extends StatelessWidget {
                         onPressed: () => Navigator.pop(context, null),
                       ),
                     ),
-                    body: const Center(
-                      child: Column(
-                        children: [
-                          AddScheduleForm()
-                        ],
-                      ),
-                    ),
-                  );
-  }
-}
-
-
-class AddScheduleForm extends StatefulWidget {
-  const AddScheduleForm({super.key});
-
-  @override
-  State<AddScheduleForm> createState() => _AddScheduleFormState();
-}
-
-class _AddScheduleFormState extends State<AddScheduleForm> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  WorkoutSchedule schedule = WorkoutSchedule(ObjectId());
-  @override
-  Widget build(BuildContext context) {
-    return Form(
+                    body: Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +39,7 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
               }
-              schedule.name = value;
+              controller.scheduleName.value = value;
               return null;
             },
           ),
@@ -74,7 +55,7 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
               }
-              schedule.numWeeks = int.parse(value);
+              controller.scheduleNumWeeks.value = int.parse(value);
               return null;
             },
           ),
@@ -86,7 +67,8 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
                 // the form is invalid.
                 if (_formKey.currentState!.validate()) {
                   // Process data.  
-                  Navigator.pop(context, schedule);
+                  controller.submitSchedule();
+                  Get.back();
                   
                 }
               },
@@ -95,6 +77,7 @@ class _AddScheduleFormState extends State<AddScheduleForm> {
           ),
         ],
       ),
-    );
+    )
+                  );
   }
 }

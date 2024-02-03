@@ -3,17 +3,14 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
-import 'package:reptrack/schemas/schemas.dart';
-import 'package:reptrack/widgets/training_session_exercise_set_widget.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
+import 'package:reptrack/session/widgets/training_session_exercise_set_widget.dart';
 
 class TrainingSessionExercise extends StatefulWidget {
   final WorkoutExercise exercise;
   final SessionExercise? previousSessionExercise;
-  final timerCallback;
 
-  SessionExercise? result;
-
-  TrainingSessionExercise (this.exercise, this.previousSessionExercise, this.timerCallback);
+  TrainingSessionExercise (this.exercise, this.previousSessionExercise);
 
   @override
   _TrainingSessionExerciseState createState() => _TrainingSessionExerciseState();
@@ -21,8 +18,6 @@ class TrainingSessionExercise extends StatefulWidget {
 }
 
 class _TrainingSessionExerciseState extends State<TrainingSessionExercise> with AutomaticKeepAliveClientMixin {
-  Exercise? exercise;
-  SessionExercise result = SessionExercise(ObjectId());
 
   
   @override
@@ -30,25 +25,9 @@ class _TrainingSessionExerciseState extends State<TrainingSessionExercise> with 
     return Container(
         width: double.infinity,
         padding: EdgeInsets.all(16.0),
-        child: ExerciseCard(widget.exercise, widget.previousSessionExercise, logSet)
+        child: ExerciseCard(widget.exercise, widget.previousSessionExercise)
     );
   }
-
-
-  void logSet(int weight, int reps) {
-    result.exercise = widget.exercise.exercise;
-    result.weightPerSetKg.add(weight);
-    result.repsPerSet.add(reps);
-    print(result.exercise!.name);
-    print(result.weightPerSetKg);
-    print(result.repsPerSet);
-    widget.result = result;
-    //if (widget.exercise.timer != null) {
-    //  widget.timerCallback(widget.exercise.timer);
-    //}
-  }
-
-
 
   @override
   bool get wantKeepAlive => true;
@@ -58,8 +37,7 @@ class _TrainingSessionExerciseState extends State<TrainingSessionExercise> with 
 class ExerciseCard extends StatelessWidget {
   SessionExercise? previousExercise;
   WorkoutExercise exercise;
-  final callback;
-  ExerciseCard (this.exercise, this.previousExercise, this.callback);
+  ExerciseCard (this.exercise, this.previousExercise);
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +64,7 @@ class ExerciseCard extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Column(
-              children: generateSetList(exercise, previousExercise, callback),
+              children: generateSetList(exercise, previousExercise),
             ),
           ],
           
@@ -98,14 +76,14 @@ class ExerciseCard extends StatelessWidget {
 
 }
 
-List<Widget> generateSetList(WorkoutExercise exercise, SessionExercise? previousSessionExercise, func) {
+List<Widget> generateSetList(WorkoutExercise exercise, SessionExercise? previousSessionExercise) {
   List<Widget> setListWidgets = List.empty(growable: true);
 
   for (var i = 0; i < exercise.sets; i++) {
     if(previousSessionExercise != null &&  i < previousSessionExercise.repsPerSet.length) {
-      setListWidgets.add(TrainingSessionExerciseSetWidget(i, previousSessionExercise.weightPerSetKg[i], previousSessionExercise.repsPerSet[i], func));
+      setListWidgets.add(TrainingSessionExerciseSetWidget(exercise.exercise!, i, previousSessionExercise.weightPerSetKg[i], previousSessionExercise.repsPerSet[i]));
     } else {
-      setListWidgets.add(TrainingSessionExerciseSetWidget(i, 0, exercise.repsPerSet[i], func));
+      setListWidgets.add(TrainingSessionExerciseSetWidget(exercise.exercise!, 0,0, exercise.repsPerSet[i]));
     }
   }
    setListWidgets.add(SizedBox(height: 5));

@@ -5,7 +5,7 @@ import 'dart:math' as math;
 
 import 'package:reptrack/pages/add_exercise.dart';
 import 'package:reptrack/schemas/schemas.dart';
-import 'package:reptrack/widgets/training_session_overview_widget.dart';
+import 'package:reptrack/session/widgets/training_session_overview_widget.dart';
 
 class TrainingSessionOverviewPage extends StatelessWidget {
   final WorkoutSchedule schedule;

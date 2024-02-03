@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:reptrack/global_states.dart';
-import 'package:reptrack/schemas/schemas.dart';
-import 'package:reptrack/widgets/workout_list_widget.dart';
+import 'package:get/get.dart';
+import 'package:reptrack/schedules/controllers/schedules_controller.dart';
+import 'package:reptrack/session/widgets/workout_list_widget.dart';
+import 'package:reptrack/session/controllers/session_controller.dart';
 
-class WorkoutCard extends StatefulWidget {
-  @override
-  _WorkoutCardState createState() => _WorkoutCardState();
-}
-
-class _WorkoutCardState extends State<WorkoutCard> {
-  WorkoutSchedule? selectedSchedule;
-  int selectedDay = 0;
+class WorkoutCard extends StatelessWidget {
+  SchedulesController schedulesController = Get.find<SchedulesController>();
+  SessionController sessionController = Get.find<SessionController>();
 
   @override
   Widget build(BuildContext context) {
-    AppState state = context.watch<AppState>();
     final PageController controller = PageController();
-    selectedSchedule ??= state.schedules.length > 0 ? state.schedules[0] : null;
-    return Container(
+    return Obx(() => Container(
         width: double.infinity,
         padding: EdgeInsets.all(16.0),
-        child: selectedSchedule == null ? Text("No schedules") : Card(
+        child: sessionController.selectedSchedule.value.value == null ? Text("No schedules") : Card(
           elevation: 4.0,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -34,25 +27,22 @@ class _WorkoutCardState extends State<WorkoutCard> {
                 ),
                 SizedBox(height: 8.0),
                 DropdownButton<String>(
-                  value: selectedSchedule!.name,
-                  items: state.schedules
+                  value: sessionController.selectedSchedule.value.value!.name,
+                  items: schedulesController.schedules
                       .map((schedule) => DropdownMenuItem<String>(
                             value: schedule.name,
                             child: Text(schedule.name),
                           ))
                       .toList(),
                   onChanged: (value) {
-                    setState(() {
-                      selectedSchedule = state.schedules.firstWhere((element) => element.name == value);
-                      selectedDay = 0;
-                    });
+                    sessionController.setSelectedSchedule(schedulesController.schedules.firstWhere((element) => element.name == value));
                   },
                 ),
                 SizedBox(height: 16.0),
                 SizedBox(height: 200,
                 child: PageView(
                     controller: controller,
-                    children: selectedSchedule!.workouts.map((value) {
+                    children: sessionController.selectedSchedule.value.value!.workouts.map((value) {
                               return Center(
                                 child: WorkoutExerciseCard(value),
                               );
@@ -61,6 +51,6 @@ class _WorkoutCardState extends State<WorkoutCard> {
               ])
           )
         )
-    );
+    ));
   }
 }

@@ -2,76 +2,76 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/global_states.dart';
 import 'dart:math' as math;
 
 import 'package:reptrack/pages/add_exercise.dart';
-import 'package:reptrack/schemas/schemas.dart';
-import 'package:reptrack/widgets/training_session_overview_widget.dart';
-import 'package:reptrack/widgets/workout.dart';
+import 'package:reptrack/schedules/controllers/schedules_controller.dart';
+import 'package:reptrack/schedules/controllers/workout_controller.dart';
+import 'package:reptrack/schedules/widgets/workout.dart';
 
-// ignore: must_be_immutable
-class ViewWorkoutSchedulePage extends StatefulWidget {
-  WorkoutSchedule schedule;
 
-  ViewWorkoutSchedulePage(this.schedule);
-
-  @override
-  State<ViewWorkoutSchedulePage> createState() => _ViewWorkoutSchedulePageState();
-}
-
-class _ViewWorkoutSchedulePageState extends State<ViewWorkoutSchedulePage> {
-  List<Workout> workouts =  List.empty(growable: true);
+class WorkoutScheduleOverview extends StatelessWidget {
+  WorkoutController controller = Get.find<WorkoutController>();
 
   @override
   Widget build(BuildContext context) {
-    workouts = widget.schedule.workouts.toList();
-    AppState state = context.watch<AppState>();
-    TextEditingController textController = TextEditingController();
     return Scaffold(
-  
-                    appBar: AppBar(
-                      title: const Text('View workout'),
+      appBar: AppBar(
+        title: const Text('View workout'),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            GetBuilder<WorkoutController>(
+              builder: (workoutController) {
+                return SizedBox(
+                  height: 400,
+                  child: ListView.builder(
+                    itemCount: workoutController.workouts.length,
+                    itemBuilder: (context, index) {
+                      print("renderer");
+                      
+                      print(workoutController.workouts[index].name);
+                      return WorkoutWidget(workoutController.workouts[index]);
+                      
+                    },
+                  ),
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: const Text('Add workout'),
+                  content: TextField(
+                    controller: controller.workoutNameController.value,
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text('Cancel'),
                     ),
-                    body: SingleChildScrollView(
-                      child: Column(
-                      children: List<Widget>.from(workouts.map((workout) {
-                                  return WorkoutWidget(workout);
-                                }).toList()) +  
-                                List.from([
-                                  ElevatedButton(
-                                   onPressed: () => showDialog<String>(
-                                      context: context,
-                                      builder: (BuildContext context) => AlertDialog(
-                                        title: const Text('Add workout'),
-                                        content: TextField(
-                                          controller: textController,
-                                        ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context, 'Cancel'),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              addWorkout(textController.text, state);
-                                              Navigator.pop(context, 'OK');
-                                            },
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  child: Text("Add workout"))
-                                ]),
-                  )));
-  }
-
-  void addWorkout(String name, AppState state) {
-    Workout workout = Workout(ObjectId(), name);
-    state.addWorkout(widget.schedule, workout);
-
+                    TextButton(
+                      onPressed: () {
+                        controller.submitWorkout();
+                        Get.back();
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              ),
+              child: Text("Add workout"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

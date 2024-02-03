@@ -2,7 +2,7 @@
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 final config = Configuration.local([WorkoutSchedule.schema, Workout.schema, WorkoutExercise.schema, Exercise.schema, TrainingSession.schema, SessionExercise.schema, BodyWeightLog.schema]);
 
 class DataRepository {

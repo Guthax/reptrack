@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'dart:math' as math;
 
 import 'package:reptrack/pages/add_exercise.dart';
-import 'package:reptrack/schemas/schemas.dart';
 
 class AddWorkoutPage extends StatelessWidget {
 
@@ -69,7 +69,7 @@ class _AddWorkoutPageState extends State<AddWorkout> {
           ElevatedButton(onPressed: () async {
              var workoutExercise = await Navigator.push(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
-                  return AddExerciseDialog(print);
+                  return AddExerciseDialog(workout);
                 },
               ));
               try {

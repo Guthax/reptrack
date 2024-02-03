@@ -2,31 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:realm/realm.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/pages/training_session_complete.dart';
-import 'package:reptrack/schemas/schemas.dart';
-import 'package:reptrack/widgets/training_session_exercise_widget.dart';
+import 'package:reptrack/session/controllers/session_controller.dart';
+import 'package:reptrack/session/widgets/training_session_exercise_widget.dart';
 
-class TrainingSessionPage extends StatefulWidget {
-  final Workout? workout;
-
-  TrainingSession session = TrainingSession(ObjectId(), dateStarted: DateTime.now());
-
-  TrainingSessionPage ({ Key? key, this.workout }): super(key: key);
-  @override
-  State<TrainingSessionPage> createState() => _TrainingSessionPageState();
-
-
-}
-
-class _TrainingSessionPageState extends State<TrainingSessionPage> {
+class TrainingSessionPage extends StatelessWidget {
+  SessionController sessionController = Get.find<SessionController>();
   
-
-  List<TrainingSessionExercise> sessionWidgets = List.empty(growable: true);
-  int currentCountDown = 0;
-
-  Timer? _timer;
-  @override
+@override
   Widget build(BuildContext context) {
     final PageController controller = PageController();
     return Scaffold(
@@ -39,38 +25,15 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
               SizedBox(height: 500,
                 child: PageView(
                     controller: controller,
-                    children: widget.workout!.exercises.map((exercise) {
-                              SessionExercise? previousSessionExercise = null;
-                              if (widget.workout!.trainingSessions.length > 0) {
-                                List<SessionExercise> previousRecords = widget.workout!.trainingSessions.last.exercises.where((element) => element.exercise == exercise.exercise).toList();
-                                if (previousRecords.length > 0) {
-                                  previousSessionExercise = previousRecords[0];
-                                  
-                                }
-                              }
-                              TrainingSessionExercise tewidget = TrainingSessionExercise( exercise, previousSessionExercise, startTimer);
-                              sessionWidgets.add(tewidget);
-                              return tewidget;
+                    children: sessionController.selectedWorkout.value.value!.exercises.map((exercise) {
+                              SessionExercise? previousSessionExercise = sessionController.getPreviousWorkoutExercise(exercise.exercise!);
+                              return TrainingSessionExercise(exercise, previousSessionExercise);
                             }).toList(),
                   )),
-              Visibility(
-              visible: currentCountDown > 0,
-                child: Text(currentCountDown.toString())
-              ),
           Row(children: [
             ElevatedButton(onPressed: (() {}), child: Text("Stop workout")),
             ElevatedButton(onPressed: (() {
-              sessionWidgets.forEach((widg) {
-                //print(widget.result);
-                if(widg.result != null) {
-                  widget.session.exercises.add(widg.result!);
-                }
-              });
-              Navigator.push(context, MaterialPageRoute<void>(
-                builder: (BuildContext context) {
-
-                  return TrainingSessionCompletePage(widget.session, widget.workout!);
-                }));
+              Get.to(TrainingSessionCompletePage());
             }), child: Text("Finish workout"))
           ])
             
@@ -79,31 +42,4 @@ class _TrainingSessionPageState extends State<TrainingSessionPage> {
     );
   }
 
-  void startTimer(int timerDuration) {
-    if(_timer != null) {
-      _timer!.cancel();
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if(timerDuration - timer.tick < 0) {
-          timer.cancel();
-        } else {
-          if(timerDuration - timer.tick <= 5) {
-            SystemSound.play(SystemSoundType.alert);
-          }
-          setState(() {
-            currentCountDown = timerDuration - timer.tick;
-          });
-        }
-      });
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    if(_timer != null) {
-      _timer!.cancel();
-    }
-  }
 }

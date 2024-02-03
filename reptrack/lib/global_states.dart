@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:realm/realm.dart';
 import 'package:reptrack/data/data_repository.dart';
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
 class AppState extends ChangeNotifier {
   List<WorkoutSchedule> schedules = List.empty();

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
+import 'package:reptrack/session/controllers/session_controller.dart';
 
 class TrainingSessionExerciseSetWidget extends StatefulWidget {
+  SessionController controller = Get.find<SessionController>();
+
+  Exercise exercise;
   int setNumber = 0;
   int weight = 0;
   int reps = 0;
-  var callback;
-  TrainingSessionExerciseSetWidget(this.setNumber, this.weight, this.reps, this.callback);
+  TrainingSessionExerciseSetWidget(this.exercise, this.setNumber, this.weight, this.reps);
 
   @override
   _TrainingSessionExerciseSetWidgetState createState() => _TrainingSessionExerciseSetWidgetState();
@@ -80,11 +85,11 @@ class _TrainingSessionExerciseSetWidgetState extends State<TrainingSessionExerci
                 SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: enabled ? () {
-                      widget.callback(int.parse(weightTextController.text),int.parse(repsTextController.text));
                       setState(() {
                         enabled = false;
                         widget.weight = int.parse(weightTextController.text);
                         widget.reps = int.parse(repsTextController.text);
+                        widget.controller.logSet(widget.exercise, widget.weight, widget.reps);
                       });
                   }: null,
                   style: ElevatedButton.styleFrom(

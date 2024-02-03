@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:reptrack/data/schemas/schemas.dart';
 import 'package:reptrack/pages/training_session.dart';
-import 'package:reptrack/schemas/schemas.dart';
+import 'package:reptrack/session/controllers/session_controller.dart';
 
 class WorkoutExerciseCard extends StatelessWidget {
+  SessionController controller = Get.find<SessionController>();
   Workout? workout;
 
   WorkoutExerciseCard(Workout w) {
@@ -36,7 +39,8 @@ class WorkoutExerciseCard extends StatelessWidget {
                 ElevatedButton(onPressed: () => {
                   Navigator.push(context, MaterialPageRoute<void>(
                   builder: (BuildContext context) {
-                    return TrainingSessionPage(workout: workout);
+                    controller.setSelectedWorkout(workout!);
+                    return TrainingSessionPage();
                   }))
                 }, child: Text("START"))
               ],
