@@ -23,8 +23,24 @@ class ProgramsController extends GetxController {
     }
   }
 
-  Future<void> addProgram() async {
-    await  Get.find<AppDatabase>().addProgram('New Program ${programs.length + 1}');
-    await loadPrograms(); // Refresh the list
+  // inside programs_controller.dart
+  Future<Program?> addProgram(String name) async {
+    try {
+      final database = Get.find<AppDatabase>();
+      
+      // 1. Insert and get the full Program object back
+      // (Assuming your database helper has a method like this, or use the return value of insert)
+      final id = await database.into(database.programs).insert(
+        ProgramsCompanion.insert(name: name),
+      );
+
+      await loadPrograms(); 
+
+      // Find the newly created program in our list
+      return programs.firstWhere((p) => p.id == id);
+    } catch (e) {
+      Get.snackbar("Error", "Could not save: $e");
+      return null;
+    }
   }
 }
