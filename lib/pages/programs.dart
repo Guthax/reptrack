@@ -1,37 +1,15 @@
 import 'package:flutter/material.dart';
-import '../persistance/database.dart';
+import 'package:get/get.dart';
+import '../controllers/programs_controller.dart'; // Import your controller
 
-class ProgramsPage extends StatefulWidget {
+class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
   @override
-  State<ProgramsPage> createState() => _ProgramsPageState();
-}
-
-class _ProgramsPageState extends State<ProgramsPage> {
-  final db = AppDatabase();
-  List<Program> programs = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPrograms();
-  }
-
-  Future<void> _loadPrograms() async {
-    final data = await db.getAllPrograms();
-    setState(() {
-      programs = data;
-    });
-  }
-
-  Future<void> _addProgram() async {
-    await db.addProgram('New Program ${programs.length + 1}');
-    _loadPrograms();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Inject the controller
+    final ProgramsController controller = Get.put(ProgramsController());
+
     return Scaffold(
       appBar: AppBar(title: const Text('Programs')),
       body: Column(
@@ -44,23 +22,34 @@ class _ProgramsPageState extends State<ProgramsPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: programs.length,
-              itemBuilder: (context, index) {
-                final program = programs[index];
-                return ListTile(
-                  leading: const Icon(Icons.fitness_center),
-                  title: Text(program.name),
-                );
-              },
-            ),
+            // Obx listens for changes in controller.programs
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              if (controller.programs.isEmpty) {
+                return const Center(child: Text("No programs yet. Tap + to add one!"));
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: controller.programs.length,
+                itemBuilder: (context, index) {
+                  final program = controller.programs[index];
+                  return ListTile(
+                    leading: const Icon(Icons.fitness_center),
+                    title: Text(program.name),
+                  );
+                },
+              );
+            }),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        onPressed: controller.addProgram,
         child: const Icon(Icons.add),
-        onPressed: _addProgram,
       ),
     );
   }
