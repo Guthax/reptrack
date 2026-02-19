@@ -17,6 +17,12 @@ class ProgramsController extends GetxController {
     try {
       isLoading(true);
       final data = await Get.find<AppDatabase>().getAllPrograms();
+
+      final existingExercises = await Get.find<AppDatabase>().getAllExercises();
+      if (existingExercises.isEmpty) {
+        await Get.find<AppDatabase>().seedDatabase();
+      }
+
       programs.assignAll(data);
     } finally {
       isLoading(false);

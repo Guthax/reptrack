@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/pages/programs.dart';
 import 'package:reptrack/pages/tracking.dart';
+import 'package:reptrack/pages/workout.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'controllers/navigation_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Get.put(AppDatabase(), permanent: true);
+  
   runApp(const MainApp());
+  
 }
 
 class MainApp extends StatelessWidget {
@@ -34,6 +37,7 @@ class HomePage extends StatelessWidget {
 
     final List<Widget> pages = const [
       ProgramsPage(),
+      WorkoutPage(),
       TrackingPage(),
     ];
 
@@ -48,6 +52,10 @@ class HomePage extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Icon(Icons.schedule),
               label: 'Programs',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center),
+              label: 'Workout',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.track_changes),
