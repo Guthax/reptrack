@@ -8,6 +8,13 @@ import 'package:rxdart/rxdart.dart';
 
 part 'database.g.dart';
 
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'db.sqlite'));
+    return NativeDatabase(file);
+  });
+}
 
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -15,6 +22,34 @@ class Exercises extends Table {
   TextColumn get muscleGroup => text().nullable()();
   TextColumn get note => text().nullable()();
   IntColumn get timer => integer().nullable()();
+}
+
+class MuscleGroups extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+}
+
+class Equipments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+  TextColumn get icon_name => text().unique()();
+}
+
+class ExerciseEquipment extends Table {
+  IntColumn get exerciseId => integer().references(Exercises, #id)();
+  IntColumn get equipmentId => integer().references(Equipments, #id)();
+
+  @override
+  Set<Column> get primaryKey => {exerciseId, equipmentId};
+}
+
+class ExerciseMuscleGroup extends Table {
+  IntColumn get exerciseId => integer().references(Exercises, #id)();
+  IntColumn get muscleGroupId => integer().references(MuscleGroups, #id)();
+  TextColumn get focus => text()();
+
+  @override
+  Set<Column> get primaryKey => {exerciseId, muscleGroupId};
 }
 
 class Programs extends Table {
@@ -30,8 +65,11 @@ class WorkoutDays extends Table {
 
 class ProgramExercise extends Table {
   IntColumn get id => integer().autoIncrement()();
+
   IntColumn get workoutDayId => integer().references(WorkoutDays, #id, onDelete: KeyAction.cascade)();
+  IntColumn get equipmentId => integer().references(Equipments, #id, onDelete: KeyAction.cascade)();
   IntColumn get exerciseId => integer().references(Exercises, #id)();
+  
   IntColumn get sets => integer()();
   IntColumn get reps => integer()();
   RealColumn get weight => real().withDefault(const Constant(0.0))();
@@ -49,8 +87,8 @@ class Workouts extends Table {
 class WorkoutSets extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get workoutId => integer().references(Workouts, #id, onDelete: KeyAction.cascade)();
-
   IntColumn get exerciseId => integer().references(Exercises, #id)();
+  IntColumn get equipmentId => integer().references(Equipments, #id)();
   
   IntColumn get reps => integer()();
   RealColumn get weight => real()();
@@ -59,7 +97,7 @@ class WorkoutSets extends Table {
   BoolColumn get isCompleted => boolean().withDefault(const Constant(true))();
 }
 
-@DriftDatabase(tables: [Exercises, Programs, WorkoutDays, ProgramExercise, Workouts, WorkoutSets])
+@DriftDatabase(tables: [Exercises, Equipments, MuscleGroups, ExerciseMuscleGroup, ExerciseEquipment, Programs, WorkoutDays, ProgramExercise, Workouts, WorkoutSets])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -108,22 +146,24 @@ class AppDatabase extends _$AppDatabase {
     return (select(programExercise)..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
   }
 
+// Inside AppDatabase class in database.dart
   Future<int> addExerciseToDay({
-  required int workoutDayId,
-  required int exerciseId,
-  required int sets,
-  required int reps,
-  double weight = 0.0,
-}) {
-  print("Adding exercise to day: workoutDayId=$workoutDayId, exerciseId=$exerciseId, sets=$sets, reps=$reps");
-  return into(programExercise).insert(ProgramExerciseCompanion(
-    workoutDayId: Value(workoutDayId),
-    exerciseId: Value(exerciseId),
-    sets: Value(sets),
-    reps: Value(reps),
-    weight: Value(weight),
-  ));
-}
+    required int workoutDayId,
+    required int exerciseId,
+    required int equipmentId, // Add this
+    required int sets,
+    required int reps,
+    double weight = 0.0,
+  }) {
+    return into(programExercise).insert(ProgramExerciseCompanion(
+      workoutDayId: Value(workoutDayId),
+      exerciseId: Value(exerciseId),
+      equipmentId: Value(equipmentId), // Map the value here
+      sets: Value(sets),
+      reps: Value(reps),
+      weight: Value(weight),
+    ));
+  }
 
   Future<int> updateProgramExercise(ProgramExerciseCompanion companion, int id) {
     return (update(programExercise)..where((tbl) => tbl.id.equals(id))).write(companion);
@@ -142,120 +182,58 @@ Future<WorkoutSet?> getLastSetForExercise(int exerciseId) {
       .getSingleOrNull();
 }
 
+Future<List<Equipment>> getEquipmentForExercise(int exerciseId) async {
+  final query = select(equipments).join([
+    innerJoin(
+      exerciseEquipment, 
+      exerciseEquipment.equipmentId.equalsExp(equipments.id),
+    ),
+  ])..where(exerciseEquipment.exerciseId.equals(exerciseId));
+
+  final rows = await query.get();
+  return rows.map((row) => row.readTable(equipments)).toList();
+}
 Stream<List<WorkoutDayWithExercises>> watchWorkoutDaysWithExercises(int programId) {
-  // 1. Watch the days first
   final dayStream = (select(workoutDays)
         ..where((d) => d.programId.equals(programId))
         ..orderBy([(t) => OrderingTerm(expression: t.id)]))
       .watch();
 
   return dayStream.switchMap((days) {
-    if (days.isEmpty) return Stream.value([]);
+    if (days.isEmpty) return Stream.value(<WorkoutDayWithExercises>[]);
 
     final dayIds = days.map((d) => d.id).toList();
 
-    // 2. Create the join query
     final query = select(programExercise).join([
       innerJoin(exercises, exercises.id.equalsExp(programExercise.exerciseId)),
+      innerJoin(equipments, equipments.id.equalsExp(programExercise.equipmentId)),
     ])..where(programExercise.workoutDayId.isIn(dayIds));
 
-    // 3. Watch the join query
     return query.watch().map((rows) {
+      // FIX: Explicitly type the Map to avoid List<dynamic> errors
       final resultMap = <int, List<ExerciseWithVolume>>{};
 
       for (final row in rows) {
         final exercise = row.readTable(exercises);
         final volume = row.readTable(programExercise);
+        final equipment = row.readTable(equipments);
         
-        resultMap.putIfAbsent(volume.workoutDayId, () => []).add(
-          ExerciseWithVolume(
-            exercise: exercise,
-            volume: volume,
-          ),
+        final entry = ExerciseWithVolume(
+          exercise: exercise,
+          volume: volume,
+          equipment: equipment,
         );
+
+        resultMap.putIfAbsent(volume.workoutDayId, () => <ExerciseWithVolume>[]).add(entry);
       }
 
       return days.map((day) {
         return WorkoutDayWithExercises(
           workoutDay: day,
-          exercises: resultMap[day.id] ?? [],
+          exercises: resultMap[day.id] ?? <ExerciseWithVolume>[],
         );
       }).toList();
     });
   });
 }
-
-Future<void> seedDatabase() async {
-  await transaction(() async {
-    // 1. Clear existing data (Optional - use with caution!)
-    // await delete(programExercise).go();
-    // await delete(workoutDays).go();
-    // await delete(programs).go();
-    // await delete(exercises).go();
-
-    // 2. Add Exercises (Global Library)
-    final benchPressId = await addExercise("Bench Press", muscleGroup: "Chest", timer: 180);
-    final squatId = await addExercise("Back Squat", muscleGroup: "Legs", timer: 240);
-    final pullUpId = await addExercise("Pull Ups", muscleGroup: "Back", timer: 120);
-    final deadliftId = await addExercise("Deadlift", muscleGroup: "Back/Legs", timer: 300);
-
-    // 3. Create a Program
-    final programId = await addProgram("Push/Pull Split");
-
-    // 4. Create Workout Days for that Program
-    final pushDayId = await addWorkoutDay(programId, "Push Day");
-    final pullDayId = await addWorkoutDay(programId, "Pull Day");
-
-    // 5. Assign Exercises to Days (ProgramExercise)
-    // Push Day Exercises
-    await addExerciseToDay(
-      workoutDayId: pushDayId,
-      exerciseId: benchPressId,
-      sets: 3,
-      reps: 8,
-      weight: 60.0,
-    );
-    await addExerciseToDay(
-      workoutDayId: pushDayId,
-      exerciseId: squatId, // Adding a leg exercise to push for variety
-      sets: 3,
-      reps: 5,
-      weight: 100.0,
-    );
-
-    // Pull Day Exercises
-    await addExerciseToDay(
-      workoutDayId: pullDayId,
-      exerciseId: pullUpId,
-      sets: 4,
-      reps: 10,
-      weight: 0.0,
-    );
-    await addExerciseToDay(
-      workoutDayId: pullDayId,
-      exerciseId: deadliftId,
-      sets: 3,
-      reps: 5,
-      weight: 120.0,
-    );
-
-    print("Database seeded successfully!");
-  });
-}
-
-
-}
-
-// --- Connection Logic ---
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    print(dbFolder.path);
-    final file = File(p.join(dbFolder.path, 'db.sqlite'));
-    return NativeDatabase(file);
-  });
-
-
-  
 }

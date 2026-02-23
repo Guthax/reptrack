@@ -4,11 +4,14 @@ import 'package:reptrack/pages/programs.dart';
 import 'package:reptrack/pages/tracking.dart';
 import 'package:reptrack/pages/workout.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/persistance/seed_data.dart';
 import 'controllers/navigation_controller.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Get.put(AppDatabase(), permanent: true);
+  final db = AppDatabase();
+  Get.put(db, permanent: true);
+  await seedDatabase(db);
   
   runApp(const MainApp());
   

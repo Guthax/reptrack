@@ -1,0 +1,102 @@
+Bench Press,1,4,"2,3,7"
+Incline Bench Press,1,5,"2,3,7"
+Decline Bench Press,1,4,"2,3"
+Push-Up,1,4,1
+Chest Fly,1,null,"3,5,6"
+Chest Press Machine,1,4,5
+Pec Deck Machine,1,null,5
+Dumbbell Pullover,1,2,3
+Svend Press,1,null,3
+Floor Press,1,4,2
+Diamond Push-Up,1,4,1
+Machine Chest Fly,1,null,5
+Pull-Up,2,3,1
+Chin-Up,2,3,1
+Lat Pulldown,2,3,5
+Close Grip Lat Pulldown,2,3,"5,6"
+Bent Over Row,2,null,"2,3"
+Seated Cable Row,2,3,6
+T-Bar Row,2,3,7
+Single Arm Dumbbell Row,2,null,3
+Straight Arm Pulldown,2,null,6
+Face Pull,2,5,6
+Good Morning,2,7,2
+Back Extension,2,7,1
+Reverse Fly,2,5,"3,5,6"
+Meadows Row,2,null,2
+Rack Pull,2,7,2
+Pendlay Row,2,null,2
+One Arm Lat Pulldown,2,null,6
+Seal Row,2,null,2
+Chest Supported Row,2,null,5
+Dumbbell Shrug,2,5,3
+Barbell Shrug,2,5,2
+Bicep Curl,3,null,"2,3,4,6"
+Hammer Curl,3,null,3
+Preacher Curl,3,null,"3,4,5"
+Concentration Curl,3,null,3
+Incline Dumbbell Curl,3,null,3
+Reverse Grip Barbell Curl,3,null,2
+Spider Curl,3,null,4
+Zottman Curl,3,null,3
+Cable Bicep Curl,3,null,6
+Tricep Pushdown,4,null,6
+Skull Crusher,4,null,4
+Overhead Tricep Extension,4,null,"3,6"
+Close Grip Bench Press,4,1,2
+Tricep Dip,4,1,1
+Tricep Kickback,4,null,3
+Rope Pushdown,4,null,6
+Machine Dip,4,null,5
+Bench Dip,4,null,1
+Single Arm Extension,4,null,6
+Overhead Press,5,4,"2,3"
+Lateral Raise,5,null,"3,5,6"
+Front Raise,5,null,"2,3,6"
+Arnold Press,5,4,3
+Upright Row,5,3,"2,6"
+Shoulder Press Machine,5,4,5
+Rear Delt Row,5,2,3
+Reverse Cable Fly,5,2,6
+Cuban Press,5,null,3
+Squat,7,6,2
+Front Squat,7,6,2
+Goblet Squat,7,6,3
+Bulgarian Split Squat,7,null,3
+Hack Squat,7,null,7
+Leg Press,7,null,7
+Leg Extension,7,null,5
+Lying Leg Curl,7,null,5
+Seated Leg Curl,7,null,5
+Standing Leg Curl,7,null,6
+Romanian Deadlift,7,2,2
+Dumbbell Romanian Deadlift,7,2,3
+Stiff Leg Deadlift,7,2,2
+Standing Calf Raise,7,null,"2,3,5"
+Seated Calf Raise,7,null,5
+Deadlift,7,2,2
+Sumo Deadlift,7,null,2
+Hip Thrust,7,null,"2,7"
+Walking Lunge,7,null,3
+Step Up,7,null,1
+Box Squat,7,6,2
+Glute Bridge,7,null,1
+Adductor Machine,7,null,5
+Abductor Machine,7,null,5
+Glute Kickback,7,null,6
+Plank,6,null,1
+Hanging Leg Raise,6,null,1
+Crunch,6,null,1
+Bicycle Crunch,6,null,1
+Russian Twist,6,null,7
+Cable Crunch,6,null,6
+Leg Raise,6,null,1
+Mountain Climber,6,7,1
+V Up,6,null,1
+Dead Bug,6,null,1
+Side Plank,6,null,1
+Woodchopper,6,5,6
+Ab Wheel Rollout,6,2,5
+Wrist Curl,3,null,2
+Reverse Wrist Curl,3,null,2
+Farmer Walk,2,6,3
