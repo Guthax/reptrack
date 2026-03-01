@@ -33,7 +33,7 @@ class ExerciseSwipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- HEADER WITH HISTORY BUTTON ---
+              // --- HEADER WITH HISTORY/SWAP BUTTONS ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,31 +55,26 @@ class ExerciseSwipeCard extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.find_replace, color: Colors.blueAccent),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => SwapExerciseDialog(
-                          exerciseId: item.exercise.id,
-                          exerciseName: item.exercise.name,
-                        ),
-                      );
-                    },
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (context) => SwapExerciseDialog(
+                        exerciseId: item.exercise.id,
+                        exerciseName: item.exercise.name,
+                      ),
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.history, color: Colors.blueAccent),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => ExerciseHistoryDialog(
-                          exerciseId: item.exercise.id,
-                          exerciseName: item.exercise.name,
-                        ),
-                      );
-                    },
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (context) => ExerciseHistoryDialog(
+                        exerciseId: item.exercise.id,
+                        exerciseName: item.exercise.name,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              // ---------------------------------
 
               const SizedBox(height: 16),
               const Text("SWITCH EQUIPMENT",
@@ -102,6 +97,7 @@ class ExerciseSwipeCard extends StatelessWidget {
 
               const Divider(height: 30),
 
+              // --- LOGGING SECTION ---
               Expanded(
                 child: Obx(() {
                   final currentEquipId = controller.selectedEquipments[item.exercise.id] ?? item.equipment?.id ?? 0;
@@ -114,10 +110,42 @@ class ExerciseSwipeCard extends StatelessWidget {
                       equipmentId: currentEquipId,
                       plannedReps: item.volume.reps,
                       plannedWeight: item.volume.weight,
+                      restSeconds: item.volume.restTimer ?? 60, // Passed from volume
                     ),
                   );
                 }),
               ),
+
+              // --- TIMER FOOTER ---
+              Obx(() {
+                final timeLeft = controller.remainingRestTime.value;
+                if (timeLeft <= 0) return const SizedBox.shrink();
+
+                return Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.timer_outlined, color: Colors.blue, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Rest Timer: ${timeLeft}s",
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => controller.skipRestTimer(),
+                        child: const Text("SKIP"),
+                      )
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -132,6 +160,7 @@ class SetLogRow extends StatefulWidget {
   final int equipmentId;
   final int plannedReps;
   final double plannedWeight;
+  final int restSeconds;
 
   const SetLogRow({
     super.key,
@@ -140,6 +169,7 @@ class SetLogRow extends StatefulWidget {
     required this.equipmentId,
     required this.plannedReps,
     required this.plannedWeight,
+    required this.restSeconds,
   });
 
   @override
@@ -156,10 +186,8 @@ class _SetLogRowState extends State<SetLogRow> {
     final controller = Get.find<ActiveWorkoutController>();
     final pastSet = controller.getPastSetData(widget.exerciseId, widget.setNum, widget.equipmentId);
 
-    repsController = TextEditingController(
-        text: pastSet != null ? pastSet.reps.toString() : widget.plannedReps.toString());
-    weightController = TextEditingController(
-        text: pastSet != null ? pastSet.weight.toString() : widget.plannedWeight.toString());
+    repsController = TextEditingController(text: pastSet != null ? pastSet.reps.toString() : widget.plannedReps.toString());
+    weightController = TextEditingController(text: pastSet != null ? pastSet.weight.toString() : widget.plannedWeight.toString());
   }
 
   @override
@@ -213,15 +241,18 @@ class _SetLogRowState extends State<SetLogRow> {
             IconButton(
               icon: Icon(isSaved ? Icons.check_circle : Icons.check_circle_outline),
               color: isSaved ? Colors.green : Colors.grey,
-              onPressed: isSaved ? null : () async {
-                await controller.logSet(
-                  exerciseId: widget.exerciseId,
-                  equipmentId: widget.equipmentId,
-                  reps: int.tryParse(repsController.text) ?? 0,
-                  weight: double.tryParse(weightController.text) ?? 0,
-                  setNum: widget.setNum,
-                );
-              },
+              onPressed: isSaved
+                  ? null
+                  : () async {
+                      await controller.logSet(
+                        exerciseId: widget.exerciseId,
+                        equipmentId: widget.equipmentId,
+                        reps: int.tryParse(repsController.text) ?? 0,
+                        weight: double.tryParse(weightController.text) ?? 0,
+                        setNum: widget.setNum,
+                        restSeconds: widget.restSeconds, // Trigger timer on save
+                      );
+                    },
             )
           ],
         ),

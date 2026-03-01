@@ -16,6 +16,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
   final TextEditingController searchController = TextEditingController();
   final TextEditingController setsController = TextEditingController(text: "3");
   final TextEditingController repsController = TextEditingController(text: "10");
+  final TextEditingController timerController = TextEditingController(text: "60");
 
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
@@ -156,6 +157,16 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   ),
                 ],
               ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: timerController,
+                decoration: const InputDecoration(
+                  labelText: "Rest Timer (seconds)",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.timer),
+                ),
+                keyboardType: TextInputType.number,
+              ),
             ],
           );
         }),
@@ -175,6 +186,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 selectedEquipmentId.value!,
                 int.tryParse(setsController.text) ?? 0,
                 int.tryParse(repsController.text) ?? 0,
+                int.tryParse(timerController.text),
               );
               Get.back();
             },

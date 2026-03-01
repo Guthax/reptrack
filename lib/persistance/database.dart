@@ -73,6 +73,7 @@ class ProgramExercise extends Table {
   IntColumn get orderInProgram => integer().withDefault(const Constant(0))();
   IntColumn get sets => integer()();
   IntColumn get reps => integer()();
+  IntColumn get restTimer => integer().nullable()();
   RealColumn get weight => real().withDefault(const Constant(0.0))();
 }
 
@@ -100,7 +101,22 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (m) async {
+        await m.createAll();
+      },
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          // Add restTimer column to ProgramExercise table
+          await m.addColumn(programExercise, programExercise.restTimer);
+        }
+      },
+    );
+  }
 
 
   // --- UPSERT FOR SEEDING ---
@@ -156,6 +172,7 @@ class AppDatabase extends _$AppDatabase {
     required int equipmentId,
     required int sets,
     required int reps,
+    int? restTimer,
     double weight = 0.0,
   }) {
     return into(programExercise).insert(ProgramExerciseCompanion(
@@ -164,6 +181,7 @@ class AppDatabase extends _$AppDatabase {
       equipmentId: Value(equipmentId),
       sets: Value(sets),
       reps: Value(reps),
+      restTimer: Value(restTimer),
       weight: Value(weight),
     ));
   }

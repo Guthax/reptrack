@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:drift/drift.dart' as d;
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 
 class ActiveWorkoutController extends GetxController {
   final AppDatabase db = Get.find<AppDatabase>();
@@ -13,11 +16,13 @@ class ActiveWorkoutController extends GetxController {
   var currentPageIndex = 0.obs;
   int? currentWorkoutId;
 
-  // Key: ExerciseID, Value: List of sets from the last time this exercise was done
+  // Timer & Audio state
+  var remainingRestTime = 0.obs;
+  Timer? _timer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   var lastWorkoutSets = <int, List<WorkoutSet>>{}.obs;
   var completedSets = <String>{}.obs;
-
-  // Key: ExerciseID, Value: Currently selected EquipmentID for this session
   var selectedEquipments = <int, int>{}.obs;
 
   final PageController pageController = PageController();
@@ -28,16 +33,17 @@ class ActiveWorkoutController extends GetxController {
   void onInit() {
     super.onInit();
     _setupWorkout();
+    // Pre-cache the sound to avoid delay on first play
   }
 
   Future<void> _setupWorkout() async {
     try {
       currentWorkoutId = await db.into(db.workouts).insert(
-        WorkoutsCompanion.insert(
-          workoutDayId: workoutDayId,
-          date: d.Value(DateTime.now()),
-        ),
-      );
+            WorkoutsCompanion.insert(
+              workoutDayId: workoutDayId,
+              date: d.Value(DateTime.now()),
+            ),
+          );
 
       final query = db.select(db.programExercise).join([
         d.innerJoin(db.exercises, db.exercises.id.equalsExp(db.programExercise.exerciseId)),
@@ -49,10 +55,7 @@ class ActiveWorkoutController extends GetxController {
       final List<ExerciseWithVolume> items = rows.map((row) {
         final ex = row.readTable(db.exercises);
         final eq = row.readTable(db.equipments);
-        
-        // Initialize the equipment switcher with the planned equipment
         selectedEquipments[ex.id] = eq.id;
-
         return ExerciseWithVolume(
           exercise: ex,
           volume: row.readTable(db.programExercise),
@@ -60,20 +63,15 @@ class ActiveWorkoutController extends GetxController {
         );
       }).toList();
 
-      // Fetch past performance for history matching
       for (var item in items) {
         final sets = await (db.select(db.workoutSets)
               ..where((tbl) => tbl.exerciseId.equals(item.exercise.id))
               ..orderBy([(u) => d.OrderingTerm(expression: u.id, mode: d.OrderingMode.desc)]))
             .get();
-        
-        if (sets.isNotEmpty) {
-          lastWorkoutSets[item.exercise.id] = sets;
-        }
+        if (sets.isNotEmpty) lastWorkoutSets[item.exercise.id] = sets;
       }
 
-      exercisesWithVolume.assignAll(items); 
-      
+      exercisesWithVolume.assignAll(items);
     } catch (e) {
       Get.snackbar("Error", "Failed to load workout: $e");
     } finally {
@@ -81,94 +79,103 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
-  // Updated to find the last time THIS specific equipment was used for THIS set number
-  WorkoutSet? getPastSetData(int exerciseId, int setNum, int equipmentId) {
-    final sets = lastWorkoutSets[exerciseId];
-    if (sets == null) return null;
-    
-    return sets.firstWhereOrNull((s) => 
-      s.setNumber == setNum && s.equipmentId == equipmentId
-    );
+  void startRestTimer(int seconds) {
+    if (seconds <= 0) return;
+    _timer?.cancel();
+    remainingRestTime.value = seconds;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingRestTime.value > 0) {
+        remainingRestTime.value--;
+      } else {
+        _playTimerEndSound();
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> _playTimerEndSound() async {
+  // This triggers the native 'click/beep' sound on Android 
+  // and the system 'alert' sound on Linux/Desktop.
+  await SystemSound.play(SystemSoundType.alert);
+  
+  // Optional: Add a haptic bump for mobile users
+  HapticFeedback.vibrate(); 
+}
+
+  void skipRestTimer() {
+    remainingRestTime.value = 0;
+    _timer?.cancel();
   }
 
   Future<void> logSet({
-    required int exerciseId, 
-    required int equipmentId, 
-    required int reps, 
-    required double weight, 
-    required int setNum
+    required int exerciseId,
+    required int equipmentId,
+    required int reps,
+    required double weight,
+    required int setNum,
+    int? restSeconds,
   }) async {
     if (currentWorkoutId == null) return;
-    
+
     await db.into(db.workoutSets).insert(
-      WorkoutSetsCompanion.insert(
-        workoutId: currentWorkoutId!,
-        exerciseId: exerciseId,
-        equipmentId: equipmentId,
-        reps: reps,
-        weight: weight,
-        setNumber: setNum,
-        isCompleted: const d.Value(true),
-      ),
-    );
+          WorkoutSetsCompanion.insert(
+            workoutId: currentWorkoutId!,
+            exerciseId: exerciseId,
+            equipmentId: equipmentId,
+            reps: reps,
+            weight: weight,
+            setNumber: setNum,
+            isCompleted: const d.Value(true),
+          ),
+        );
     completedSets.add("$exerciseId-$setNum");
+
+    if (restSeconds != null) {
+      startRestTimer(restSeconds);
+    }
   }
 
   bool isSetCompleted(int exerciseId, int setNum) => completedSets.contains("$exerciseId-$setNum");
 
-// ... existing code ...
+  WorkoutSet? getPastSetData(int exerciseId, int setNum, int equipmentId) {
+    final sets = lastWorkoutSets[exerciseId];
+    if (sets == null) return null;
+    return sets.firstWhereOrNull((s) => s.setNumber == setNum && s.equipmentId == equipmentId);
+  }
 
-  /// Swaps an existing exercise in the current session with a new one.
-  /// Preserves the sets/reps (volume) from the original slot.
   Future<void> swapExercise({
     required int oldExerciseId,
     required Exercise newExercise,
     required int newEquipmentId,
   }) async {
     try {
-      // 1. Find the index of the exercise being replaced
       final index = exercisesWithVolume.indexWhere((item) => item.exercise.id == oldExerciseId);
-      
       if (index != -1) {
-        // 2. Fetch the actual Equipment object from the DB for the new selection
         final equipmentList = await db.getEquipmentForExercise(newExercise.id);
         final newEquip = equipmentList.firstWhere(
           (e) => e.id == newEquipmentId,
           orElse: () => equipmentList.isNotEmpty 
-              ? equipmentList.first 
-              : Equipment(id: newEquipmentId, name: "Default", icon_name: "fitness_center"),
+            ? equipmentList.first 
+            : Equipment(id: newEquipmentId, name: "Default", icon_name: "fitness_center"),
         );
 
-        // 3. Create the new composite object
-        // We reuse the 'volume' from the existing index to keep planned sets/reps
         final originalItem = exercisesWithVolume[index];
-        
         final swappedItem = ExerciseWithVolume(
-          exercise: newExercise,
-          volume: originalItem.volume, // Inherit planned sets/reps
-          equipment: newEquip,
+          exercise: newExercise, 
+          volume: originalItem.volume, 
+          equipment: newEquip
         );
 
-        // 4. Update the selected equipment map for the switcher UI
         selectedEquipments[newExercise.id] = newEquipmentId;
-
-        // 5. Replace in the list and refresh the observer
         exercisesWithVolume[index] = swappedItem;
-        
-        // 6. Fetch past performance for the NEW exercise so "History" values show up
+
         final sets = await (db.select(db.workoutSets)
               ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
               ..orderBy([(u) => d.OrderingTerm(expression: u.id, mode: d.OrderingMode.desc)]))
             .get();
-        
-        if (sets.isNotEmpty) {
-          lastWorkoutSets[newExercise.id] = sets;
-        }
+        if (sets.isNotEmpty) lastWorkoutSets[newExercise.id] = sets;
 
-        // 7. Clear any sets already logged for the OLD exercise (preventing data ghosting)
         completedSets.removeWhere((key) => key.startsWith("$oldExerciseId-"));
-
-        // Force GetX update
         exercisesWithVolume.refresh();
       }
     } catch (e) {
@@ -176,9 +183,10 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
-  // ... rest of the controller ...
   @override
   void onClose() {
+    _timer?.cancel();
+    _audioPlayer.dispose();
     pageController.dispose();
     super.onClose();
   }

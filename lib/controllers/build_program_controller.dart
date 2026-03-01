@@ -24,13 +24,14 @@ class BuildProgramController extends GetxController {
     }
   }
 
-  void addExerciseToDay(int dayId, Exercise exercise, int equipmentId, int sets, int reps) async {
+  void addExerciseToDay(int dayId, Exercise exercise, int equipmentId, int sets, int reps, int? restTimer) async {
     await db.addExerciseToDay(
       workoutDayId: dayId,
       exerciseId: exercise.id,
       equipmentId: equipmentId,
       sets: sets,
       reps: reps,
+      restTimer: restTimer,
       weight: 0.0,
     );
   }

@@ -1839,6 +1839,17 @@ class $ProgramExerciseTable extends ProgramExercise
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _restTimerMeta = const VerificationMeta(
+    'restTimer',
+  );
+  @override
+  late final GeneratedColumn<int> restTimer = GeneratedColumn<int>(
+    'rest_timer',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _weightMeta = const VerificationMeta('weight');
   @override
   late final GeneratedColumn<double> weight = GeneratedColumn<double>(
@@ -1858,6 +1869,7 @@ class $ProgramExerciseTable extends ProgramExercise
     orderInProgram,
     sets,
     reps,
+    restTimer,
     weight,
   ];
   @override
@@ -1930,6 +1942,12 @@ class $ProgramExerciseTable extends ProgramExercise
     } else if (isInserting) {
       context.missing(_repsMeta);
     }
+    if (data.containsKey('rest_timer')) {
+      context.handle(
+        _restTimerMeta,
+        restTimer.isAcceptableOrUnknown(data['rest_timer']!, _restTimerMeta),
+      );
+    }
     if (data.containsKey('weight')) {
       context.handle(
         _weightMeta,
@@ -1973,6 +1991,10 @@ class $ProgramExerciseTable extends ProgramExercise
         DriftSqlType.int,
         data['${effectivePrefix}reps'],
       )!,
+      restTimer: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rest_timer'],
+      ),
       weight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}weight'],
@@ -1995,6 +2017,7 @@ class ProgramExerciseData extends DataClass
   final int orderInProgram;
   final int sets;
   final int reps;
+  final int? restTimer;
   final double weight;
   const ProgramExerciseData({
     required this.id,
@@ -2004,6 +2027,7 @@ class ProgramExerciseData extends DataClass
     required this.orderInProgram,
     required this.sets,
     required this.reps,
+    this.restTimer,
     required this.weight,
   });
   @override
@@ -2016,6 +2040,9 @@ class ProgramExerciseData extends DataClass
     map['order_in_program'] = Variable<int>(orderInProgram);
     map['sets'] = Variable<int>(sets);
     map['reps'] = Variable<int>(reps);
+    if (!nullToAbsent || restTimer != null) {
+      map['rest_timer'] = Variable<int>(restTimer);
+    }
     map['weight'] = Variable<double>(weight);
     return map;
   }
@@ -2029,6 +2056,9 @@ class ProgramExerciseData extends DataClass
       orderInProgram: Value(orderInProgram),
       sets: Value(sets),
       reps: Value(reps),
+      restTimer: restTimer == null && nullToAbsent
+          ? const Value.absent()
+          : Value(restTimer),
       weight: Value(weight),
     );
   }
@@ -2046,6 +2076,7 @@ class ProgramExerciseData extends DataClass
       orderInProgram: serializer.fromJson<int>(json['orderInProgram']),
       sets: serializer.fromJson<int>(json['sets']),
       reps: serializer.fromJson<int>(json['reps']),
+      restTimer: serializer.fromJson<int?>(json['restTimer']),
       weight: serializer.fromJson<double>(json['weight']),
     );
   }
@@ -2060,6 +2091,7 @@ class ProgramExerciseData extends DataClass
       'orderInProgram': serializer.toJson<int>(orderInProgram),
       'sets': serializer.toJson<int>(sets),
       'reps': serializer.toJson<int>(reps),
+      'restTimer': serializer.toJson<int?>(restTimer),
       'weight': serializer.toJson<double>(weight),
     };
   }
@@ -2072,6 +2104,7 @@ class ProgramExerciseData extends DataClass
     int? orderInProgram,
     int? sets,
     int? reps,
+    Value<int?> restTimer = const Value.absent(),
     double? weight,
   }) => ProgramExerciseData(
     id: id ?? this.id,
@@ -2081,6 +2114,7 @@ class ProgramExerciseData extends DataClass
     orderInProgram: orderInProgram ?? this.orderInProgram,
     sets: sets ?? this.sets,
     reps: reps ?? this.reps,
+    restTimer: restTimer.present ? restTimer.value : this.restTimer,
     weight: weight ?? this.weight,
   );
   ProgramExerciseData copyWithCompanion(ProgramExerciseCompanion data) {
@@ -2100,6 +2134,7 @@ class ProgramExerciseData extends DataClass
           : this.orderInProgram,
       sets: data.sets.present ? data.sets.value : this.sets,
       reps: data.reps.present ? data.reps.value : this.reps,
+      restTimer: data.restTimer.present ? data.restTimer.value : this.restTimer,
       weight: data.weight.present ? data.weight.value : this.weight,
     );
   }
@@ -2114,6 +2149,7 @@ class ProgramExerciseData extends DataClass
           ..write('orderInProgram: $orderInProgram, ')
           ..write('sets: $sets, ')
           ..write('reps: $reps, ')
+          ..write('restTimer: $restTimer, ')
           ..write('weight: $weight')
           ..write(')'))
         .toString();
@@ -2128,6 +2164,7 @@ class ProgramExerciseData extends DataClass
     orderInProgram,
     sets,
     reps,
+    restTimer,
     weight,
   );
   @override
@@ -2141,6 +2178,7 @@ class ProgramExerciseData extends DataClass
           other.orderInProgram == this.orderInProgram &&
           other.sets == this.sets &&
           other.reps == this.reps &&
+          other.restTimer == this.restTimer &&
           other.weight == this.weight);
 }
 
@@ -2152,6 +2190,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
   final Value<int> orderInProgram;
   final Value<int> sets;
   final Value<int> reps;
+  final Value<int?> restTimer;
   final Value<double> weight;
   const ProgramExerciseCompanion({
     this.id = const Value.absent(),
@@ -2161,6 +2200,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     this.orderInProgram = const Value.absent(),
     this.sets = const Value.absent(),
     this.reps = const Value.absent(),
+    this.restTimer = const Value.absent(),
     this.weight = const Value.absent(),
   });
   ProgramExerciseCompanion.insert({
@@ -2171,6 +2211,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     this.orderInProgram = const Value.absent(),
     required int sets,
     required int reps,
+    this.restTimer = const Value.absent(),
     this.weight = const Value.absent(),
   }) : workoutDayId = Value(workoutDayId),
        equipmentId = Value(equipmentId),
@@ -2185,6 +2226,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     Expression<int>? orderInProgram,
     Expression<int>? sets,
     Expression<int>? reps,
+    Expression<int>? restTimer,
     Expression<double>? weight,
   }) {
     return RawValuesInsertable({
@@ -2195,6 +2237,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
       if (orderInProgram != null) 'order_in_program': orderInProgram,
       if (sets != null) 'sets': sets,
       if (reps != null) 'reps': reps,
+      if (restTimer != null) 'rest_timer': restTimer,
       if (weight != null) 'weight': weight,
     });
   }
@@ -2207,6 +2250,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     Value<int>? orderInProgram,
     Value<int>? sets,
     Value<int>? reps,
+    Value<int?>? restTimer,
     Value<double>? weight,
   }) {
     return ProgramExerciseCompanion(
@@ -2217,6 +2261,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
       orderInProgram: orderInProgram ?? this.orderInProgram,
       sets: sets ?? this.sets,
       reps: reps ?? this.reps,
+      restTimer: restTimer ?? this.restTimer,
       weight: weight ?? this.weight,
     );
   }
@@ -2245,6 +2290,9 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     if (reps.present) {
       map['reps'] = Variable<int>(reps.value);
     }
+    if (restTimer.present) {
+      map['rest_timer'] = Variable<int>(restTimer.value);
+    }
     if (weight.present) {
       map['weight'] = Variable<double>(weight.value);
     }
@@ -2261,6 +2309,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
           ..write('orderInProgram: $orderInProgram, ')
           ..write('sets: $sets, ')
           ..write('reps: $reps, ')
+          ..write('restTimer: $restTimer, ')
           ..write('weight: $weight')
           ..write(')'))
         .toString();
@@ -6000,6 +6049,7 @@ typedef $$ProgramExerciseTableCreateCompanionBuilder =
       Value<int> orderInProgram,
       required int sets,
       required int reps,
+      Value<int?> restTimer,
       Value<double> weight,
     });
 typedef $$ProgramExerciseTableUpdateCompanionBuilder =
@@ -6011,6 +6061,7 @@ typedef $$ProgramExerciseTableUpdateCompanionBuilder =
       Value<int> orderInProgram,
       Value<int> sets,
       Value<int> reps,
+      Value<int?> restTimer,
       Value<double> weight,
     });
 
@@ -6114,6 +6165,11 @@ class $$ProgramExerciseTableFilterComposer
 
   ColumnFilters<int> get reps => $composableBuilder(
     column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get restTimer => $composableBuilder(
+    column: $table.restTimer,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6221,6 +6277,11 @@ class $$ProgramExerciseTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get restTimer => $composableBuilder(
+    column: $table.restTimer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get weight => $composableBuilder(
     column: $table.weight,
     builder: (column) => ColumnOrderings(column),
@@ -6318,6 +6379,9 @@ class $$ProgramExerciseTableAnnotationComposer
 
   GeneratedColumn<int> get reps =>
       $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<int> get restTimer =>
+      $composableBuilder(column: $table.restTimer, builder: (column) => column);
 
   GeneratedColumn<double> get weight =>
       $composableBuilder(column: $table.weight, builder: (column) => column);
@@ -6433,6 +6497,7 @@ class $$ProgramExerciseTableTableManager
                 Value<int> orderInProgram = const Value.absent(),
                 Value<int> sets = const Value.absent(),
                 Value<int> reps = const Value.absent(),
+                Value<int?> restTimer = const Value.absent(),
                 Value<double> weight = const Value.absent(),
               }) => ProgramExerciseCompanion(
                 id: id,
@@ -6442,6 +6507,7 @@ class $$ProgramExerciseTableTableManager
                 orderInProgram: orderInProgram,
                 sets: sets,
                 reps: reps,
+                restTimer: restTimer,
                 weight: weight,
               ),
           createCompanionCallback:
@@ -6453,6 +6519,7 @@ class $$ProgramExerciseTableTableManager
                 Value<int> orderInProgram = const Value.absent(),
                 required int sets,
                 required int reps,
+                Value<int?> restTimer = const Value.absent(),
                 Value<double> weight = const Value.absent(),
               }) => ProgramExerciseCompanion.insert(
                 id: id,
@@ -6462,6 +6529,7 @@ class $$ProgramExerciseTableTableManager
                 orderInProgram: orderInProgram,
                 sets: sets,
                 reps: reps,
+                restTimer: restTimer,
                 weight: weight,
               ),
           withReferenceMapper: (p0) => p0
