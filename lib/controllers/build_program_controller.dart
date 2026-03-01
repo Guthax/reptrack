@@ -34,4 +34,11 @@ class BuildProgramController extends GetxController {
       weight: 0.0,
     );
   }
+
+  void removeExerciseFromDay(int dayId, int exerciseId) async {
+    await db.deleteExerciseFromWorkoutDay(
+      dayId,
+      exerciseId
+    );
+  }
 }

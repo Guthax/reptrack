@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/widgets/exercise_history_card_widget.dart';
+import 'package:reptrack/widgets/swap_exercise_dialog.dart';
 
 class ExerciseSwipeCard extends StatelessWidget {
   final ExerciseWithVolume item;
@@ -31,37 +33,82 @@ class ExerciseSwipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.exercise.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text(item.exercise.muscleGroup ?? "General", style: TextStyle(color: Colors.grey[600])),
-              
-              const SizedBox(height: 16),
-              const Text("SWITCH EQUIPMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-              const SizedBox(height: 8),
-              
-              Obx(() => Wrap(
-                spacing: 8,
-                children: alternatives.map((e) {
-                  final isSelected = controller.selectedEquipments[item.exercise.id] == e.id;
-                  return ChoiceChip(
-                    label: Text(e.name),
-                    selected: isSelected,
-                    onSelected: (val) {
-                      if (val) controller.selectedEquipments[item.exercise.id] = e.id;
+              // --- HEADER WITH HISTORY BUTTON ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.exercise.name,
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          item.exercise.muscleGroup ?? "General",
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.find_replace, color: Colors.blueAccent),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => SwapExerciseDialog(
+                          exerciseId: item.exercise.id,
+                          exerciseName: item.exercise.name,
+                        ),
+                      );
                     },
-                  );
-                }).toList(),
-              )),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.history, color: Colors.blueAccent),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ExerciseHistoryDialog(
+                          exerciseId: item.exercise.id,
+                          exerciseName: item.exercise.name,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              // ---------------------------------
+
+              const SizedBox(height: 16),
+              const Text("SWITCH EQUIPMENT",
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+              const SizedBox(height: 8),
+
+              Obx(() => Wrap(
+                    spacing: 8,
+                    children: alternatives.map((e) {
+                      final isSelected = controller.selectedEquipments[item.exercise.id] == e.id;
+                      return ChoiceChip(
+                        label: Text(e.name),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          if (val) controller.selectedEquipments[item.exercise.id] = e.id;
+                        },
+                      );
+                    }).toList(),
+                  )),
 
               const Divider(height: 30),
-              
+
               Expanded(
                 child: Obx(() {
-                  final currentEquipId = controller.selectedEquipments[item.exercise.id] ?? item.equipment.id;
-                  
+                  final currentEquipId = controller.selectedEquipments[item.exercise.id] ?? item.equipment?.id ?? 0;
                   return ListView.builder(
                     itemCount: item.volume.sets,
                     itemBuilder: (context, index) => SetLogRow(
-                      key: ValueKey("${item.exercise.id}-$currentEquipId-${index + 1}"), // Key forces refresh on equip change
+                      key: ValueKey("${item.exercise.id}-$currentEquipId-${index + 1}"),
                       setNum: index + 1,
                       exerciseId: item.exercise.id,
                       equipmentId: currentEquipId,
@@ -107,7 +154,6 @@ class _SetLogRowState extends State<SetLogRow> {
   void initState() {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
-    // History is now equipment-specific
     final pastSet = controller.getPastSetData(widget.exerciseId, widget.setNum, widget.equipmentId);
 
     repsController = TextEditingController(

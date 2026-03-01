@@ -44,31 +44,72 @@ class BuildProgramPage extends StatelessWidget {
     final day = entry.workoutDay;
     final exercises = entry.exercises;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ExpansionTile(
-        title: Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${exercises.length} Exercises"),
-        leading: const Icon(Icons.calendar_today),
+return Card(
+  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  child: ExpansionTile(
+    title: Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+    subtitle: Text("${exercises.length} Exercises"),
+    leading: const Icon(Icons.calendar_today),
+    children: [
+    ...exercises.map((ex) => ListTile(
+      leading: Icon(_getIconData(ex.equipment.icon_name), color: Colors.blueAccent),
+      title: Row(
         children: [
-          ...exercises.map((ex) => ListTile(
-            leading: Icon(_getIconData(ex.equipment.icon_name), color: Colors.blueAccent),
-            title: Text(ex.exercise.name),
-            subtitle: Text("${ex.exercise.muscleGroup} • ${ex.equipment.name}"),
-            trailing: Text("${ex.volume.sets} × ${ex.volume.reps}", 
-               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-          )),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton.icon(
-              onPressed: () => Get.dialog(AddExerciseDialog(dayId: day.id)),
-              icon: const Icon(Icons.add),
-              label: const Text("Add Exercise"),
+          // 1. NAME (Left side)
+          Expanded(
+            flex: 3, 
+            child: Text(
+              ex.exercise.name, 
+              overflow: TextOverflow.ellipsis,
             ),
-          )
+          ),
+          
+          // 2. REPS (True Middle)
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                "${ex.volume.sets} × ${ex.volume.reps}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  color: Colors.blueAccent,
+                ),
+              ),
+            ),
+          ),
+
+          // 3. SPACER (To balance the Row so Reps stay centered)
+          const Expanded(flex: 1, child: SizedBox()),
         ],
       ),
-    );
+      subtitle: Text("${ex.exercise.muscleGroup} • ${ex.equipment.name}"),
+      // 4. DELETE BUTTON (The very end)
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+        onPressed: () => {
+        Get.defaultDialog(
+          title: "Are you sure you want to delete the exercise from the program?",
+          middleText: "",
+          onCancel: () => {},
+          onConfirm: () {
+            controller.removeExerciseFromDay(day.id, ex.exercise.id);
+            Get.back();
+          },
+        )
+      },
+      ),
+    )),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextButton.icon(
+          onPressed: () => Get.dialog(AddExerciseDialog(dayId: day.id)),
+          icon: const Icon(Icons.add),
+          label: const Text("Add Exercise"),
+        ),
+      )
+    ],
+  ),
+);
   }
 
   void _showAddDayDialog() {

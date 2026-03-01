@@ -45,4 +45,19 @@ class ProgramsController extends GetxController {
       return null;
     }
   }
+
+    Future<void> deleteProgram(Program program) async {
+    try {
+      final database = Get.find<AppDatabase>();
+      
+      // 1. Insert and get the full Program object back
+      // (Assuming your database helper has a method like this, or use the return value of insert)
+      await (database.delete(database.programs)
+            ..where((row) => row.id.equals(program.id))
+          ).go();
+      await loadPrograms(); 
+    } catch (e) {
+      Get.snackbar("Error", "Could not delete: $e");
+    }
+  }
 }

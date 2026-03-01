@@ -28,7 +28,7 @@ Rack Pull,2,7,2
 Pendlay Row,2,null,2
 One Arm Lat Pulldown,2,null,6
 Seal Row,2,null,2
-Chest Supported Row,2,null,5
+Chest Supported Row,2,null,"5,7"
 Dumbbell Shrug,2,5,3
 Barbell Shrug,2,5,2
 Bicep Curl,3,null,"2,3,4,6"
@@ -100,3 +100,5 @@ Ab Wheel Rollout,6,2,5
 Wrist Curl,3,null,2
 Reverse Wrist Curl,3,null,2
 Farmer Walk,2,6,3
+Shoulder Press,5, null, "3,5,7"
+Tricep Pulldown, 4, null, 6

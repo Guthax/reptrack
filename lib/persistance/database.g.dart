@@ -1809,6 +1809,18 @@ class $ProgramExerciseTable extends ProgramExercise
       'REFERENCES exercises (id)',
     ),
   );
+  static const VerificationMeta _orderInProgramMeta = const VerificationMeta(
+    'orderInProgram',
+  );
+  @override
+  late final GeneratedColumn<int> orderInProgram = GeneratedColumn<int>(
+    'order_in_program',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _setsMeta = const VerificationMeta('sets');
   @override
   late final GeneratedColumn<int> sets = GeneratedColumn<int>(
@@ -1843,6 +1855,7 @@ class $ProgramExerciseTable extends ProgramExercise
     workoutDayId,
     equipmentId,
     exerciseId,
+    orderInProgram,
     sets,
     reps,
     weight,
@@ -1892,6 +1905,15 @@ class $ProgramExerciseTable extends ProgramExercise
     } else if (isInserting) {
       context.missing(_exerciseIdMeta);
     }
+    if (data.containsKey('order_in_program')) {
+      context.handle(
+        _orderInProgramMeta,
+        orderInProgram.isAcceptableOrUnknown(
+          data['order_in_program']!,
+          _orderInProgramMeta,
+        ),
+      );
+    }
     if (data.containsKey('sets')) {
       context.handle(
         _setsMeta,
@@ -1939,6 +1961,10 @@ class $ProgramExerciseTable extends ProgramExercise
         DriftSqlType.int,
         data['${effectivePrefix}exercise_id'],
       )!,
+      orderInProgram: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_in_program'],
+      )!,
       sets: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sets'],
@@ -1966,6 +1992,7 @@ class ProgramExerciseData extends DataClass
   final int workoutDayId;
   final int equipmentId;
   final int exerciseId;
+  final int orderInProgram;
   final int sets;
   final int reps;
   final double weight;
@@ -1974,6 +2001,7 @@ class ProgramExerciseData extends DataClass
     required this.workoutDayId,
     required this.equipmentId,
     required this.exerciseId,
+    required this.orderInProgram,
     required this.sets,
     required this.reps,
     required this.weight,
@@ -1985,6 +2013,7 @@ class ProgramExerciseData extends DataClass
     map['workout_day_id'] = Variable<int>(workoutDayId);
     map['equipment_id'] = Variable<int>(equipmentId);
     map['exercise_id'] = Variable<int>(exerciseId);
+    map['order_in_program'] = Variable<int>(orderInProgram);
     map['sets'] = Variable<int>(sets);
     map['reps'] = Variable<int>(reps);
     map['weight'] = Variable<double>(weight);
@@ -1997,6 +2026,7 @@ class ProgramExerciseData extends DataClass
       workoutDayId: Value(workoutDayId),
       equipmentId: Value(equipmentId),
       exerciseId: Value(exerciseId),
+      orderInProgram: Value(orderInProgram),
       sets: Value(sets),
       reps: Value(reps),
       weight: Value(weight),
@@ -2013,6 +2043,7 @@ class ProgramExerciseData extends DataClass
       workoutDayId: serializer.fromJson<int>(json['workoutDayId']),
       equipmentId: serializer.fromJson<int>(json['equipmentId']),
       exerciseId: serializer.fromJson<int>(json['exerciseId']),
+      orderInProgram: serializer.fromJson<int>(json['orderInProgram']),
       sets: serializer.fromJson<int>(json['sets']),
       reps: serializer.fromJson<int>(json['reps']),
       weight: serializer.fromJson<double>(json['weight']),
@@ -2026,6 +2057,7 @@ class ProgramExerciseData extends DataClass
       'workoutDayId': serializer.toJson<int>(workoutDayId),
       'equipmentId': serializer.toJson<int>(equipmentId),
       'exerciseId': serializer.toJson<int>(exerciseId),
+      'orderInProgram': serializer.toJson<int>(orderInProgram),
       'sets': serializer.toJson<int>(sets),
       'reps': serializer.toJson<int>(reps),
       'weight': serializer.toJson<double>(weight),
@@ -2037,6 +2069,7 @@ class ProgramExerciseData extends DataClass
     int? workoutDayId,
     int? equipmentId,
     int? exerciseId,
+    int? orderInProgram,
     int? sets,
     int? reps,
     double? weight,
@@ -2045,6 +2078,7 @@ class ProgramExerciseData extends DataClass
     workoutDayId: workoutDayId ?? this.workoutDayId,
     equipmentId: equipmentId ?? this.equipmentId,
     exerciseId: exerciseId ?? this.exerciseId,
+    orderInProgram: orderInProgram ?? this.orderInProgram,
     sets: sets ?? this.sets,
     reps: reps ?? this.reps,
     weight: weight ?? this.weight,
@@ -2061,6 +2095,9 @@ class ProgramExerciseData extends DataClass
       exerciseId: data.exerciseId.present
           ? data.exerciseId.value
           : this.exerciseId,
+      orderInProgram: data.orderInProgram.present
+          ? data.orderInProgram.value
+          : this.orderInProgram,
       sets: data.sets.present ? data.sets.value : this.sets,
       reps: data.reps.present ? data.reps.value : this.reps,
       weight: data.weight.present ? data.weight.value : this.weight,
@@ -2074,6 +2111,7 @@ class ProgramExerciseData extends DataClass
           ..write('workoutDayId: $workoutDayId, ')
           ..write('equipmentId: $equipmentId, ')
           ..write('exerciseId: $exerciseId, ')
+          ..write('orderInProgram: $orderInProgram, ')
           ..write('sets: $sets, ')
           ..write('reps: $reps, ')
           ..write('weight: $weight')
@@ -2087,6 +2125,7 @@ class ProgramExerciseData extends DataClass
     workoutDayId,
     equipmentId,
     exerciseId,
+    orderInProgram,
     sets,
     reps,
     weight,
@@ -2099,6 +2138,7 @@ class ProgramExerciseData extends DataClass
           other.workoutDayId == this.workoutDayId &&
           other.equipmentId == this.equipmentId &&
           other.exerciseId == this.exerciseId &&
+          other.orderInProgram == this.orderInProgram &&
           other.sets == this.sets &&
           other.reps == this.reps &&
           other.weight == this.weight);
@@ -2109,6 +2149,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
   final Value<int> workoutDayId;
   final Value<int> equipmentId;
   final Value<int> exerciseId;
+  final Value<int> orderInProgram;
   final Value<int> sets;
   final Value<int> reps;
   final Value<double> weight;
@@ -2117,6 +2158,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     this.workoutDayId = const Value.absent(),
     this.equipmentId = const Value.absent(),
     this.exerciseId = const Value.absent(),
+    this.orderInProgram = const Value.absent(),
     this.sets = const Value.absent(),
     this.reps = const Value.absent(),
     this.weight = const Value.absent(),
@@ -2126,6 +2168,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     required int workoutDayId,
     required int equipmentId,
     required int exerciseId,
+    this.orderInProgram = const Value.absent(),
     required int sets,
     required int reps,
     this.weight = const Value.absent(),
@@ -2139,6 +2182,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     Expression<int>? workoutDayId,
     Expression<int>? equipmentId,
     Expression<int>? exerciseId,
+    Expression<int>? orderInProgram,
     Expression<int>? sets,
     Expression<int>? reps,
     Expression<double>? weight,
@@ -2148,6 +2192,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
       if (workoutDayId != null) 'workout_day_id': workoutDayId,
       if (equipmentId != null) 'equipment_id': equipmentId,
       if (exerciseId != null) 'exercise_id': exerciseId,
+      if (orderInProgram != null) 'order_in_program': orderInProgram,
       if (sets != null) 'sets': sets,
       if (reps != null) 'reps': reps,
       if (weight != null) 'weight': weight,
@@ -2159,6 +2204,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     Value<int>? workoutDayId,
     Value<int>? equipmentId,
     Value<int>? exerciseId,
+    Value<int>? orderInProgram,
     Value<int>? sets,
     Value<int>? reps,
     Value<double>? weight,
@@ -2168,6 +2214,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
       workoutDayId: workoutDayId ?? this.workoutDayId,
       equipmentId: equipmentId ?? this.equipmentId,
       exerciseId: exerciseId ?? this.exerciseId,
+      orderInProgram: orderInProgram ?? this.orderInProgram,
       sets: sets ?? this.sets,
       reps: reps ?? this.reps,
       weight: weight ?? this.weight,
@@ -2189,6 +2236,9 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
     if (exerciseId.present) {
       map['exercise_id'] = Variable<int>(exerciseId.value);
     }
+    if (orderInProgram.present) {
+      map['order_in_program'] = Variable<int>(orderInProgram.value);
+    }
     if (sets.present) {
       map['sets'] = Variable<int>(sets.value);
     }
@@ -2208,6 +2258,7 @@ class ProgramExerciseCompanion extends UpdateCompanion<ProgramExerciseData> {
           ..write('workoutDayId: $workoutDayId, ')
           ..write('equipmentId: $equipmentId, ')
           ..write('exerciseId: $exerciseId, ')
+          ..write('orderInProgram: $orderInProgram, ')
           ..write('sets: $sets, ')
           ..write('reps: $reps, ')
           ..write('weight: $weight')
@@ -2621,6 +2672,18 @@ class $WorkoutSetsTable extends WorkoutSets
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _dateLoggedMeta = const VerificationMeta(
+    'dateLogged',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dateLogged = GeneratedColumn<DateTime>(
+    'date_logged',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDate,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2631,6 +2694,7 @@ class $WorkoutSetsTable extends WorkoutSets
     weight,
     setNumber,
     isCompleted,
+    dateLogged,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2707,6 +2771,12 @@ class $WorkoutSetsTable extends WorkoutSets
         ),
       );
     }
+    if (data.containsKey('date_logged')) {
+      context.handle(
+        _dateLoggedMeta,
+        dateLogged.isAcceptableOrUnknown(data['date_logged']!, _dateLoggedMeta),
+      );
+    }
     return context;
   }
 
@@ -2748,6 +2818,10 @@ class $WorkoutSetsTable extends WorkoutSets
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
       )!,
+      dateLogged: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date_logged'],
+      )!,
     );
   }
 
@@ -2766,6 +2840,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
   final double weight;
   final int setNumber;
   final bool isCompleted;
+  final DateTime dateLogged;
   const WorkoutSet({
     required this.id,
     required this.workoutId,
@@ -2775,6 +2850,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
     required this.weight,
     required this.setNumber,
     required this.isCompleted,
+    required this.dateLogged,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2787,6 +2863,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
     map['weight'] = Variable<double>(weight);
     map['set_number'] = Variable<int>(setNumber);
     map['is_completed'] = Variable<bool>(isCompleted);
+    map['date_logged'] = Variable<DateTime>(dateLogged);
     return map;
   }
 
@@ -2800,6 +2877,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
       weight: Value(weight),
       setNumber: Value(setNumber),
       isCompleted: Value(isCompleted),
+      dateLogged: Value(dateLogged),
     );
   }
 
@@ -2817,6 +2895,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
       weight: serializer.fromJson<double>(json['weight']),
       setNumber: serializer.fromJson<int>(json['setNumber']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      dateLogged: serializer.fromJson<DateTime>(json['dateLogged']),
     );
   }
   @override
@@ -2831,6 +2910,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
       'weight': serializer.toJson<double>(weight),
       'setNumber': serializer.toJson<int>(setNumber),
       'isCompleted': serializer.toJson<bool>(isCompleted),
+      'dateLogged': serializer.toJson<DateTime>(dateLogged),
     };
   }
 
@@ -2843,6 +2923,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
     double? weight,
     int? setNumber,
     bool? isCompleted,
+    DateTime? dateLogged,
   }) => WorkoutSet(
     id: id ?? this.id,
     workoutId: workoutId ?? this.workoutId,
@@ -2852,6 +2933,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
     weight: weight ?? this.weight,
     setNumber: setNumber ?? this.setNumber,
     isCompleted: isCompleted ?? this.isCompleted,
+    dateLogged: dateLogged ?? this.dateLogged,
   );
   WorkoutSet copyWithCompanion(WorkoutSetsCompanion data) {
     return WorkoutSet(
@@ -2869,6 +2951,9 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
+      dateLogged: data.dateLogged.present
+          ? data.dateLogged.value
+          : this.dateLogged,
     );
   }
 
@@ -2882,7 +2967,8 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
           ..write('reps: $reps, ')
           ..write('weight: $weight, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('dateLogged: $dateLogged')
           ..write(')'))
         .toString();
   }
@@ -2897,6 +2983,7 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
     weight,
     setNumber,
     isCompleted,
+    dateLogged,
   );
   @override
   bool operator ==(Object other) =>
@@ -2909,7 +2996,8 @@ class WorkoutSet extends DataClass implements Insertable<WorkoutSet> {
           other.reps == this.reps &&
           other.weight == this.weight &&
           other.setNumber == this.setNumber &&
-          other.isCompleted == this.isCompleted);
+          other.isCompleted == this.isCompleted &&
+          other.dateLogged == this.dateLogged);
 }
 
 class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
@@ -2921,6 +3009,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
   final Value<double> weight;
   final Value<int> setNumber;
   final Value<bool> isCompleted;
+  final Value<DateTime> dateLogged;
   const WorkoutSetsCompanion({
     this.id = const Value.absent(),
     this.workoutId = const Value.absent(),
@@ -2930,6 +3019,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
     this.weight = const Value.absent(),
     this.setNumber = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.dateLogged = const Value.absent(),
   });
   WorkoutSetsCompanion.insert({
     this.id = const Value.absent(),
@@ -2940,6 +3030,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
     required double weight,
     required int setNumber,
     this.isCompleted = const Value.absent(),
+    this.dateLogged = const Value.absent(),
   }) : workoutId = Value(workoutId),
        exerciseId = Value(exerciseId),
        equipmentId = Value(equipmentId),
@@ -2955,6 +3046,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
     Expression<double>? weight,
     Expression<int>? setNumber,
     Expression<bool>? isCompleted,
+    Expression<DateTime>? dateLogged,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2965,6 +3057,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
       if (weight != null) 'weight': weight,
       if (setNumber != null) 'set_number': setNumber,
       if (isCompleted != null) 'is_completed': isCompleted,
+      if (dateLogged != null) 'date_logged': dateLogged,
     });
   }
 
@@ -2977,6 +3070,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
     Value<double>? weight,
     Value<int>? setNumber,
     Value<bool>? isCompleted,
+    Value<DateTime>? dateLogged,
   }) {
     return WorkoutSetsCompanion(
       id: id ?? this.id,
@@ -2987,6 +3081,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
       weight: weight ?? this.weight,
       setNumber: setNumber ?? this.setNumber,
       isCompleted: isCompleted ?? this.isCompleted,
+      dateLogged: dateLogged ?? this.dateLogged,
     );
   }
 
@@ -3017,6 +3112,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
+    if (dateLogged.present) {
+      map['date_logged'] = Variable<DateTime>(dateLogged.value);
+    }
     return map;
   }
 
@@ -3030,7 +3128,8 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
           ..write('reps: $reps, ')
           ..write('weight: $weight, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isCompleted: $isCompleted')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('dateLogged: $dateLogged')
           ..write(')'))
         .toString();
   }
@@ -5898,6 +5997,7 @@ typedef $$ProgramExerciseTableCreateCompanionBuilder =
       required int workoutDayId,
       required int equipmentId,
       required int exerciseId,
+      Value<int> orderInProgram,
       required int sets,
       required int reps,
       Value<double> weight,
@@ -5908,6 +6008,7 @@ typedef $$ProgramExerciseTableUpdateCompanionBuilder =
       Value<int> workoutDayId,
       Value<int> equipmentId,
       Value<int> exerciseId,
+      Value<int> orderInProgram,
       Value<int> sets,
       Value<int> reps,
       Value<double> weight,
@@ -5998,6 +6099,11 @@ class $$ProgramExerciseTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orderInProgram => $composableBuilder(
+    column: $table.orderInProgram,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6100,6 +6206,11 @@ class $$ProgramExerciseTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get orderInProgram => $composableBuilder(
+    column: $table.orderInProgram,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sets => $composableBuilder(
     column: $table.sets,
     builder: (column) => ColumnOrderings(column),
@@ -6196,6 +6307,11 @@ class $$ProgramExerciseTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get orderInProgram => $composableBuilder(
+    column: $table.orderInProgram,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get sets =>
       $composableBuilder(column: $table.sets, builder: (column) => column);
@@ -6314,6 +6430,7 @@ class $$ProgramExerciseTableTableManager
                 Value<int> workoutDayId = const Value.absent(),
                 Value<int> equipmentId = const Value.absent(),
                 Value<int> exerciseId = const Value.absent(),
+                Value<int> orderInProgram = const Value.absent(),
                 Value<int> sets = const Value.absent(),
                 Value<int> reps = const Value.absent(),
                 Value<double> weight = const Value.absent(),
@@ -6322,6 +6439,7 @@ class $$ProgramExerciseTableTableManager
                 workoutDayId: workoutDayId,
                 equipmentId: equipmentId,
                 exerciseId: exerciseId,
+                orderInProgram: orderInProgram,
                 sets: sets,
                 reps: reps,
                 weight: weight,
@@ -6332,6 +6450,7 @@ class $$ProgramExerciseTableTableManager
                 required int workoutDayId,
                 required int equipmentId,
                 required int exerciseId,
+                Value<int> orderInProgram = const Value.absent(),
                 required int sets,
                 required int reps,
                 Value<double> weight = const Value.absent(),
@@ -6340,6 +6459,7 @@ class $$ProgramExerciseTableTableManager
                 workoutDayId: workoutDayId,
                 equipmentId: equipmentId,
                 exerciseId: exerciseId,
+                orderInProgram: orderInProgram,
                 sets: sets,
                 reps: reps,
                 weight: weight,
@@ -6849,6 +6969,7 @@ typedef $$WorkoutSetsTableCreateCompanionBuilder =
       required double weight,
       required int setNumber,
       Value<bool> isCompleted,
+      Value<DateTime> dateLogged,
     });
 typedef $$WorkoutSetsTableUpdateCompanionBuilder =
     WorkoutSetsCompanion Function({
@@ -6860,6 +6981,7 @@ typedef $$WorkoutSetsTableUpdateCompanionBuilder =
       Value<double> weight,
       Value<int> setNumber,
       Value<bool> isCompleted,
+      Value<DateTime> dateLogged,
     });
 
 final class $$WorkoutSetsTableReferences
@@ -6955,6 +7077,11 @@ class $$WorkoutSetsTableFilterComposer
 
   ColumnFilters<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dateLogged => $composableBuilder(
+    column: $table.dateLogged,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7062,6 +7189,11 @@ class $$WorkoutSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get dateLogged => $composableBuilder(
+    column: $table.dateLogged,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$WorkoutsTableOrderingComposer get workoutId {
     final $$WorkoutsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7155,6 +7287,11 @@ class $$WorkoutSetsTableAnnotationComposer
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get dateLogged => $composableBuilder(
+    column: $table.dateLogged,
     builder: (column) => column,
   );
 
@@ -7268,6 +7405,7 @@ class $$WorkoutSetsTableTableManager
                 Value<double> weight = const Value.absent(),
                 Value<int> setNumber = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime> dateLogged = const Value.absent(),
               }) => WorkoutSetsCompanion(
                 id: id,
                 workoutId: workoutId,
@@ -7277,6 +7415,7 @@ class $$WorkoutSetsTableTableManager
                 weight: weight,
                 setNumber: setNumber,
                 isCompleted: isCompleted,
+                dateLogged: dateLogged,
               ),
           createCompanionCallback:
               ({
@@ -7288,6 +7427,7 @@ class $$WorkoutSetsTableTableManager
                 required double weight,
                 required int setNumber,
                 Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime> dateLogged = const Value.absent(),
               }) => WorkoutSetsCompanion.insert(
                 id: id,
                 workoutId: workoutId,
@@ -7297,6 +7437,7 @@ class $$WorkoutSetsTableTableManager
                 weight: weight,
                 setNumber: setNumber,
                 isCompleted: isCompleted,
+                dateLogged: dateLogged,
               ),
           withReferenceMapper: (p0) => p0
               .map(

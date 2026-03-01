@@ -8,6 +8,7 @@ class ProgramsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     // Inject the controller
     final ProgramsController controller = Get.put(ProgramsController());
 
@@ -43,13 +44,19 @@ class ProgramsPage extends StatelessWidget {
     title: Text(program.name),
     // Added the trailing icon here
     trailing: IconButton(
-      icon: const Icon(Icons.edit, color: Colors.blueGrey),
+      icon: const Icon(Icons.delete, color: Colors.blueGrey),
       onPressed: () {
-        // Navigate to the build page for this specific program
-        Get.to(() => BuildProgramPage(program: program));
+        Get.defaultDialog(
+          title: "Are you sure you want to delete the program",
+          middleText: "",
+          onCancel: () => {},
+          onConfirm: () {
+            controller.deleteProgram(program);
+            Get.back();
+          },
+        );
       },
     ),
-    // Optional: Making the whole tile clickable too
     onTap: () => Get.to(() => BuildProgramPage(program: program)),
   );
 },
@@ -98,5 +105,9 @@ onConfirm: () async {
   child: const Icon(Icons.add),
 ),
     );
+  
   }
+  
+  
 }
+
