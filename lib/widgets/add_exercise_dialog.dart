@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/build_program_controller.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/fuzzy_search.dart';
 
 class AddExerciseDialog extends StatefulWidget {
   final int dayId;
@@ -14,8 +16,12 @@ class AddExerciseDialog extends StatefulWidget {
 class _AddExerciseDialogState extends State<AddExerciseDialog> {
   final TextEditingController searchController = TextEditingController();
   final TextEditingController setsController = TextEditingController(text: "3");
-  final TextEditingController repsController = TextEditingController(text: "10");
-  final TextEditingController timerController = TextEditingController(text: "60");
+  final TextEditingController repsController = TextEditingController(
+    text: "10",
+  );
+  final TextEditingController timerController = TextEditingController(
+    text: "60",
+  );
 
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
@@ -41,7 +47,11 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     final controller = Get.find<BuildProgramController>();
 
     return AlertDialog(
-      title: Obx(() => Text(selectedExercise.value == null ? "Select Exercise" : "Set Volume")),
+      title: Obx(
+        () => Text(
+          selectedExercise.value == null ? "Select Exercise" : "Set Volume",
+        ),
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: Obx(() {
@@ -58,8 +68,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (val) {
-                    filteredExercises.assignAll(allExercises.where((e) =>
-                        e.name.toLowerCase().contains(val.toLowerCase())));
+                    filteredExercises.assignAll(
+                      fuzzyFilter(allExercises, val, (e) => e.name),
+                    );
                   },
                 ),
                 const SizedBox(height: 10),
@@ -67,7 +78,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   child: Container(
                     height: 300,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: AppColors.outline),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListView.builder(
@@ -111,7 +122,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 deleteIcon: const Icon(Icons.close),
               ),
               const SizedBox(height: 20),
-              const Text("Equipment Type", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                "Equipment Type",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -119,7 +133,8 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   return ChoiceChip(
                     label: Text(e.name),
                     selected: selectedEquipmentId.value == e.id,
-                    onSelected: (val) => selectedEquipmentId.value = val ? e.id : null,
+                    onSelected: (val) =>
+                        selectedEquipmentId.value = val ? e.id : null,
                   );
                 }).toList(),
               ),
@@ -129,7 +144,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   Expanded(
                     child: TextField(
                       controller: setsController,
-                      decoration: const InputDecoration(labelText: "Sets", border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: "Sets",
+                        border: OutlineInputBorder(),
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -137,7 +155,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   Expanded(
                     child: TextField(
                       controller: repsController,
-                      decoration: const InputDecoration(labelText: "Reps", border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: "Reps",
+                        border: OutlineInputBorder(),
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -161,7 +182,8 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
         TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
         Obx(() {
           final bool isValid =
-              selectedExercise.value != null && selectedEquipmentId.value != null;
+              selectedExercise.value != null &&
+              selectedEquipmentId.value != null;
 
           return ElevatedButton(
             onPressed: !isValid

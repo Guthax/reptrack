@@ -19,6 +19,7 @@ dependencies:
   intl: ^0.20.2
   audioplayers: ^6.5.1
   flutter_launcher_icons: ^0.14.4
+  fl_chart: ^0.69.0
   
 
 dev_dependencies:
@@ -38,4 +39,4 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/icon_rounded.png"
+  image_path: "assets/icons/icon_square_dark.png"

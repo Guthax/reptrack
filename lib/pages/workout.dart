@@ -18,7 +18,9 @@ class WorkoutPage extends StatelessWidget {
           children: [
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -26,56 +28,72 @@ class WorkoutPage extends StatelessWidget {
                   children: [
                     const Text(
                       "Select your session",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
-                    Obx(() => DropdownButtonFormField<Program>(
-                          decoration: const InputDecoration(
-                            labelText: "Program",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.list_alt),
-                          ),
-                          initialValue: controller.selectedProgram.value,
-                          items: controller.programs.map((p) {
-                            return DropdownMenuItem(value: p, child: Text(p.name));
-                          }).toList(),
-                          onChanged: controller.onProgramChanged,
-                        )),
+                    Obx(
+                      () => DropdownButtonFormField<Program>(
+                        decoration: const InputDecoration(
+                          labelText: "Program",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.list_alt),
+                        ),
+                        initialValue: controller.selectedProgram.value,
+                        items: controller.programs.map((p) {
+                          return DropdownMenuItem(
+                            value: p,
+                            child: Text(p.name),
+                          );
+                        }).toList(),
+                        onChanged: controller.onProgramChanged,
+                      ),
+                    ),
 
                     const SizedBox(height: 16),
 
-                    Obx(() => DropdownButtonFormField<WorkoutDay>(
-                          decoration: const InputDecoration(
-                            labelText: "Workout Day",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today),
-                          ),
-                          initialValue: controller.selectedDay.value,
-                          disabledHint: const Text("Select a program first"),
-                          items: controller.workoutDays.map((d) {
-                            return DropdownMenuItem(value: d, child: Text(d.dayName));
-                          }).toList(),
-                          onChanged: (val) => controller.selectedDay.value = val,
-                        )),
+                    Obx(
+                      () => DropdownButtonFormField<WorkoutDay>(
+                        decoration: const InputDecoration(
+                          labelText: "Workout Day",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.calendar_today),
+                        ),
+                        initialValue: controller.selectedDay.value,
+                        disabledHint: const Text("Select a program first"),
+                        items: controller.workoutDays.map((d) {
+                          return DropdownMenuItem(
+                            value: d,
+                            child: Text(d.dayName),
+                          );
+                        }).toList(),
+                        onChanged: (val) => controller.selectedDay.value = val,
+                      ),
+                    ),
 
                     const SizedBox(height: 24),
 
-                    Obx(() => ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    Obx(
+                      () => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(),
+                        ),
+                        onPressed: controller.selectedDay.value == null
+                            ? null
+                            : controller.startWorkout,
+                        child: const Text(
+                          "START WORKOUT",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          onPressed: controller.selectedDay.value == null 
-                              ? null 
-                              : controller.startWorkout,
-                          child: const Text(
-                            "START WORKOUT",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        )),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

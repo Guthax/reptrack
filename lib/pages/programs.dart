@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/pages/build_program.dart';
+import 'package:reptrack/utils/app_theme.dart';
 import '../controllers/programs_controller.dart';
 
 class ProgramsPage extends StatelessWidget {
@@ -16,10 +17,7 @@ class ProgramsPage extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.all(16),
-            child: Text(
-              'Workouts',
-              style: TextStyle(fontSize: 18),
-            ),
+            child: Text('Workouts', style: TextStyle(fontSize: 18)),
           ),
           Expanded(
             child: Obx(() {
@@ -28,7 +26,9 @@ class ProgramsPage extends StatelessWidget {
               }
 
               if (controller.programs.isEmpty) {
-                return const Center(child: Text("No programs yet. Tap + to add one!"));
+                return const Center(
+                  child: Text("No programs yet. Tap + to add one!"),
+                );
               }
 
               return ListView.builder(
@@ -40,20 +40,37 @@ class ProgramsPage extends StatelessWidget {
                     leading: const Icon(Icons.fitness_center),
                     title: Text(program.name),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.blueGrey),
+                      icon: const Icon(Icons.delete, color: AppColors.error),
                       onPressed: () {
-                        Get.defaultDialog(
-                          title: "Are you sure you want to delete the program",
-                          middleText: "",
-                          onCancel: () => {},
-                          onConfirm: () {
-                            controller.deleteProgram(program);
-                            Get.back();
-                          },
+                        Get.dialog(
+                          AlertDialog(
+                            title: const Text("Delete Program?"),
+                            content: Text(
+                              'Are you sure you want to delete "${program.name}"?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: Get.back,
+                                child: const Text("CANCEL"),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.error,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () {
+                                  controller.deleteProgram(program);
+                                  Get.back();
+                                },
+                                child: const Text("DELETE"),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
-                    onTap: () => Get.to(() => BuildProgramPage(program: program)),
+                    onTap: () =>
+                        Get.to(() => BuildProgramPage(program: program)),
                   );
                 },
               );
@@ -65,30 +82,34 @@ class ProgramsPage extends StatelessWidget {
         onPressed: () {
           final TextEditingController nameController = TextEditingController();
 
-          Get.defaultDialog(
-            title: "New Program",
-            content: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
+          Get.dialog(
+            AlertDialog(
+              title: const Text("New Program"),
+              content: TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
                   hintText: "Enter program name (e.g. Push Pull Legs)",
                 ),
                 autofocus: true,
               ),
+              actions: [
+                TextButton(onPressed: Get.back, child: const Text("CANCEL")),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isNotEmpty) {
+                      final newProgram = await controller.addProgram(
+                        nameController.text.trim(),
+                      );
+                      Get.back();
+                      if (newProgram != null) {
+                        Get.to(() => BuildProgramPage(program: newProgram));
+                      }
+                    }
+                  },
+                  child: const Text("ADD"),
+                ),
+              ],
             ),
-            textConfirm: "Add",
-            textCancel: "Cancel",
-            confirmTextColor: Colors.white,
-            onConfirm: () async {
-              if (nameController.text.trim().isNotEmpty) {
-                final newProgram = await controller.addProgram(nameController.text.trim());
-                Get.back();
-                if (newProgram != null) {
-                  Get.to(() => BuildProgramPage(program: newProgram));
-                }
-              }
-            },
           );
         },
         child: const Icon(Icons.add),

@@ -1,6 +1,5 @@
 import 'package:reptrack/persistance/database.dart';
 
-
 class ExerciseWithVolume {
   final Exercise exercise;
   final ProgramExerciseData volume;
@@ -17,8 +16,5 @@ class WorkoutDayWithExercises {
   final WorkoutDay workoutDay;
   final List<ExerciseWithVolume> exercises;
 
-  WorkoutDayWithExercises({
-    required this.workoutDay,
-    required this.exercises,
-  });
+  WorkoutDayWithExercises({required this.workoutDay, required this.exercises});
 }

@@ -37,7 +37,9 @@ class ActiveWorkoutController extends GetxController {
 
   Future<void> _setupWorkout() async {
     try {
-      currentWorkoutId = await db.into(db.workouts).insert(
+      currentWorkoutId = await db
+          .into(db.workouts)
+          .insert(
             WorkoutsCompanion.insert(
               workoutDayId: workoutDayId,
               date: d.Value(DateTime.now()),
@@ -45,8 +47,14 @@ class ActiveWorkoutController extends GetxController {
           );
 
       final query = db.select(db.programExercise).join([
-        d.innerJoin(db.exercises, db.exercises.id.equalsExp(db.programExercise.exerciseId)),
-        d.innerJoin(db.equipments, db.equipments.id.equalsExp(db.programExercise.equipmentId)),
+        d.innerJoin(
+          db.exercises,
+          db.exercises.id.equalsExp(db.programExercise.exerciseId),
+        ),
+        d.innerJoin(
+          db.equipments,
+          db.equipments.id.equalsExp(db.programExercise.equipmentId),
+        ),
       ])..where(db.programExercise.workoutDayId.equals(workoutDayId));
 
       final rows = await query.get();
@@ -63,10 +71,16 @@ class ActiveWorkoutController extends GetxController {
       }).toList();
 
       for (var item in items) {
-        final sets = await (db.select(db.workoutSets)
-              ..where((tbl) => tbl.exerciseId.equals(item.exercise.id))
-              ..orderBy([(u) => d.OrderingTerm(expression: u.id, mode: d.OrderingMode.desc)]))
-            .get();
+        final sets =
+            await (db.select(db.workoutSets)
+                  ..where((tbl) => tbl.exerciseId.equals(item.exercise.id))
+                  ..orderBy([
+                    (u) => d.OrderingTerm(
+                      expression: u.id,
+                      mode: d.OrderingMode.desc,
+                    ),
+                  ]))
+                .get();
         if (sets.isNotEmpty) lastWorkoutSets[item.exercise.id] = sets;
       }
 
@@ -149,19 +163,37 @@ class ActiveWorkoutController extends GetxController {
     }
     sessionLoggedSets[exerciseId]!.add(entry);
 
-    completedSets.add("$exerciseId-$setNum");
+    completedSets.add("$exerciseId-$equipmentId-$setNum");
 
     if (restSeconds != null) {
       startRestTimer(restSeconds);
     }
   }
 
-  bool isSetCompleted(int exerciseId, int setNum) => completedSets.contains("$exerciseId-$setNum");
+  bool isSetCompleted(int exerciseId, int equipmentId, int setNum) =>
+      completedSets.contains("$exerciseId-$equipmentId-$setNum");
+
+  Future<void> unlogSet({
+    required int exerciseId,
+    required int equipmentId,
+    required int setNum,
+  }) async {
+    if (currentWorkoutId == null) return;
+    await db.deleteWorkoutSet(currentWorkoutId!, exerciseId, setNum);
+    completedSets.remove("$exerciseId-$equipmentId-$setNum");
+    final list = sessionLoggedSets[exerciseId];
+    if (list != null) {
+      list.removeWhere((s) => s.setNumber.value == setNum);
+      sessionLoggedSets.refresh();
+    }
+  }
 
   WorkoutSet? getPastSetData(int exerciseId, int setNum, int equipmentId) {
     final sets = lastWorkoutSets[exerciseId];
     if (sets == null) return null;
-    return sets.firstWhereOrNull((s) => s.setNumber == setNum && s.equipmentId == equipmentId);
+    return sets.firstWhereOrNull(
+      (s) => s.setNumber == setNum && s.equipmentId == equipmentId,
+    );
   }
 
   Future<void> swapExercise({
@@ -170,14 +202,20 @@ class ActiveWorkoutController extends GetxController {
     required int newEquipmentId,
   }) async {
     try {
-      final index = exercisesWithVolume.indexWhere((item) => item.exercise.id == oldExerciseId);
+      final index = exercisesWithVolume.indexWhere(
+        (item) => item.exercise.id == oldExerciseId,
+      );
       if (index != -1) {
         final equipmentList = await db.getEquipmentForExercise(newExercise.id);
         final newEquip = equipmentList.firstWhere(
           (e) => e.id == newEquipmentId,
           orElse: () => equipmentList.isNotEmpty
               ? equipmentList.first
-              : Equipment(id: newEquipmentId, name: "Default", icon_name: "fitness_center"),
+              : Equipment(
+                  id: newEquipmentId,
+                  name: "Default",
+                  icon_name: "fitness_center",
+                ),
         );
 
         final originalItem = exercisesWithVolume[index];
@@ -190,10 +228,16 @@ class ActiveWorkoutController extends GetxController {
         selectedEquipments[newExercise.id] = newEquipmentId;
         exercisesWithVolume[index] = swappedItem;
 
-        final sets = await (db.select(db.workoutSets)
-              ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
-              ..orderBy([(u) => d.OrderingTerm(expression: u.id, mode: d.OrderingMode.desc)]))
-            .get();
+        final sets =
+            await (db.select(db.workoutSets)
+                  ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
+                  ..orderBy([
+                    (u) => d.OrderingTerm(
+                      expression: u.id,
+                      mode: d.OrderingMode.desc,
+                    ),
+                  ]))
+                .get();
         if (sets.isNotEmpty) lastWorkoutSets[newExercise.id] = sets;
 
         completedSets.removeWhere((key) => key.startsWith("$oldExerciseId-"));

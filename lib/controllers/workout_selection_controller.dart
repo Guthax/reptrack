@@ -34,10 +34,12 @@ class WorkoutSelectionController extends GetxController {
 
   void startWorkout() {
     if (selectedDay.value != null) {
-      Get.to(() => TrackWorkoutPage(
-            dayId: selectedDay.value!.id,
-            dayName: selectedDay.value!.dayName,
-          ));
+      Get.to(
+        () => TrackWorkoutPage(
+          dayId: selectedDay.value!.id,
+          dayName: selectedDay.value!.dayName,
+        ),
+      );
     }
   }
 }

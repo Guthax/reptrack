@@ -5,32 +5,55 @@ import 'package:reptrack/persistance/database.dart';
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
     final muscleNames = {
-      1: 'Chest', 2: 'Back', 3: 'Bicep', 4: 'Tricep', 5: 'Shoulders', 6: 'Abs', 7: 'Legs'
+      1: 'Chest',
+      2: 'Back',
+      3: 'Bicep',
+      4: 'Tricep',
+      5: 'Shoulders',
+      6: 'Abs',
+      7: 'Legs',
     };
     for (var entry in muscleNames.entries) {
-      await db.into(db.muscleGroups).insertOnConflictUpdate(
-        MuscleGroupsCompanion.insert(id: Value(entry.key), name: entry.value),
-      );
+      await db
+          .into(db.muscleGroups)
+          .insertOnConflictUpdate(
+            MuscleGroupsCompanion.insert(
+              id: Value(entry.key),
+              name: entry.value,
+            ),
+          );
     }
 
     final equipmentNames = {
-      1: 'Bodyweight', 2: 'Barbell', 3: 'Dumbbells', 4: 'EZ-Bar', 5: 'Machine', 6: 'Cable', 7: 'Plate Loaded'
+      1: 'Bodyweight',
+      2: 'Barbell',
+      3: 'Dumbbells',
+      4: 'EZ-Bar',
+      5: 'Machine',
+      6: 'Cable',
+      7: 'Plate Loaded',
     };
     for (var entry in equipmentNames.entries) {
-      await db.into(db.equipments).insertOnConflictUpdate(
-        EquipmentsCompanion.insert(
-          id: Value(entry.key),
-          name: entry.value,
-          icon_name: entry.value.toLowerCase().replaceAll(' ', '_'),
-        ),
-      );
+      await db
+          .into(db.equipments)
+          .insertOnConflictUpdate(
+            EquipmentsCompanion.insert(
+              id: Value(entry.key),
+              name: entry.value,
+              icon_name: entry.value.toLowerCase().replaceAll(' ', '_'),
+            ),
+          );
     }
 
     final allExisting = await db.select(db.exercises).get();
-    final Set<String> existingNames = allExisting.map((e) => e.name.trim().toLowerCase()).toSet();
+    final Set<String> existingNames = allExisting
+        .map((e) => e.name.trim().toLowerCase())
+        .toSet();
 
     try {
-      final String rawData = await rootBundle.loadString('assets/data/exercises.csv');
+      final String rawData = await rootBundle.loadString(
+        'assets/data/exercises.csv',
+      );
       final lines = rawData.split(RegExp(r'\r?\n'));
 
       for (var line in lines) {
@@ -41,11 +64,14 @@ Future<void> seedDatabase(AppDatabase db) async {
         if (columns.length < 4) continue;
 
         final String name = columns[0].trim();
-        if (name.isEmpty || existingNames.contains(name.toLowerCase())) continue;
+        if (name.isEmpty || existingNames.contains(name.toLowerCase()))
+          continue;
 
         try {
           final primaryId = int.parse(columns[1].trim());
-          final secondaryId = columns[2].trim() == 'null' ? null : int.tryParse(columns[2].trim());
+          final secondaryId = columns[2].trim() == 'null'
+              ? null
+              : int.tryParse(columns[2].trim());
 
           final String rawEquipColumn = columns[3];
           final cleanEquipStr = rawEquipColumn.replaceAll('"', '').trim();
@@ -56,38 +82,46 @@ Future<void> seedDatabase(AppDatabase db) async {
               .map((e) => int.parse(e))
               .toList();
 
-          final exerciseId = await db.into(db.exercises).insert(
-            ExercisesCompanion.insert(
-              name: name,
-              muscleGroup: Value(muscleNames[primaryId] ?? 'General'),
-            ),
-          );
+          final exerciseId = await db
+              .into(db.exercises)
+              .insert(
+                ExercisesCompanion.insert(
+                  name: name,
+                  muscleGroup: Value(muscleNames[primaryId] ?? 'General'),
+                ),
+              );
 
-          await db.into(db.exerciseMuscleGroup).insert(
-            ExerciseMuscleGroupCompanion.insert(
-              exerciseId: exerciseId,
-              muscleGroupId: primaryId,
-              focus: 'primary',
-            ),
-          );
+          await db
+              .into(db.exerciseMuscleGroup)
+              .insert(
+                ExerciseMuscleGroupCompanion.insert(
+                  exerciseId: exerciseId,
+                  muscleGroupId: primaryId,
+                  focus: 'primary',
+                ),
+              );
 
           if (secondaryId != null) {
-            await db.into(db.exerciseMuscleGroup).insert(
-              ExerciseMuscleGroupCompanion.insert(
-                exerciseId: exerciseId,
-                muscleGroupId: secondaryId,
-                focus: 'secondary',
-              ),
-            );
+            await db
+                .into(db.exerciseMuscleGroup)
+                .insert(
+                  ExerciseMuscleGroupCompanion.insert(
+                    exerciseId: exerciseId,
+                    muscleGroupId: secondaryId,
+                    focus: 'secondary',
+                  ),
+                );
           }
 
           for (var eId in equipIds) {
-            await db.into(db.exerciseEquipment).insert(
-              ExerciseEquipmentCompanion.insert(
-                exerciseId: exerciseId,
-                equipmentId: eId,
-              ),
-            );
+            await db
+                .into(db.exerciseEquipment)
+                .insert(
+                  ExerciseEquipmentCompanion.insert(
+                    exerciseId: exerciseId,
+                    equipmentId: eId,
+                  ),
+                );
           }
 
           existingNames.add(name.toLowerCase());

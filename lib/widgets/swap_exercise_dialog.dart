@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/utils/app_theme.dart';
 
 class SwapExerciseDialog extends StatefulWidget {
   final int exerciseId;
@@ -57,8 +58,11 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                 border: OutlineInputBorder(),
               ),
               onChanged: (val) {
-                filteredExercises.assignAll(allExercises.where((e) =>
-                    e.name.toLowerCase().contains(val.toLowerCase())));
+                filteredExercises.assignAll(
+                  allExercises.where(
+                    (e) => e.name.toLowerCase().contains(val.toLowerCase()),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -66,48 +70,58 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
               child: Container(
                 height: 350,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppColors.outline),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Obx(() => ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: filteredExercises.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) {
-                    final ex = filteredExercises[i];
-                    return ListTile(
-                      title: Text(ex.name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                      subtitle: Text(ex.muscleGroup ?? "General", style: const TextStyle(fontSize: 12)),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                      onTap: () async {
-                        // 1. Get available equipment for the new exercise
-                        final equips = await db.getEquipmentForExercise(ex.id);
-                        
-                        // 2. Default to the first equipment found (or 0 if none)
-                        final defaultEquipId = equips.isNotEmpty ? equips.first.id : 0;
+                child: Obx(
+                  () => ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: filteredExercises.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (ctx, i) {
+                      final ex = filteredExercises[i];
+                      return ListTile(
+                        title: Text(
+                          ex.name,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          ex.muscleGroup ?? "General",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                        onTap: () async {
+                          // 1. Get available equipment for the new exercise
+                          final equips = await db.getEquipmentForExercise(
+                            ex.id,
+                          );
 
-                        // 3. Perform the swap in the controller
-                        activeController.swapExercise(
-                          oldExerciseId: widget.exerciseId,
-                          newExercise: ex,
-                          newEquipmentId: defaultEquipId,
-                        );
+                          // 2. Default to the first equipment found (or 0 if none)
+                          final defaultEquipId = equips.isNotEmpty
+                              ? equips.first.id
+                              : 0;
 
-                        Get.back(); // Close dialog
-                      },
-                    );
-                  },
-                )),
+                          // 3. Perform the swap in the controller
+                          activeController.swapExercise(
+                            oldExerciseId: widget.exerciseId,
+                            newExercise: ex,
+                            newEquipmentId: defaultEquipId,
+                          );
+
+                          Get.back(); // Close dialog
+                        },
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Get.back(), 
-          child: const Text("Cancel", style: TextStyle(color: Colors.grey))
-        ),
+        TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
       ],
     );
   }

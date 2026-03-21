@@ -5,6 +5,7 @@ import 'package:reptrack/pages/tracking.dart';
 import 'package:reptrack/pages/workout.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/seed_data.dart';
+import 'package:reptrack/utils/app_theme.dart';
 import 'controllers/navigation_controller.dart';
 
 void main() async {
@@ -20,9 +21,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const GetMaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      theme: AppTheme.darkTheme,
+      home: const HomePage(),
     );
   }
 }

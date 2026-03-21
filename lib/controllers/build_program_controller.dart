@@ -8,7 +8,8 @@ class BuildProgramController extends GetxController {
 
   BuildProgramController(this.programId);
 
-  RxList<WorkoutDayWithExercises> daysWithExercises = <WorkoutDayWithExercises>[].obs;
+  RxList<WorkoutDayWithExercises> daysWithExercises =
+      <WorkoutDayWithExercises>[].obs;
 
   @override
   void onInit() {
@@ -24,7 +25,14 @@ class BuildProgramController extends GetxController {
     }
   }
 
-  Future<void> addExerciseToDay(int dayId, Exercise exercise, int equipmentId, int sets, int reps, int? restTimer) async {
+  Future<void> addExerciseToDay(
+    int dayId,
+    Exercise exercise,
+    int equipmentId,
+    int sets,
+    int reps,
+    int? restTimer,
+  ) async {
     await db.addExerciseToDay(
       workoutDayId: dayId,
       exerciseId: exercise.id,
@@ -38,5 +46,9 @@ class BuildProgramController extends GetxController {
 
   Future<void> removeExerciseFromDay(int dayId, int exerciseId) async {
     await db.deleteExerciseFromWorkoutDay(dayId, exerciseId);
+  }
+
+  Future<void> reorderExercisesInDay(List<ExerciseWithVolume> exercises) async {
+    await db.reorderExercisesInDay(exercises.map((e) => e.volume.id).toList());
   }
 }
