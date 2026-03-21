@@ -3379,6 +3379,253 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSet> {
   }
 }
 
+class $BodyweightEntriesTable extends BodyweightEntries
+    with TableInfo<$BodyweightEntriesTable, BodyweightEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BodyweightEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weightMeta = const VerificationMeta('weight');
+  @override
+  late final GeneratedColumn<double> weight = GeneratedColumn<double>(
+    'weight',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, date, weight];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bodyweight_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BodyweightEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('weight')) {
+      context.handle(
+        _weightMeta,
+        weight.isAcceptableOrUnknown(data['weight']!, _weightMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weightMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BodyweightEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BodyweightEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      weight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}weight'],
+      )!,
+    );
+  }
+
+  @override
+  $BodyweightEntriesTable createAlias(String alias) {
+    return $BodyweightEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class BodyweightEntry extends DataClass implements Insertable<BodyweightEntry> {
+  final int id;
+  final DateTime date;
+  final double weight;
+  const BodyweightEntry({
+    required this.id,
+    required this.date,
+    required this.weight,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date'] = Variable<DateTime>(date);
+    map['weight'] = Variable<double>(weight);
+    return map;
+  }
+
+  BodyweightEntriesCompanion toCompanion(bool nullToAbsent) {
+    return BodyweightEntriesCompanion(
+      id: Value(id),
+      date: Value(date),
+      weight: Value(weight),
+    );
+  }
+
+  factory BodyweightEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BodyweightEntry(
+      id: serializer.fromJson<int>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      weight: serializer.fromJson<double>(json['weight']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'weight': serializer.toJson<double>(weight),
+    };
+  }
+
+  BodyweightEntry copyWith({int? id, DateTime? date, double? weight}) =>
+      BodyweightEntry(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        weight: weight ?? this.weight,
+      );
+  BodyweightEntry copyWithCompanion(BodyweightEntriesCompanion data) {
+    return BodyweightEntry(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      weight: data.weight.present ? data.weight.value : this.weight,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BodyweightEntry(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('weight: $weight')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, date, weight);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BodyweightEntry &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.weight == this.weight);
+}
+
+class BodyweightEntriesCompanion extends UpdateCompanion<BodyweightEntry> {
+  final Value<int> id;
+  final Value<DateTime> date;
+  final Value<double> weight;
+  const BodyweightEntriesCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.weight = const Value.absent(),
+  });
+  BodyweightEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime date,
+    required double weight,
+  }) : date = Value(date),
+       weight = Value(weight);
+  static Insertable<BodyweightEntry> custom({
+    Expression<int>? id,
+    Expression<DateTime>? date,
+    Expression<double>? weight,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (weight != null) 'weight': weight,
+    });
+  }
+
+  BodyweightEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? date,
+    Value<double>? weight,
+  }) {
+    return BodyweightEntriesCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      weight: weight ?? this.weight,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (weight.present) {
+      map['weight'] = Variable<double>(weight.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BodyweightEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('weight: $weight')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3397,6 +3644,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $WorkoutsTable workouts = $WorkoutsTable(this);
   late final $WorkoutSetsTable workoutSets = $WorkoutSetsTable(this);
+  late final $BodyweightEntriesTable bodyweightEntries =
+      $BodyweightEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3413,6 +3662,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     programExercise,
     workouts,
     workoutSets,
+    bodyweightEntries,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -8147,6 +8397,171 @@ typedef $$WorkoutSetsTableProcessedTableManager =
         bool equipmentId,
       })
     >;
+typedef $$BodyweightEntriesTableCreateCompanionBuilder =
+    BodyweightEntriesCompanion Function({
+      Value<int> id,
+      required DateTime date,
+      required double weight,
+    });
+typedef $$BodyweightEntriesTableUpdateCompanionBuilder =
+    BodyweightEntriesCompanion Function({
+      Value<int> id,
+      Value<DateTime> date,
+      Value<double> weight,
+    });
+
+class $$BodyweightEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $BodyweightEntriesTable> {
+  $$BodyweightEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get weight => $composableBuilder(
+    column: $table.weight,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BodyweightEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $BodyweightEntriesTable> {
+  $$BodyweightEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get weight => $composableBuilder(
+    column: $table.weight,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BodyweightEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BodyweightEntriesTable> {
+  $$BodyweightEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<double> get weight =>
+      $composableBuilder(column: $table.weight, builder: (column) => column);
+}
+
+class $$BodyweightEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BodyweightEntriesTable,
+          BodyweightEntry,
+          $$BodyweightEntriesTableFilterComposer,
+          $$BodyweightEntriesTableOrderingComposer,
+          $$BodyweightEntriesTableAnnotationComposer,
+          $$BodyweightEntriesTableCreateCompanionBuilder,
+          $$BodyweightEntriesTableUpdateCompanionBuilder,
+          (
+            BodyweightEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $BodyweightEntriesTable,
+              BodyweightEntry
+            >,
+          ),
+          BodyweightEntry,
+          PrefetchHooks Function()
+        > {
+  $$BodyweightEntriesTableTableManager(
+    _$AppDatabase db,
+    $BodyweightEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BodyweightEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BodyweightEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BodyweightEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<double> weight = const Value.absent(),
+              }) => BodyweightEntriesCompanion(
+                id: id,
+                date: date,
+                weight: weight,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime date,
+                required double weight,
+              }) => BodyweightEntriesCompanion.insert(
+                id: id,
+                date: date,
+                weight: weight,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BodyweightEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BodyweightEntriesTable,
+      BodyweightEntry,
+      $$BodyweightEntriesTableFilterComposer,
+      $$BodyweightEntriesTableOrderingComposer,
+      $$BodyweightEntriesTableAnnotationComposer,
+      $$BodyweightEntriesTableCreateCompanionBuilder,
+      $$BodyweightEntriesTableUpdateCompanionBuilder,
+      (
+        BodyweightEntry,
+        BaseReferences<_$AppDatabase, $BodyweightEntriesTable, BodyweightEntry>,
+      ),
+      BodyweightEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8173,4 +8588,6 @@ class $AppDatabaseManager {
       $$WorkoutsTableTableManager(_db, _db.workouts);
   $$WorkoutSetsTableTableManager get workoutSets =>
       $$WorkoutSetsTableTableManager(_db, _db.workoutSets);
+  $$BodyweightEntriesTableTableManager get bodyweightEntries =>
+      $$BodyweightEntriesTableTableManager(_db, _db.bodyweightEntries);
 }

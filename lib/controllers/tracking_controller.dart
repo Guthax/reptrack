@@ -4,12 +4,15 @@ import 'package:reptrack/utils/fuzzy_search.dart';
 
 /// Controller for the Tracking screen.
 ///
-/// Manages exercise search/filter state and loads historical workout sets
-/// for the selected exercise. Equipment filter chips allow the weight
-/// progress chart to be scoped to a specific equipment variant.
+/// Manages two tabs: exercise progress charts and bodyweight tracking.
+/// Exercise search/filter state and historical workout sets are scoped to the
+/// exercises tab. Bodyweight entries are kept live via a Drift stream.
 class TrackingController extends GetxController {
   /// The shared database instance, resolved via GetX dependency injection.
   final AppDatabase db = Get.find<AppDatabase>();
+
+  /// 0 = exercises tab, 1 = bodyweight tab.
+  final RxInt selectedTab = 0.obs;
 
   /// All exercises stored in the database, loaded once on [onInit].
   final RxList<Exercise> allExercises = <Exercise>[].obs;
@@ -32,10 +35,14 @@ class TrackingController extends GetxController {
   /// The equipment variant currently selected for the weight progress chart.
   final Rx<Equipment?> selectedEquipment = Rx<Equipment?>(null);
 
+  /// All bodyweight entries in chronological order.
+  final RxList<BodyweightEntry> bodyweightEntries = <BodyweightEntry>[].obs;
+
   @override
   void onInit() {
     super.onInit();
     _loadExercises();
+    bodyweightEntries.bindStream(db.watchBodyweightEntries());
   }
 
   /// Fetches all exercises from the database and initialises both
@@ -99,6 +106,11 @@ class TrackingController extends GetxController {
     availableEquipment.clear();
     selectedEquipment.value = null;
     setEquipment.clear();
+  }
+
+  /// Logs a bodyweight entry for today with [weight] in kg.
+  Future<void> logBodyweight(double weight) {
+    return db.addBodyweightEntry(DateTime.now(), weight);
   }
 
   /// Returns `(date, maxWeight)` pairs grouped by calendar day, sorted

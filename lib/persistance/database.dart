@@ -96,6 +96,13 @@ class ProgramExercise extends Table {
   RealColumn get weight => real().withDefault(const Constant(0.0))();
 }
 
+/// A bodyweight log entry recorded by the user on a given date.
+class BodyweightEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  RealColumn get weight => real()();
+}
+
 /// A logged workout session tied to a specific [WorkoutDays] entry.
 class Workouts extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -131,6 +138,7 @@ class WorkoutSets extends Table {
     ProgramExercise,
     Workouts,
     WorkoutSets,
+    BodyweightEntries,
   ],
 )
 /// Central Drift database for RepTrack.
@@ -141,27 +149,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
-
-  @override
-  MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await customStatement(
-          'ALTER TABLE program_exercise ADD COLUMN seconds INTEGER NOT NULL DEFAULT 0',
-        );
-        await customStatement(
-          'ALTER TABLE workout_sets ADD COLUMN seconds INTEGER NOT NULL DEFAULT 0',
-        );
-      }
-      if (from < 3) {
-        await customStatement('ALTER TABLE exercises DROP COLUMN muscle_group');
-        await customStatement('ALTER TABLE exercises DROP COLUMN timer');
-        await customStatement('ALTER TABLE workouts DROP COLUMN note');
-      }
-    },
-  );
+  int get schemaVersion => 1;
 
   /// Inserts [entry] or ignores if the name already exists.
   Future<int> upsertExercise(ExercisesCompanion entry) async {
@@ -529,6 +517,20 @@ class AppDatabase extends _$AppDatabase {
             (u) => OrderingTerm(expression: u.id, mode: OrderingMode.desc),
           ]))
         .get();
+  }
+
+  /// Inserts a bodyweight entry for [date] with [weight] in kg.
+  Future<void> addBodyweightEntry(DateTime date, double weight) {
+    return into(bodyweightEntries).insert(
+      BodyweightEntriesCompanion(date: Value(date), weight: Value(weight)),
+    );
+  }
+
+  /// Emits all bodyweight entries in chronological order.
+  Stream<List<BodyweightEntry>> watchBodyweightEntries() {
+    return (select(
+      bodyweightEntries,
+    )..orderBy([(t) => OrderingTerm(expression: t.date)])).watch();
   }
 
   /// Emits the ordered list of workout days with their exercises for [programId].

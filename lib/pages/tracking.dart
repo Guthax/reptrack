@@ -6,11 +6,11 @@ import 'package:reptrack/controllers/tracking_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 
-/// Page for viewing historical weight-progress charts per exercise.
+/// Page for viewing historical weight-progress charts per exercise and
+/// bodyweight over time.
 ///
-/// Presents a searchable exercise list when no exercise is selected
-/// ([_ExerciseSearchView]), and switches to a progress chart view
-/// ([_ExerciseProgressView]) once an exercise is tapped.
+/// A [SegmentedButton] below the title switches between the exercises tab
+/// (search list + progress chart) and the bodyweight tab (chart + log button).
 class TrackingPage extends StatelessWidget {
   const TrackingPage({super.key});
 
@@ -18,8 +18,33 @@ class TrackingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(TrackingController());
     return Scaffold(
-      appBar: AppBar(title: const Text('Tracking')),
+      appBar: AppBar(
+        title: const Text('Tracking'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Obx(
+              () => SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Exercises')),
+                  ButtonSegment(value: 1, label: Text('Bodyweight')),
+                ],
+                selected: {controller.selectedTab.value},
+                onSelectionChanged: (s) {
+                  controller.selectedTab.value = s.first;
+                  if (s.first == 0) controller.clearSelection();
+                },
+                showSelectedIcon: false,
+              ),
+            ),
+          ),
+        ),
+      ),
       body: Obx(() {
+        if (controller.selectedTab.value == 1) {
+          return _BodyweightView(controller: controller);
+        }
         if (controller.selectedExercise.value == null) {
           return _ExerciseSearchView(controller: controller);
         }
@@ -174,6 +199,92 @@ class _ExerciseProgressView extends StatelessWidget {
         ],
       );
     });
+  }
+}
+
+/// Bodyweight tab: a line chart of logged bodyweight entries plus a log button.
+class _BodyweightView extends StatelessWidget {
+  final TrackingController controller;
+
+  const _BodyweightView({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final entries = controller.bodyweightEntries;
+
+      return Column(
+        children: [
+          if (entries.isEmpty)
+            const Expanded(
+              child: Center(child: Text('No bodyweight entries yet.')),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                'Bodyweight over time',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 24, 16),
+                child: _WeightChart(
+                  data: entries.map((e) => MapEntry(e.date, e.weight)).toList(),
+                ),
+              ),
+            ),
+          ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Log Bodyweight'),
+                onPressed: () => _showLogDialog(context),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  void _showLogDialog(BuildContext context) {
+    final textController = TextEditingController();
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Log Bodyweight'),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            hintText: 'Weight in kg',
+            suffixText: 'kg',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text('CANCEL')),
+          ElevatedButton(
+            onPressed: () {
+              final value = double.tryParse(
+                textController.text.replaceAll(',', '.'),
+              );
+              if (value != null && value > 0) {
+                controller.logBodyweight(value);
+                Get.back();
+              }
+            },
+            child: const Text('LOG'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
