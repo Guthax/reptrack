@@ -116,6 +116,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                     return ChoiceChip(
                       label: Text(e.name),
                       selected: isSelected,
+                      showCheckmark: false,
                       onSelected: (val) {
                         if (val)
                           controller.selectedEquipments[item.exercise.id] =
@@ -140,9 +141,10 @@ class ExerciseSwipeCard extends StatelessWidget {
                       controller.selectedEquipments[item.exercise.id] ??
                       item.equipment?.id ??
                       0;
+                  final plannedSetsReps = item.volume.setsRepsList;
                   final totalSets = controller.getTotalSetsForExercise(
                     item.exercise.id,
-                    item.volume.sets,
+                    plannedSetsReps.length,
                   );
 
                   return ListView.builder(
@@ -168,7 +170,7 @@ class ExerciseSwipeCard extends StatelessWidget {
 
                       // 2. Render the Set Rows
                       final setNum = index + 1;
-                      final isExtraSet = setNum > item.volume.sets;
+                      final isExtraSet = setNum > plannedSetsReps.length;
                       final isSaved = controller.isSetCompleted(
                         item.exercise.id,
                         currentEquipId,
@@ -207,9 +209,14 @@ class ExerciseSwipeCard extends StatelessWidget {
                           setNum: setNum,
                           exerciseId: item.exercise.id,
                           equipmentId: currentEquipId,
-                          plannedReps: item.volume.reps,
+                          plannedReps: isExtraSet
+                              ? (plannedSetsReps.isNotEmpty
+                                    ? plannedSetsReps.last
+                                    : 12)
+                              : plannedSetsReps[setNum - 1],
                           plannedWeight: item.volume.weight,
                           restSeconds: item.volume.restTimer ?? 60,
+                          totalPlannedSets: plannedSetsReps.length,
                         ),
                       );
                     },
@@ -336,6 +343,7 @@ class SetLogRow extends StatefulWidget {
   final int plannedReps;
   final double plannedWeight;
   final int restSeconds;
+  final int totalPlannedSets;
 
   const SetLogRow({
     super.key,
@@ -345,6 +353,7 @@ class SetLogRow extends StatefulWidget {
     required this.plannedReps,
     required this.plannedWeight,
     required this.restSeconds,
+    required this.totalPlannedSets,
   });
 
   @override
@@ -479,6 +488,28 @@ class _SetLogRowState extends State<SetLogRow> {
                     setNum: widget.setNum,
                     restSeconds: widget.restSeconds,
                   );
+
+                  final allDone = List.generate(
+                    widget.totalPlannedSets,
+                    (i) => i + 1,
+                  ).every(
+                    (s) => controller.isSetCompleted(
+                      widget.exerciseId,
+                      widget.equipmentId,
+                      s,
+                    ),
+                  );
+
+                  if (allDone) {
+                    final current = controller.currentPageIndex.value;
+                    final total = controller.exercisesWithVolume.length;
+                    if (current < total - 1) {
+                      controller.pageController.nextPage(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  }
                 },
               ),
           ],

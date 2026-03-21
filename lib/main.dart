@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/pages/programs.dart';
@@ -8,10 +9,23 @@ import 'package:reptrack/persistance/seed_data.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'controllers/navigation_controller.dart';
 
+class CelebrationController extends GetxController {
+  final confetti = ConfettiController(duration: const Duration(seconds: 3));
+
+  void celebrate() => confetti.play();
+
+  @override
+  void onClose() {
+    confetti.dispose();
+    super.onClose();
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
   Get.put(db, permanent: true);
+  Get.put(CelebrationController(), permanent: true);
   await seedDatabase(db);
   runApp(const MainApp());
 }
@@ -42,8 +56,29 @@ class HomePage extends StatelessWidget {
       TrackingPage(),
     ];
 
+    final celebration = Get.find<CelebrationController>();
+
     return Scaffold(
-      body: Obx(() => pages[navRepo.selectedIndex.value]),
+      body: Stack(
+        children: [
+          Obx(() => pages[navRepo.selectedIndex.value]),
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: celebration.confetti,
+              blastDirectionality: BlastDirectionality.explosive,
+              numberOfParticles: 40,
+              gravity: 0.3,
+              colors: const [
+                AppColors.primary,
+                AppColors.secondary,
+                AppColors.success,
+                Colors.white,
+              ],
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           currentIndex: navRepo.selectedIndex.value,

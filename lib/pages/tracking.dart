@@ -128,6 +128,7 @@ class _ExerciseProgressView extends StatelessWidget {
                           ),
                         ),
                         selected: isSelected,
+                        showCheckmark: false,
                         backgroundColor: AppColors.surfaceVariant,
                         selectedColor: AppColors.primary,
                         onSelected: (_) {

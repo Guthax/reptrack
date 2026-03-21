@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -22,6 +23,13 @@ class Exercises extends Table {
   TextColumn get muscleGroup => text().nullable()();
   TextColumn get note => text().nullable()();
   IntColumn get timer => integer().nullable()();
+  IntColumn get exerciseTypeId =>
+      integer().nullable().references(ExerciseTypes, #id)();
+}
+
+class ExerciseTypes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
 }
 
 class MuscleGroups extends Table {
@@ -62,6 +70,7 @@ class WorkoutDays extends Table {
   IntColumn get programId =>
       integer().references(Programs, #id, onDelete: KeyAction.cascade)();
   TextColumn get dayName => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 }
 
 class ProgramExercise extends Table {
@@ -72,9 +81,10 @@ class ProgramExercise extends Table {
       integer().references(Equipments, #id, onDelete: KeyAction.cascade)();
   IntColumn get exerciseId => integer().references(Exercises, #id)();
   IntColumn get orderInProgram => integer().withDefault(const Constant(0))();
-  IntColumn get sets => integer()();
-  IntColumn get reps => integer()();
+  // JSON list of reps per set, e.g. "[12,10,8]"
+  TextColumn get setsReps => text().withDefault(const Constant('[12]'))();
   IntColumn get restTimer => integer().nullable()();
+  IntColumn get seconds => integer().withDefault(const Constant(0))();
   RealColumn get weight => real().withDefault(const Constant(0.0))();
 }
 
@@ -94,6 +104,7 @@ class WorkoutSets extends Table {
   IntColumn get reps => integer()();
   RealColumn get weight => real()();
   IntColumn get setNumber => integer()();
+  IntColumn get seconds => integer().withDefault(const Constant(0))();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(true))();
   DateTimeColumn get dateLogged => dateTime().withDefault(currentDate)();
 }
@@ -101,6 +112,7 @@ class WorkoutSets extends Table {
 @DriftDatabase(
   tables: [
     Exercises,
+    ExerciseTypes,
     Equipments,
     MuscleGroups,
     ExerciseMuscleGroup,
@@ -119,18 +131,19 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 2;
 
   @override
-  MigrationStrategy get migration {
-    return MigrationStrategy(
-      onCreate: (m) async {
-        await m.createAll();
-      },
-      onUpgrade: (m, from, to) async {
-        if (from < 2) {
-          await m.addColumn(programExercise, programExercise.restTimer);
-        }
-      },
-    );
-  }
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await customStatement(
+          'ALTER TABLE program_exercise ADD COLUMN seconds INTEGER NOT NULL DEFAULT 0',
+        );
+        await customStatement(
+          'ALTER TABLE workout_sets ADD COLUMN seconds INTEGER NOT NULL DEFAULT 0',
+        );
+      }
+    },
+  );
 
   Future<int> upsertExercise(ExercisesCompanion entry) async {
     return into(exercises).insert(
@@ -151,6 +164,10 @@ class AppDatabase extends _$AppDatabase {
       (delete(programs)..where((tbl) => tbl.id.equals(id))).go();
 
   Future<List<Exercise>> getAllExercises() => select(exercises).get();
+
+  Future<Exercise?> getExerciseByName(String name) => (select(
+    exercises,
+  )..where((e) => e.name.lower().equals(name.toLowerCase()))).getSingleOrNull();
   Future<int> addExercise(
     String name, {
     String? muscleGroup,
@@ -169,6 +186,35 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteExercise(int id) =>
       (delete(exercises)..where((tbl) => tbl.id.equals(id))).go();
+
+  Future<void> updateExerciseDetails(
+    int id,
+    String name,
+    String? muscleGroup,
+    String? note,
+    Set<int> equipmentIds,
+  ) async {
+    await transaction(() async {
+      await (update(exercises)..where((e) => e.id.equals(id))).write(
+        ExercisesCompanion(
+          name: Value(name),
+          muscleGroup: Value(muscleGroup),
+          note: Value(note),
+        ),
+      );
+      await (delete(
+        exerciseEquipment,
+      )..where((e) => e.exerciseId.equals(id))).go();
+      for (final equipId in equipmentIds) {
+        await into(exerciseEquipment).insert(
+          ExerciseEquipmentCompanion(
+            exerciseId: Value(id),
+            equipmentId: Value(equipId),
+          ),
+        );
+      }
+    });
+  }
 
   Future<void> updateExerciseNote(int exerciseId, String? note) {
     return (update(exercises)..where((tbl) => tbl.id.equals(exerciseId))).write(
@@ -213,8 +259,7 @@ class AppDatabase extends _$AppDatabase {
     required int workoutDayId,
     required int exerciseId,
     required int equipmentId,
-    required int sets,
-    required int reps,
+    required List<int> setsReps,
     int? restTimer,
     double weight = 0.0,
   }) async {
@@ -227,8 +272,7 @@ class AppDatabase extends _$AppDatabase {
         exerciseId: Value(exerciseId),
         equipmentId: Value(equipmentId),
         orderInProgram: Value(existing.length),
-        sets: Value(sets),
-        reps: Value(reps),
+        setsReps: Value(jsonEncode(setsReps)),
         restTimer: Value(restTimer),
         weight: Value(weight),
       ),
@@ -241,6 +285,16 @@ class AppDatabase extends _$AppDatabase {
         await (update(programExercise)
               ..where((tbl) => tbl.id.equals(programExerciseIds[i])))
             .write(ProgramExerciseCompanion(orderInProgram: Value(i)));
+      }
+    });
+  }
+
+  Future<void> reorderDays(List<int> workoutDayIds) async {
+    await transaction(() async {
+      for (int i = 0; i < workoutDayIds.length; i++) {
+        await (update(workoutDays)
+              ..where((tbl) => tbl.id.equals(workoutDayIds[i])))
+            .write(WorkoutDaysCompanion(sortOrder: Value(i)));
       }
     });
   }
@@ -313,7 +367,7 @@ class AppDatabase extends _$AppDatabase {
     final dayStream =
         (select(workoutDays)
               ..where((d) => d.programId.equals(programId))
-              ..orderBy([(t) => OrderingTerm(expression: t.id)]))
+              ..orderBy([(t) => OrderingTerm(expression: t.sortOrder)]))
             .watch();
 
     return dayStream.switchMap((days) {

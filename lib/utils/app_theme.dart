@@ -1,5 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+
+abstract final class AppSnackbar {
+  static void error(String message) {
+    Get.snackbar(
+      '',
+      '',
+      titleText: Row(
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      messageText: const SizedBox.shrink(),
+      backgroundColor: AppColors.surface,
+      borderColor: AppColors.error,
+      borderWidth: 1,
+      borderRadius: 12,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      duration: const Duration(seconds: 3),
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  static void success(String message) {
+    Get.snackbar(
+      '',
+      '',
+      titleText: Row(
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            color: AppColors.success,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      messageText: const SizedBox.shrink(),
+      backgroundColor: AppColors.surface,
+      borderColor: AppColors.success,
+      borderWidth: 1,
+      borderRadius: 12,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      duration: const Duration(seconds: 2),
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+}
 
 /// Central color palette for RepTrack.
 /// Aesthetic: "High-Performance Dark Mode" — deep charcoal + Electric Lime accent.

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/fuzzy_search.dart';
 
 class SwapExerciseDialog extends StatefulWidget {
   final int exerciseId;
@@ -59,9 +60,7 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
               ),
               onChanged: (val) {
                 filteredExercises.assignAll(
-                  allExercises.where(
-                    (e) => e.name.toLowerCase().contains(val.toLowerCase()),
-                  ),
+                  fuzzyFilter(allExercises, val, (e) => e.name),
                 );
               },
             ),

@@ -5,6 +5,7 @@ import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 import 'package:reptrack/widgets/create_exercise_dialog.dart';
+import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 
 class AddExerciseDialog extends StatefulWidget {
   final int dayId;
@@ -16,13 +17,12 @@ class AddExerciseDialog extends StatefulWidget {
 
 class _AddExerciseDialogState extends State<AddExerciseDialog> {
   final TextEditingController searchController = TextEditingController();
-  final TextEditingController setsController = TextEditingController(text: "3");
-  final TextEditingController repsController = TextEditingController(
-    text: "10",
-  );
   final TextEditingController timerController = TextEditingController(
-    text: "60",
+    text: "0",
   );
+  final List<TextEditingController> setControllers = [
+    TextEditingController(text: "12"),
+  ];
 
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
@@ -59,21 +59,50 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               ),
             ),
           ),
-          if (selectedExercise.value == null)
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
+          Obx(() {
+            if (selectedExercise.value == null) {
+              return IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                color: AppColors.primary,
+                tooltip: 'Create new exercise',
+                onPressed: () async {
+                  final newExercise = await Get.dialog<Exercise>(
+                    const CreateExerciseDialog(),
+                  );
+                  if (newExercise != null) {
+                    allExercises.add(newExercise);
+                    filteredExercises.assignAll(allExercises);
+                  }
+                },
+              );
+            }
+            return IconButton(
+              icon: const Icon(Icons.edit_outlined),
               color: AppColors.primary,
-              tooltip: 'Create new exercise',
+              tooltip: 'Edit exercise',
               onPressed: () async {
-                final newExercise = await Get.dialog<Exercise>(
-                  const CreateExerciseDialog(),
+                final updated = await Get.dialog<Exercise>(
+                  EditExerciseDialog(exercise: selectedExercise.value!),
                 );
-                if (newExercise != null) {
-                  allExercises.add(newExercise);
+                if (updated != null) {
+                  selectedExercise.value = updated;
+                  final equips = await Get.find<AppDatabase>()
+                      .getEquipmentForExercise(updated.id);
+                  availableEquipment.assignAll(equips);
+                  if (!equips.any((e) => e.id == selectedEquipmentId.value)) {
+                    selectedEquipmentId.value = equips.length == 1
+                        ? equips.first.id
+                        : null;
+                  }
+                  final idx = allExercises.indexWhere(
+                    (e) => e.id == updated.id,
+                  );
+                  if (idx != -1) allExercises[idx] = updated;
                   filteredExercises.assignAll(allExercises);
                 }
               },
-            ),
+            );
+          }),
         ],
       ),
       content: SizedBox(
@@ -157,36 +186,65 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   return ChoiceChip(
                     label: Text(e.name),
                     selected: selectedEquipmentId.value == e.id,
+                    showCheckmark: false,
                     onSelected: (val) =>
                         selectedEquipmentId.value = val ? e.id : null,
                   );
                 }).toList(),
               ),
               const SizedBox(height: 25),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: setsController,
-                      decoration: const InputDecoration(
-                        labelText: "Sets",
-                        border: OutlineInputBorder(),
+              ...setControllers.asMap().entries.map((entry) {
+                final i = entry.key;
+                final ctrl = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 60,
+                        child: Text(
+                          "Set ${i + 1}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: TextField(
-                      controller: repsController,
-                      decoration: const InputDecoration(
-                        labelText: "Reps",
-                        border: OutlineInputBorder(),
+                      Expanded(
+                        child: TextField(
+                          controller: ctrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: "Reps",
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                        ),
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
+                      if (setControllers.length > 1)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            color: AppColors.error,
+                          ),
+                          onPressed: () => setState(() {
+                            setControllers[i].dispose();
+                            setControllers.removeAt(i);
+                          }),
+                        ),
+                    ],
                   ),
-                ],
+                );
+              }),
+              TextButton.icon(
+                onPressed: () => setState(() {
+                  setControllers.add(
+                    TextEditingController(text: setControllers.last.text),
+                  );
+                }),
+                icon: const Icon(Icons.add),
+                label: const Text("ADD SET"),
+                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
               ),
               const SizedBox(height: 15),
               TextField(
@@ -217,8 +275,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                       widget.dayId,
                       selectedExercise.value!,
                       selectedEquipmentId.value!,
-                      int.tryParse(setsController.text) ?? 0,
-                      int.tryParse(repsController.text) ?? 0,
+                      setControllers
+                          .map((c) => int.tryParse(c.text) ?? 0)
+                          .toList(),
                       int.tryParse(timerController.text),
                     );
                     Get.back();

@@ -57,6 +57,10 @@ class ActiveWorkoutController extends GetxController {
         ),
       ])..where(db.programExercise.workoutDayId.equals(workoutDayId));
 
+      query.orderBy([
+        d.OrderingTerm(expression: db.programExercise.orderInProgram),
+      ]);
+
       final rows = await query.get();
 
       final List<ExerciseWithVolume> items = rows.map((row) {
@@ -184,6 +188,7 @@ class ActiveWorkoutController extends GetxController {
           (tbl) =>
               tbl.workoutId.equals(currentWorkoutId!) &
               tbl.exerciseId.equals(exerciseId) &
+              tbl.equipmentId.equals(equipmentId) &
               tbl.setNumber.equals(setNum),
         ))
         .write(const WorkoutSetsCompanion(isCompleted: d.Value(false)));

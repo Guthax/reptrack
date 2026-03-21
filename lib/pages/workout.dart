@@ -9,6 +9,7 @@ class WorkoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(WorkoutSelectionController());
+    controller.fetchPrograms();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Start Workout')),

@@ -144,6 +144,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                       selected: controller.selectedEquipmentIds.contains(
                         equipment.id,
                       ),
+                      showCheckmark: false,
                       onSelected: (_) {
                         controller.toggleEquipment(equipment.id);
                       },

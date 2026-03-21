@@ -4,6 +4,18 @@ import 'package:reptrack/persistance/database.dart';
 
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
+    final exerciseTypes = {1: 'Strength', 2: 'Cardio'};
+    for (var entry in exerciseTypes.entries) {
+      await db
+          .into(db.exerciseTypes)
+          .insertOnConflictUpdate(
+            ExerciseTypesCompanion.insert(
+              id: Value(entry.key),
+              name: entry.value,
+            ),
+          );
+    }
+
     final muscleNames = {
       1: 'Chest',
       2: 'Back',
@@ -32,6 +44,7 @@ Future<void> seedDatabase(AppDatabase db) async {
       5: 'Machine',
       6: 'Cable',
       7: 'Plate Loaded',
+      8: 'Smith Machine',
     };
     for (var entry in equipmentNames.entries) {
       await db
@@ -61,19 +74,20 @@ Future<void> seedDatabase(AppDatabase db) async {
         if (trimmedLine.isEmpty) continue;
 
         final columns = _splitCsvLine(trimmedLine);
-        if (columns.length < 4) continue;
+        if (columns.length < 5) continue;
 
         final String name = columns[0].trim();
         if (name.isEmpty || existingNames.contains(name.toLowerCase()))
           continue;
 
         try {
-          final primaryId = int.parse(columns[1].trim());
-          final secondaryId = columns[2].trim() == 'null'
+          final exerciseTypeId = int.tryParse(columns[1].trim());
+          final primaryId = int.parse(columns[2].trim());
+          final secondaryId = columns[3].trim() == 'null'
               ? null
-              : int.tryParse(columns[2].trim());
+              : int.tryParse(columns[3].trim());
 
-          final String rawEquipColumn = columns[3];
+          final String rawEquipColumn = columns[4];
           final cleanEquipStr = rawEquipColumn.replaceAll('"', '').trim();
           final List<int> equipIds = cleanEquipStr
               .split(',')
@@ -88,6 +102,7 @@ Future<void> seedDatabase(AppDatabase db) async {
                 ExercisesCompanion.insert(
                   name: name,
                   muscleGroup: Value(muscleNames[primaryId] ?? 'General'),
+                  exerciseTypeId: Value(exerciseTypeId),
                 ),
               );
 

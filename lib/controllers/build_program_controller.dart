@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
@@ -29,16 +32,14 @@ class BuildProgramController extends GetxController {
     int dayId,
     Exercise exercise,
     int equipmentId,
-    int sets,
-    int reps,
+    List<int> setsReps,
     int? restTimer,
   ) async {
     await db.addExerciseToDay(
       workoutDayId: dayId,
       exerciseId: exercise.id,
       equipmentId: equipmentId,
-      sets: sets,
-      reps: reps,
+      setsReps: setsReps,
       restTimer: restTimer,
       weight: 0.0,
     );
@@ -50,5 +51,27 @@ class BuildProgramController extends GetxController {
 
   Future<void> reorderExercisesInDay(List<ExerciseWithVolume> exercises) async {
     await db.reorderExercisesInDay(exercises.map((e) => e.volume.id).toList());
+  }
+
+  Future<void> reorderDays(List<WorkoutDayWithExercises> days) async {
+    await db.reorderDays(days.map((d) => d.workoutDay.id).toList());
+  }
+
+  Future<void> updateExerciseInDay(
+    int volumeId,
+    Exercise exercise,
+    int equipmentId,
+    List<int> setsReps,
+    int? restTimer,
+  ) async {
+    await db.updateProgramExercise(
+      ProgramExerciseCompanion(
+        exerciseId: drift.Value(exercise.id),
+        equipmentId: drift.Value(equipmentId),
+        setsReps: drift.Value(jsonEncode(setsReps)),
+        restTimer: drift.Value(restTimer),
+      ),
+      volumeId,
+    );
   }
 }

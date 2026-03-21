@@ -1,104 +1,300 @@
-Bench Press,1,4,"2,3,7"
-Incline Bench Press,1,5,"2,3,7"
-Decline Bench Press,1,4,"2,3"
-Push-Up,1,4,1
-Chest Fly,1,null,"3,5,6"
-Chest Press Machine,1,4,5
-Pec Deck Machine,1,null,5
-Dumbbell Pullover,1,2,3
-Svend Press,1,null,3
-Floor Press,1,4,2
-Diamond Push-Up,1,4,1
-Machine Chest Fly,1,null,5
-Pull-Up,2,3,1
-Chin-Up,2,3,1
-Lat Pulldown,2,3,5
-Close Grip Lat Pulldown,2,3,"5,6"
-Bent Over Row,2,null,"2,3"
-Seated Cable Row,2,3,6
-T-Bar Row,2,3,7
-Single Arm Dumbbell Row,2,null,3
-Straight Arm Pulldown,2,null,6
-Face Pull,2,5,6
-Good Morning,2,7,2
-Back Extension,2,7,1
-Reverse Fly,2,5,"3,5,6"
-Meadows Row,2,null,2
-Rack Pull,2,7,2
-Pendlay Row,2,null,2
-One Arm Lat Pulldown,2,null,6
-Seal Row,2,null,2
-Chest Supported Row,2,null,"5,7"
-Dumbbell Shrug,2,5,3
-Barbell Shrug,2,5,2
-Bicep Curl,3,null,"2,3,4,6"
-Hammer Curl,3,null,3
-Preacher Curl,3,null,"3,4,5"
-Concentration Curl,3,null,3
-Incline Dumbbell Curl,3,null,3
-Reverse Grip Barbell Curl,3,null,2
-Spider Curl,3,null,4
-Zottman Curl,3,null,3
-Cable Bicep Curl,3,null,6
-Tricep Pushdown,4,null,6
-Skull Crusher,4,null,4
-Overhead Tricep Extension,4,null,"3,6"
-Close Grip Bench Press,4,1,2
-Tricep Dip,4,1,1
-Tricep Kickback,4,null,3
-Rope Pushdown,4,null,6
-Machine Dip,4,null,5
-Bench Dip,4,null,1
-Single Arm Extension,4,null,6
-Overhead Press,5,4,"2,3"
-Lateral Raise,5,null,"3,5,6"
-Front Raise,5,null,"2,3,6"
-Arnold Press,5,4,3
-Upright Row,5,3,"2,6"
-Shoulder Press Machine,5,4,5
-Rear Delt Row,5,2,3
-Reverse Cable Fly,5,2,6
-Cuban Press,5,null,3
-Squat,7,6,2
-Front Squat,7,6,2
-Goblet Squat,7,6,3
-Bulgarian Split Squat,7,null,3
-Hack Squat,7,null,7
-Leg Press,7,null,7
-Leg Extension,7,null,5
-Lying Leg Curl,7,null,5
-Seated Leg Curl,7,null,5
-Standing Leg Curl,7,null,6
-Romanian Deadlift,7,2,2
-Dumbbell Romanian Deadlift,7,2,3
-Stiff Leg Deadlift,7,2,2
-Standing Calf Raise,7,null,"2,3,5"
-Seated Calf Raise,7,null,5
-Deadlift,7,2,2
-Sumo Deadlift,7,null,2
-Hip Thrust,7,null,"2,7"
-Walking Lunge,7,null,3
-Step Up,7,null,1
-Box Squat,7,6,2
-Glute Bridge,7,null,1
-Adductor Machine,7,null,5
-Abductor Machine,7,null,5
-Glute Kickback,7,null,6
-Plank,6,null,1
-Hanging Leg Raise,6,null,1
-Crunch,6,null,1
-Bicycle Crunch,6,null,1
-Russian Twist,6,null,7
-Cable Crunch,6,null,6
-Leg Raise,6,null,1
-Mountain Climber,6,7,1
-V Up,6,null,1
-Dead Bug,6,null,1
-Side Plank,6,null,1
-Woodchopper,6,5,6
-Ab Wheel Rollout,6,2,5
-Wrist Curl,3,null,2
-Reverse Wrist Curl,3,null,2
-Farmer Walk,2,6,3
-Shoulder Press,5, null, "3,5,7"
-Tricep Pulldown, 4, null, 6
+Bench Press,1,1,4,"2,3,5,7,8"
+Incline Bench Press,1,1,5,"2,3,5,7,8"
+Decline Bench Press,1,1,4,"2,3,5,7,8"
+Push-Up,1,1,4,1
+Chest Fly,1,1,null,"3,5,6"
+Pec Deck,1,1,null,5
+Chest Press,1,1,4,"2,3,5,7,8"
+Dumbbell Pullover,1,1,2,"2,3,5,6"
+Svend Press,1,1,null,7
+Floor Press,1,1,4,"2,3"
+Diamond Push-Up,1,1,4,1
+Landmine Press,1,1,5,2
+Dip,1,1,4,"1,5"
+Incline Push-Up,1,1,5,1
+Decline Push-Up,1,1,4,1
+Wide Grip Push-Up,1,1,4,1
+Archer Push-Up,1,1,4,1
+Plyometric Push-Up,1,1,4,1
+Close Grip Push-Up,1,1,4,1
+Guillotine Press,1,1,null,2
+Squeeze Press,1,1,null,3
+Single Arm Press,1,1,4,"3,6,8"
+Neutral Grip Press,1,1,4,3
+Pike Push-Up,1,1,5,1
+Pseudo Planche Push-Up,1,1,4,1
+Reverse Grip Bench Press,1,1,4,"2,8"
+Hex Press,1,1,null,3
+Low Incline Bench Press,1,1,5,"2,3,7,8"
+Cambered Bar Bench Press,1,1,4,7
+Board Press,1,1,4,2
+Foam Roller Press,1,1,null,3
+Pin Press,1,1,4,2
+Larsen Press,1,1,4,2
+Gironda Dip,1,1,null,1
+Pull-Up,1,2,3,1
+Chin-Up,1,2,3,1
+Lat Pulldown,1,2,3,"5,6"
+Wide Grip Lat Pulldown,1,2,3,"5,6"
+Close Grip Lat Pulldown,1,2,3,"5,6"
+Reverse Grip Lat Pulldown,1,2,3,"5,6"
+Bent Over Row,1,2,3,"2,3,5,6,7,8"
+T-Bar Row,1,2,3,"2,7"
+Single Arm Row,1,2,null,"3,5,6"
+Face Pull,1,2,5,"1,6"
+Good Morning,1,2,7,"2,3,7,8"
+Back Extension,1,2,7,"1,5,7"
+Reverse Fly,1,2,5,"3,5,6"
+Rack Pull,1,2,7,"2,7"
+Pendlay Row,1,2,null,2
+Seal Row,1,2,null,"2,3,7"
+Chest Supported Row,1,2,null,"3,5,7"
+Shrug,1,2,5,"2,3,5,6,7,8"
+Meadows Row,1,2,null,2
+Inverted Row,1,2,3,1
+Rope Climb,1,2,3,1
+Snatch Grip Deadlift,1,2,7,2
+Neutral Grip Pull-Up,1,2,3,1
+Renegade Row,1,2,6,3
+Kroc Row,1,2,null,3
+Wide Grip Pull-Up,1,2,3,1
+Typewriter Pull-Up,1,2,3,1
+Archer Pull-Up,1,2,3,1
+L-Sit Pull-Up,1,2,6,1
+Row,1,2,3,"1,3,5,6"
+Pullover To Row,1,2,1,3
+Landmine Row,1,2,null,2
+Bicep Curl,1,3,null,"2,3,4,5,6"
+Hammer Curl,1,3,null,"3,6"
+Preacher Curl,1,3,null,"2,3,4,5,6"
+Concentration Curl,1,3,null,3
+Incline Curl,1,3,null,"3,6"
+Reverse Curl,1,3,null,"2,3,4,6"
+Spider Curl,1,3,null,"2,3,4"
+Zottman Curl,1,3,null,3
+Cross Body Hammer Curl,1,3,null,3
+Drag Curl,1,3,null,"2,3"
+Prone Curl,1,3,null,3
+Waiter Curl,1,3,null,3
+Alternating Curl,1,3,null,"3,6"
+Wrist Curl,1,3,null,"2,3"
+Reverse Wrist Curl,1,3,null,"2,3"
+Cheat Curl,1,3,null,2
+Scott Curl,1,3,null,"2,3,4"
+Pinwheel Curl,1,3,null,3
+Incline Hammer Curl,1,3,null,3
+21s Curl,1,3,null,"2,3,4"
+Isometric Curl Hold,1,3,null,"2,3,4"
+Single Arm Preacher Curl,1,3,null,"3,5,6"
+Partial Curl,1,3,null,"2,3,4"
+Chin-Up Curl,1,3,2,1
+Wrist Roller,1,3,null,1
+Finger Curl,1,3,null,2
+Pronated Wrist Curl,1,3,null,"2,3"
+Tricep Pushdown,1,4,null,6
+Skull Crusher,1,4,null,"2,3,4"
+Overhead Tricep Extension,1,4,null,"2,3,5,6"
+Close Grip Bench Press,1,4,1,"2,8"
+Tricep Dip,1,4,1,1
+Tricep Kickback,1,4,null,"3,6"
+Bench Dip,1,4,null,1
+Single Arm Tricep Extension,1,4,null,"3,6"
+Tate Press,1,4,null,3
+JM Press,1,4,null,2
+Incline Skull Crusher,1,4,1,"2,3,4"
+Decline Skull Crusher,1,4,1,"2,3,4"
+Rolling Tricep Extension,1,4,null,3
+Cobra Push-Up,1,4,1,1
+Kneeling Overhead Extension,1,4,null,"3,6"
+Decline Close Grip Bench Press,1,4,1,2
+Cross Body Tricep Extension,1,4,null,"3,6"
+Overhead Press,1,5,4,"2,3,5,7,8"
+Lateral Raise,1,5,null,"3,5,6"
+Front Raise,1,5,null,"2,3,6,7"
+Arnold Press,1,5,4,3
+Upright Row,1,5,3,"2,3,6,8"
+Rear Delt Fly,1,5,2,"3,5,6"
+Cuban Press,1,5,null,"2,3"
+Landmine Lateral Raise,1,5,null,2
+Y Raise,1,5,2,"3,5"
+Push Press,1,5,4,"2,3,7"
+Behind The Neck Press,1,5,4,"2,8"
+Bradford Press,1,5,4,2
+Seated Press,1,5,4,"2,3,5,8"
+Leaning Lateral Raise,1,5,null,3
+Prone Y Raise,1,5,2,"3,5"
+Prone T Raise,1,5,2,"3,5"
+Prone W Raise,1,5,2,"3,5"
+Single Arm Lateral Raise,1,5,null,"3,6"
+Single Arm Front Raise,1,5,null,"3,6"
+Power Clean,1,5,7,2
+Hang Power Clean,1,5,7,2
+High Pull,1,5,2,2
+Pull Apart,1,5,2,1
+Lu Raises,1,5,null,3
+Windmill,1,5,6,3
+Bottoms Up Press,1,5,4,3
+Landmine Push Press,1,5,4,2
+W Raise,1,5,2,"3,5"
+L Raise,1,5,2,"3,5"
+Around The World,1,5,1,"3,7"
+Swing,1,5,7,3
+Bus Driver,1,5,null,7
+Face Pull With External Rotation,1,5,2,6
+Snatch Balance,1,5,7,2
+Muscle Snatch,1,5,7,2
+Squat,1,7,6,"1,2,3,7,8"
+Front Squat,1,7,6,"2,3,7,8"
+Goblet Squat,1,7,6,"3,7"
+Bulgarian Split Squat,1,7,null,"1,2,3,8"
+Hack Squat,1,7,null,"2,5,7"
+Leg Press,1,7,null,"5,7"
+Leg Extension,1,7,null,5
+Lying Leg Curl,1,7,null,5
+Seated Leg Curl,1,7,null,5
+Standing Leg Curl,1,7,null,"5,6"
+Romanian Deadlift,1,7,2,"2,3,8"
+Stiff Leg Deadlift,1,7,2,"2,3"
+Standing Calf Raise,1,7,null,"1,2,3,5,7,8"
+Seated Calf Raise,1,7,null,"5,7"
+Deadlift,1,7,2,"2,7"
+Sumo Deadlift,1,7,null,"2,7"
+Hip Thrust,1,7,null,"1,2,5,7,8"
+Walking Lunge,1,7,null,"1,2,3,8"
+Step Up,1,7,null,"1,2,3"
+Box Squat,1,7,6,"2,7,8"
+Glute Bridge,1,7,null,"1,2,5,7,8"
+Adductor,1,7,null,5
+Abductor,1,7,null,5
+Glute Kickback,1,7,null,"1,5,6"
+Nordic Curl,1,7,3,1
+Sissy Squat,1,7,null,"1,5"
+Jefferson Curl,1,7,2,"2,3"
+Donkey Calf Raise,1,7,null,"1,5"
+Single Leg Press,1,7,null,"5,7"
+Reverse Lunge,1,7,null,"1,2,3"
+Lateral Lunge,1,7,null,"1,3"
+Zercher Squat,1,7,6,2
+Trap Bar Deadlift,1,7,2,7
+Single Leg Romanian Deadlift,1,7,2,"2,3"
+Leg Press Calf Raise,1,7,null,"5,7"
+Glute Ham Raise,1,7,2,"1,5"
+Pause Squat,1,7,6,"2,7,8"
+Anderson Squat,1,7,6,2
+Safety Bar Squat,1,7,6,7
+Landmine Squat,1,7,6,2
+Pistol Squat,1,7,null,1
+Cable Pull Through,1,7,2,6
+Kettlebell Swing,1,7,2,3
+Box Jump,1,7,null,1
+Jump Squat,1,7,null,"1,2,3"
+Single Leg Glute Bridge,1,7,null,1
+Frog Pump,1,7,null,1
+Standing Hip Abduction,1,7,null,"1,5,6"
+Standing Hip Adduction,1,7,null,"5,6"
+Reverse Hyperextension,1,7,2,"1,5"
+45 Degree Hyperextension,1,7,2,"1,5,7"
+Sumo Squat,1,7,null,"2,3,7"
+Single Leg Deadlift,1,7,2,"2,3"
+Deficit Deadlift,1,7,2,2
+Pause Deadlift,1,7,2,2
+Romanian Deadlift From Deficit,1,7,2,2
+Siff Squat,1,7,6,2
+Overhead Squat,1,7,5,2
+Plié Squat,1,7,null,"3,7"
+Cossack Squat,1,7,null,"1,3"
+Reverse Nordic Curl,1,7,null,1
+Tibialis Raise,1,7,null,1
+Prone Leg Curl,1,7,null,5
+Wall Sit,1,7,null,1
+Sled Push,1,7,6,5
+Sled Pull,1,2,7,5
+Belt Squat,1,7,6,"5,7"
+Hatfield Squat,1,7,6,7
+Spanish Squat,1,7,null,1
+Heel Elevated Squat,1,7,6,"1,2,3,7"
+Peterson Step Up,1,7,null,1
+Reverse Step Up,1,7,null,"1,2,3"
+Lateral Step Up,1,7,null,"1,2,3"
+Crossover Step Up,1,7,null,"1,2,3"
+Donkey Kick,1,7,null,"1,5,6"
+Fire Hydrant,1,7,null,1
+Clamshell,1,7,null,1
+Squat Walk,1,7,null,1
+Sumo Romanian Deadlift,1,7,null,"2,3"
+Straight Leg Deadlift,1,7,2,"2,3"
+Block Pull,1,7,2,2
+Snatch Grip Romanian Deadlift,1,7,2,2
+Wide Stance Squat,1,7,6,"2,7,8"
+Close Stance Squat,1,7,6,"2,7,8"
+Cambered Bar Squat,1,7,6,7
+Manta Ray Squat,1,7,6,2
+Zombie Squat,1,7,6,2
+Duck Walk,1,7,null,1
+Monster Walk,1,7,null,1
+Adductor Squeeze,1,7,null,1
+Leg Press Hip Abduction,1,7,null,"5,7"
+Single Leg Extension,1,7,null,5
+Single Leg Curl,1,7,null,5
+Plank,1,6,null,1
+Hanging Leg Raise,1,6,3,1
+Crunch,1,6,null,"1,5,6"
+Bicycle Crunch,1,6,null,1
+Russian Twist,1,6,null,"1,3,6,7"
+Leg Raise,1,6,null,1
+Mountain Climber,1,6,7,1
+V Up,1,6,null,1
+Dead Bug,1,6,null,1
+Side Plank,1,6,null,1
+Woodchopper,1,6,5,"6,7"
+Ab Wheel Rollout,1,6,2,"1,5"
+Toes To Bar,1,6,3,1
+Dragon Flag,1,6,null,1
+Pallof Press,1,6,5,6
+Decline Crunch,1,6,null,"1,7"
+Hollow Body Hold,1,6,null,1
+Landmine Rotation,1,6,5,2
+Reverse Crunch,1,6,null,1
+Flutter Kick,1,6,null,1
+Scissor Kick,1,6,null,1
+Toe Touch Crunch,1,6,null,1
+Seated Leg Tuck,1,6,null,1
+Hanging Knee Raise,1,6,3,1
+Jackknife,1,6,7,1
+Windshield Wiper,1,6,null,1
+L-Sit,1,6,null,1
+Plank Hip Dip,1,6,null,1
+Side Crunch,1,6,null,1
+Side Bend,1,6,5,"3,6"
+Oblique Crunch,1,6,null,1
+Sit Up,1,6,null,"1,7"
+Decline Sit Up,1,6,null,1
+Stir The Pot,1,6,null,1
+Suitcase Deadlift,1,6,2,3
+GHD Sit Up,1,6,7,1
+Decline Russian Twist,1,6,5,"1,3,7"
+Single Leg V Up,1,6,null,1
+Tuck Crunch,1,6,null,1
+Toe Tap,1,6,null,1
+Copenhagen Plank,1,6,7,1
+Side Lying Hip Raise,1,6,7,1
+Plank Reach,1,6,null,1
+Plank Row,1,6,2,3
+Farmer Walk,1,2,6,"2,3,7"
+Suitcase Carry,1,6,2,3
+Yoke Carry,1,7,2,7
+Clean And Press,1,5,7,2
+Turkish Get Up,1,5,6,3
+Snatch,1,7,5,2
+Power Snatch,1,7,5,2
+Clean,1,7,5,2
+Push Jerk,1,5,7,2
+Split Jerk,1,5,7,2
+Sandbag Carry,1,7,6,1
+Atlas Stone Lift,1,7,6,1
+Log Press,1,5,4,1
+Axle Bar Press,1,5,4,2
+Axle Bar Deadlift,1,7,2,2
+Keg Toss,1,5,7,1
+Tire Flip,1,7,5,1
+Zercher Carry,1,7,6,2

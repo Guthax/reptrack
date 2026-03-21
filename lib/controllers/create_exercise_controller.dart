@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/utils/app_theme.dart';
 
 class CreateExerciseController extends GetxController {
   final AppDatabase db = Get.find<AppDatabase>();
@@ -37,46 +38,48 @@ class CreateExerciseController extends GetxController {
     String? note,
     required Set<int> equipmentIds,
   }) async {
-    if (name.trim().isEmpty) {
-      Get.snackbar('Error', 'Exercise name is required');
+    final trimmedName = name.trim();
+
+    if (trimmedName.isEmpty) {
+      AppSnackbar.error('Exercise name is required');
       return null;
     }
 
     if (equipmentIds.isEmpty) {
-      Get.snackbar('Error', 'Please select at least one equipment type');
+      AppSnackbar.error('Please select at least one equipment type');
       return null;
     }
 
-    try {
-      final id = await db.addExercise(
-        name.trim(),
-        muscleGroup: muscleGroup?.trim(),
-        comment: note?.trim(),
-      );
-
-      // Add equipment associations
-      for (final equipmentId in equipmentIds) {
-        await db
-            .into(db.exerciseEquipment)
-            .insert(
-              ExerciseEquipmentCompanion(
-                exerciseId: drift.Value(id),
-                equipmentId: drift.Value(equipmentId),
-              ),
-            );
-      }
-
-      Get.snackbar('Success', 'Exercise created successfully');
-      return Exercise(
-        id: id,
-        name: name.trim(),
-        muscleGroup: muscleGroup?.trim(),
-        note: note?.trim(),
-        timer: null,
-      );
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to create exercise: $e');
+    final existing = await db.getExerciseByName(trimmedName);
+    if (existing != null) {
+      AppSnackbar.error('"$trimmedName" already exists');
       return null;
     }
+
+    final id = await db.addExercise(
+      trimmedName,
+      muscleGroup: muscleGroup?.trim(),
+      comment: note?.trim(),
+    );
+
+    for (final equipmentId in equipmentIds) {
+      await db
+          .into(db.exerciseEquipment)
+          .insert(
+            ExerciseEquipmentCompanion(
+              exerciseId: drift.Value(id),
+              equipmentId: drift.Value(equipmentId),
+            ),
+          );
+    }
+
+    AppSnackbar.success('"$trimmedName" created');
+    return Exercise(
+      id: id,
+      name: trimmedName,
+      muscleGroup: muscleGroup?.trim(),
+      note: note?.trim(),
+      timer: null,
+    );
   }
 }

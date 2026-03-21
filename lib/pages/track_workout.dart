@@ -19,9 +19,8 @@ class TrackWorkoutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(ActiveWorkoutController(dayId));
 
-    // We use PopScope to intercept the back button/gesture
     return PopScope(
-      canPop: false, // Prevent immediate pop
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         _showExitWarning();
@@ -61,10 +60,12 @@ class TrackWorkoutPage extends StatelessWidget {
           ],
         ),
         body: Obx(() {
-          if (controller.isLoading.value)
+          if (controller.isLoading.value) {
             return const Center(child: CircularProgressIndicator());
-          if (controller.exercisesWithVolume.isEmpty)
+          }
+          if (controller.exercisesWithVolume.isEmpty) {
             return const Center(child: Text("No exercises found."));
+          }
 
           return Column(
             children: [
@@ -96,7 +97,6 @@ class TrackWorkoutPage extends StatelessWidget {
     );
   }
 
-  // Dialog for the AppBar FINISH button
   void _showFinishDialog() {
     Get.dialog(
       AlertDialog(
@@ -111,7 +111,13 @@ class TrackWorkoutPage extends StatelessWidget {
               backgroundColor: AppColors.success,
               foregroundColor: Colors.black,
             ),
-            onPressed: () => Get.offAll(() => const HomePage()),
+            onPressed: () {
+              Get.back();
+              Get.offAll(() => const HomePage());
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Get.find<CelebrationController>().celebrate();
+              });
+            },
             child: const Text("FINISH"),
           ),
         ],
@@ -119,7 +125,6 @@ class TrackWorkoutPage extends StatelessWidget {
     );
   }
 
-  // Dialog for the BACK button/gesture
   void _showExitWarning() {
     Get.dialog(
       AlertDialog(
