@@ -108,6 +108,36 @@ class _ExerciseProgressView extends StatelessWidget {
               ],
             ),
           ),
+          if (controller.availableEquipment.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (final equipment in controller.availableEquipment)
+                    Obx(() {
+                      final isSelected =
+                          controller.selectedEquipment.value?.id ==
+                          equipment.id;
+                      return FilterChip(
+                        label: Text(
+                          equipment.name,
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : null,
+                            fontWeight: isSelected ? FontWeight.w600 : null,
+                          ),
+                        ),
+                        selected: isSelected,
+                        backgroundColor: AppColors.surfaceVariant,
+                        selectedColor: AppColors.primary,
+                        onSelected: (_) {
+                          controller.selectedEquipment.value = equipment;
+                        },
+                      );
+                    }),
+                ],
+              ),
+            ),
           if (data.isEmpty)
             const Expanded(
               child: Center(

@@ -179,7 +179,14 @@ class ActiveWorkoutController extends GetxController {
     required int setNum,
   }) async {
     if (currentWorkoutId == null) return;
-    await db.deleteWorkoutSet(currentWorkoutId!, exerciseId, setNum);
+    // Mark the set as incomplete instead of deleting it
+    await (db.update(db.workoutSets)..where(
+          (tbl) =>
+              tbl.workoutId.equals(currentWorkoutId!) &
+              tbl.exerciseId.equals(exerciseId) &
+              tbl.setNumber.equals(setNum),
+        ))
+        .write(const WorkoutSetsCompanion(isCompleted: d.Value(false)));
     completedSets.remove("$exerciseId-$equipmentId-$setNum");
     final list = sessionLoggedSets[exerciseId];
     if (list != null) {

@@ -4,6 +4,7 @@ import 'package:reptrack/controllers/build_program_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
+import 'package:reptrack/widgets/create_exercise_dialog.dart';
 
 class AddExerciseDialog extends StatefulWidget {
   final int dayId;
@@ -47,10 +48,33 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     final controller = Get.find<BuildProgramController>();
 
     return AlertDialog(
-      title: Obx(
-        () => Text(
-          selectedExercise.value == null ? "Select Exercise" : "Set Volume",
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Obx(
+              () => Text(
+                selectedExercise.value == null
+                    ? "Select Exercise"
+                    : "Set Volume",
+              ),
+            ),
+          ),
+          if (selectedExercise.value == null)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              color: AppColors.primary,
+              tooltip: 'Create new exercise',
+              onPressed: () async {
+                final newExercise = await Get.dialog<Exercise>(
+                  const CreateExerciseDialog(),
+                );
+                if (newExercise != null) {
+                  allExercises.add(newExercise);
+                  filteredExercises.assignAll(allExercises);
+                }
+              },
+            ),
+        ],
       ),
       content: SizedBox(
         width: double.maxFinite,

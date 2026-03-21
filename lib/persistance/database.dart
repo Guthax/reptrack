@@ -278,6 +278,12 @@ class AppDatabase extends _$AppDatabase {
     return rows.map((row) => row.readTable(equipments)).toList();
   }
 
+  Future<Equipment?> getEquipmentById(int equipmentId) {
+    return (select(
+      equipments,
+    )..where((tbl) => tbl.id.equals(equipmentId))).getSingleOrNull();
+  }
+
   Future<void> deleteWorkoutSet(int workoutId, int exerciseId, int setNumber) {
     return (delete(workoutSets)..where(
           (tbl) =>
@@ -290,7 +296,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<WorkoutSet>> getSetsForExercise(int exerciseId) {
     return (select(workoutSets)
-          ..where((tbl) => tbl.exerciseId.equals(exerciseId))
+          ..where(
+            (tbl) =>
+                tbl.exerciseId.equals(exerciseId) &
+                tbl.isCompleted.equals(true),
+          )
           ..orderBy([
             (u) => OrderingTerm(expression: u.id, mode: OrderingMode.desc),
           ]))
