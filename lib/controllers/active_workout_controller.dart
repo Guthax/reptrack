@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:drift/drift.dart' as d;
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
 class ActiveWorkoutController extends GetxController {
@@ -16,14 +15,15 @@ class ActiveWorkoutController extends GetxController {
   var currentPageIndex = 0.obs;
   int? currentWorkoutId;
 
-  // Timer & Audio state
   var remainingRestTime = 0.obs;
   Timer? _timer;
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   var lastWorkoutSets = <int, List<WorkoutSet>>{}.obs;
   var completedSets = <String>{}.obs;
   var selectedEquipments = <int, int>{}.obs;
+
+  var extraSetsCount = <int, int>{}.obs;
+  var sessionLoggedSets = <int, List<WorkoutSetsCompanion>>{}.obs;
 
   final PageController pageController = PageController();
 
@@ -33,7 +33,6 @@ class ActiveWorkoutController extends GetxController {
   void onInit() {
     super.onInit();
     _setupWorkout();
-    // Pre-cache the sound to avoid delay on first play
   }
 
   Future<void> _setupWorkout() async {
@@ -79,6 +78,26 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
+  void addExtraSet(int exerciseId) {
+    extraSetsCount[exerciseId] = (extraSetsCount[exerciseId] ?? 0) + 1;
+  }
+
+  void removeExtraSet(int exerciseId) {
+    if ((extraSetsCount[exerciseId] ?? 0) > 0) {
+      extraSetsCount[exerciseId] = extraSetsCount[exerciseId]! - 1;
+    }
+  }
+
+  int getTotalSetsForExercise(int exerciseId, int plannedSets) {
+    return plannedSets + (extraSetsCount[exerciseId] ?? 0);
+  }
+
+  WorkoutSetsCompanion? getLastLoggedSet(int exerciseId) {
+    final list = sessionLoggedSets[exerciseId];
+    if (list == null || list.isEmpty) return null;
+    return list.last;
+  }
+
   void startRestTimer(int seconds) {
     if (seconds <= 0) return;
     _timer?.cancel();
@@ -94,13 +113,9 @@ class ActiveWorkoutController extends GetxController {
   }
 
   Future<void> _playTimerEndSound() async {
-  // This triggers the native 'click/beep' sound on Android 
-  // and the system 'alert' sound on Linux/Desktop.
-  await SystemSound.play(SystemSoundType.alert);
-  
-  // Optional: Add a haptic bump for mobile users
-  HapticFeedback.vibrate(); 
-}
+    await SystemSound.play(SystemSoundType.alert);
+    HapticFeedback.vibrate();
+  }
 
   void skipRestTimer() {
     remainingRestTime.value = 0;
@@ -117,17 +132,23 @@ class ActiveWorkoutController extends GetxController {
   }) async {
     if (currentWorkoutId == null) return;
 
-    await db.into(db.workoutSets).insert(
-          WorkoutSetsCompanion.insert(
-            workoutId: currentWorkoutId!,
-            exerciseId: exerciseId,
-            equipmentId: equipmentId,
-            reps: reps,
-            weight: weight,
-            setNumber: setNum,
-            isCompleted: const d.Value(true),
-          ),
-        );
+    final entry = WorkoutSetsCompanion.insert(
+      workoutId: currentWorkoutId!,
+      exerciseId: exerciseId,
+      equipmentId: equipmentId,
+      reps: reps,
+      weight: weight,
+      setNumber: setNum,
+      isCompleted: const d.Value(true),
+    );
+
+    await db.into(db.workoutSets).insert(entry);
+
+    if (!sessionLoggedSets.containsKey(exerciseId)) {
+      sessionLoggedSets[exerciseId] = [];
+    }
+    sessionLoggedSets[exerciseId]!.add(entry);
+
     completedSets.add("$exerciseId-$setNum");
 
     if (restSeconds != null) {
@@ -154,16 +175,16 @@ class ActiveWorkoutController extends GetxController {
         final equipmentList = await db.getEquipmentForExercise(newExercise.id);
         final newEquip = equipmentList.firstWhere(
           (e) => e.id == newEquipmentId,
-          orElse: () => equipmentList.isNotEmpty 
-            ? equipmentList.first 
-            : Equipment(id: newEquipmentId, name: "Default", icon_name: "fitness_center"),
+          orElse: () => equipmentList.isNotEmpty
+              ? equipmentList.first
+              : Equipment(id: newEquipmentId, name: "Default", icon_name: "fitness_center"),
         );
 
         final originalItem = exercisesWithVolume[index];
         final swappedItem = ExerciseWithVolume(
-          exercise: newExercise, 
-          volume: originalItem.volume, 
-          equipment: newEquip
+          exercise: newExercise,
+          volume: originalItem.volume,
+          equipment: newEquip,
         );
 
         selectedEquipments[newExercise.id] = newEquipmentId;
@@ -186,7 +207,6 @@ class ActiveWorkoutController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
-    _audioPlayer.dispose();
     pageController.dispose();
     super.onClose();
   }

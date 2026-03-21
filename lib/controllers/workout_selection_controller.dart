@@ -1,15 +1,13 @@
 import 'package:get/get.dart';
 import 'package:reptrack/pages/track_workout.dart';
-import 'package:reptrack/persistance/database.dart'; // Adjust path
+import 'package:reptrack/persistance/database.dart';
 
 class WorkoutSelectionController extends GetxController {
   final AppDatabase db = Get.find<AppDatabase>();
 
-  // Observable lists for dropdowns
   var programs = <Program>[].obs;
   var workoutDays = <WorkoutDay>[].obs;
 
-  // Selected values
   var selectedProgram = Rxn<Program>();
   var selectedDay = Rxn<WorkoutDay>();
 
@@ -25,8 +23,8 @@ class WorkoutSelectionController extends GetxController {
 
   void onProgramChanged(Program? program) async {
     selectedProgram.value = program;
-    selectedDay.value = null; // Reset day when program changes
-    
+    selectedDay.value = null;
+
     if (program != null) {
       workoutDays.value = await db.getWorkoutDaysForProgram(program.id);
     } else {
@@ -37,9 +35,9 @@ class WorkoutSelectionController extends GetxController {
   void startWorkout() {
     if (selectedDay.value != null) {
       Get.to(() => TrackWorkoutPage(
-        dayId: selectedDay.value!.id,
-        dayName: selectedDay.value!.dayName,
-      ));
+            dayId: selectedDay.value!.id,
+            dayName: selectedDay.value!.dayName,
+          ));
     }
   }
 }

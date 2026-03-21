@@ -33,7 +33,6 @@ class ExerciseHistoryDialog extends StatelessWidget {
         width: double.maxFinite,
         height: 450,
         child: FutureBuilder(
-          // We wait for both the sets and the equipment list to arrive
           future: Future.wait([
             db.getSetsForExercise(exerciseId),
             db.select(db.equipments).get(),
@@ -51,10 +50,8 @@ class ExerciseHistoryDialog extends StatelessWidget {
             final List<WorkoutSet> allSets = snapshot.data![0];
             final List<Equipment> allEquip = snapshot.data![1];
 
-            // Create a map for quick equipment name lookup
             final equipMap = {for (var e in allEquip) e.id: e.name};
 
-            // 1. Group sets by workoutId (Session)
             final Map<int, List<WorkoutSet>> sessions = {};
             for (var set in allSets) {
               sessions.putIfAbsent(set.workoutId, () => []).add(set);
@@ -101,8 +98,7 @@ class ExerciseHistoryDialog extends StatelessWidget {
                             final idx = entry.key;
                             final set = entry.value;
                             final isLast = idx == sets.length - 1;
-                            
-                            // Lookup equipment name
+
                             final equipName = equipMap[set.equipmentId] ?? "Unknown";
 
                             return Column(
@@ -122,7 +118,7 @@ class ExerciseHistoryDialog extends StatelessWidget {
                                           Text(equipName,
                                               style: TextStyle(
                                                   fontSize: 9,
-                                                  color: Colors.blueGrey.withOpacity(0.6))),
+                                                  color: Colors.blueGrey.withValues(alpha: 0.6))),
                                         ],
                                       ),
                                       const Spacer(),

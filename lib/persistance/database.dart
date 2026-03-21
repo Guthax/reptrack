@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:reptrack/persistance/composites.dart'; 
+import 'package:reptrack/persistance/composites.dart';
 import 'package:rxdart/rxdart.dart';
 
 part 'database.g.dart';
@@ -15,8 +15,6 @@ LazyDatabase _openConnection() {
     return NativeDatabase(file);
   });
 }
-
-// --- TABLES ---
 
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -91,7 +89,7 @@ class WorkoutSets extends Table {
   IntColumn get equipmentId => integer().references(Equipments, #id)();
   IntColumn get reps => integer()();
   RealColumn get weight => real()();
-  IntColumn get setNumber => integer()(); 
+  IntColumn get setNumber => integer()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(true))();
   DateTimeColumn get dateLogged => dateTime().withDefault(currentDate)();
 }
@@ -111,21 +109,17 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
-          // Add restTimer column to ProgramExercise table
           await m.addColumn(programExercise, programExercise.restTimer);
         }
       },
     );
   }
 
-
-  // --- UPSERT FOR SEEDING ---
   Future<int> upsertExercise(ExercisesCompanion entry) async {
     return into(exercises).insert(
       entry,
       onConflict: DoUpdate(
         (old) => ExercisesCompanion.custom(
-          // Extract the raw value and wrap it in a Constant expression
           muscleGroup: Constant(entry.muscleGroup.value),
         ),
         target: [exercises.name],
@@ -133,12 +127,10 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  // --- PROGRAM CRUD ---
   Future<List<Program>> getAllPrograms() => select(programs).get();
   Future<int> addProgram(String name) => into(programs).insert(ProgramsCompanion(name: Value(name)));
   Future<int> deleteProgram(int id) => (delete(programs)..where((tbl) => tbl.id.equals(id))).go();
 
-  // --- EXERCISE CRUD ---
   Future<List<Exercise>> getAllExercises() => select(exercises).get();
   Future<int> addExercise(String name, {String? muscleGroup, String? comment, int? timer}) {
     return into(exercises).insert(ExercisesCompanion(
@@ -150,7 +142,6 @@ class AppDatabase extends _$AppDatabase {
   }
   Future<int> deleteExercise(int id) => (delete(exercises)..where((tbl) => tbl.id.equals(id))).go();
 
-  // --- WORKOUT DAYS CRUD ---
   Future<List<WorkoutDay>> getWorkoutDaysForProgram(int programId) {
     return (select(workoutDays)..where((tbl) => tbl.programId.equals(programId))).get();
   }
@@ -159,7 +150,6 @@ class AppDatabase extends _$AppDatabase {
   }
   Future<int> deleteWorkoutDay(int id) => (delete(workoutDays)..where((tbl) => tbl.id.equals(id))).go();
 
-  // --- PROGRAM EXERCISES CRUD ---
   Future<List<ProgramExerciseData>> getExercisesForDay(int workoutDayId) {
     return (select(programExercise)..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
   }
@@ -190,7 +180,6 @@ class AppDatabase extends _$AppDatabase {
   }
   Future<int> deleteProgramExercise(int id) => (delete(programExercise)..where((tbl) => tbl.id.equals(id))).go();
 
-  // --- HISTORY & QUERIES ---
   Future<WorkoutSet?> getLastSetForExercise(int exerciseId) {
     return (select(workoutSets)
           ..where((tbl) => tbl.exerciseId.equals(exerciseId))
@@ -214,7 +203,6 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  // --- THE FIXED STREAM ---
   Stream<List<WorkoutDayWithExercises>> watchWorkoutDaysWithExercises(int programId) {
     final dayStream = (select(workoutDays)
           ..where((d) => d.programId.equals(programId))
@@ -237,8 +225,7 @@ class AppDatabase extends _$AppDatabase {
           final exercise = row.readTableOrNull(exercises);
           final volume = row.readTableOrNull(programExercise);
           final equipment = row.readTableOrNull(equipments);
-          
-          // Only add to list if all required components exist
+
           if (exercise != null && volume != null && equipment != null) {
             final entry = ExerciseWithVolume(
               exercise: exercise,

@@ -2,8 +2,6 @@ import 'package:get/get.dart';
 import '../persistance/database.dart';
 
 class ProgramsController extends GetxController {
-  
-  // .obs makes the list observable
   var programs = <Program>[].obs;
   var isLoading = true.obs;
 
@@ -17,28 +15,19 @@ class ProgramsController extends GetxController {
     try {
       isLoading(true);
       final data = await Get.find<AppDatabase>().getAllPrograms();
-
-      final existingExercises = await Get.find<AppDatabase>().getAllExercises();
       programs.assignAll(data);
     } finally {
       isLoading(false);
     }
   }
 
-  // inside programs_controller.dart
   Future<Program?> addProgram(String name) async {
     try {
       final database = Get.find<AppDatabase>();
-      
-      // 1. Insert and get the full Program object back
-      // (Assuming your database helper has a method like this, or use the return value of insert)
       final id = await database.into(database.programs).insert(
         ProgramsCompanion.insert(name: name),
       );
-
-      await loadPrograms(); 
-
-      // Find the newly created program in our list
+      await loadPrograms();
       return programs.firstWhere((p) => p.id == id);
     } catch (e) {
       Get.snackbar("Error", "Could not save: $e");
@@ -46,16 +35,10 @@ class ProgramsController extends GetxController {
     }
   }
 
-    Future<void> deleteProgram(Program program) async {
+  Future<void> deleteProgram(Program program) async {
     try {
-      final database = Get.find<AppDatabase>();
-      
-      // 1. Insert and get the full Program object back
-      // (Assuming your database helper has a method like this, or use the return value of insert)
-      await (database.delete(database.programs)
-            ..where((row) => row.id.equals(program.id))
-          ).go();
-      await loadPrograms(); 
+      await Get.find<AppDatabase>().deleteProgram(program.id);
+      await loadPrograms();
     } catch (e) {
       Get.snackbar("Error", "Could not delete: $e");
     }

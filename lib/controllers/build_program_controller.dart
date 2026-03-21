@@ -18,13 +18,13 @@ class BuildProgramController extends GetxController {
 
   Future<List<Exercise>> getAvailableExercises() => db.getAllExercises();
 
-  void addDay(String name) async {
+  Future<void> addDay(String name) async {
     if (name.trim().isNotEmpty) {
       await db.addWorkoutDay(programId, name.trim());
     }
   }
 
-  void addExerciseToDay(int dayId, Exercise exercise, int equipmentId, int sets, int reps, int? restTimer) async {
+  Future<void> addExerciseToDay(int dayId, Exercise exercise, int equipmentId, int sets, int reps, int? restTimer) async {
     await db.addExerciseToDay(
       workoutDayId: dayId,
       exerciseId: exercise.id,
@@ -36,10 +36,7 @@ class BuildProgramController extends GetxController {
     );
   }
 
-  void removeExerciseFromDay(int dayId, int exerciseId) async {
-    await db.deleteExerciseFromWorkoutDay(
-      dayId,
-      exerciseId
-    );
+  Future<void> removeExerciseFromDay(int dayId, int exerciseId) async {
+    await db.deleteExerciseFromWorkoutDay(dayId, exerciseId);
   }
 }

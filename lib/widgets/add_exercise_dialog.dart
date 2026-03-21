@@ -12,7 +12,6 @@ class AddExerciseDialog extends StatefulWidget {
 }
 
 class _AddExerciseDialogState extends State<AddExerciseDialog> {
-  // Use standard controllers to avoid Rx lag in text fields
   final TextEditingController searchController = TextEditingController();
   final TextEditingController setsController = TextEditingController(text: "3");
   final TextEditingController repsController = TextEditingController(text: "10");
@@ -42,13 +41,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     final controller = Get.find<BuildProgramController>();
 
     return AlertDialog(
-      title: Obx(() => Text(selectedExercise.value == null 
-          ? "Select Exercise" 
-          : "Set Volume")),
+      title: Obx(() => Text(selectedExercise.value == null ? "Select Exercise" : "Set Volume")),
       content: SizedBox(
         width: double.maxFinite,
         child: Obx(() {
-          // STEP 1: If no exercise is selected, show ONLY the search list
           if (selectedExercise.value == null) {
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -83,19 +79,16 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                           title: Text(ex.name),
                           subtitle: Text(ex.muscleGroup ?? ""),
                           onTap: () async {
-                            // Fetch equipment first
                             final equips = await Get.find<AppDatabase>()
                                 .getEquipmentForExercise(ex.id);
-                            
-                            // Then update state
+
                             availableEquipment.assignAll(equips);
-                            selectedEquipmentId.value = equips.length == 1 
-                                ? equips.first.id 
+                            selectedEquipmentId.value = equips.length == 1
+                                ? equips.first.id
                                 : null;
                             selectedExercise.value = ex;
-                            
-                            // Kill keyboard
-                            FocusScope.of(context).unfocus();
+
+                            if (mounted) FocusScope.of(context).unfocus();
                           },
                         );
                       },
@@ -106,11 +99,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             );
           }
 
-          // STEP 2: Exercise is selected, show ONLY the equipment/volume form
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Selection Summary Chip
               Chip(
                 label: Text(selectedExercise.value!.name),
                 onDeleted: () {
@@ -120,8 +111,6 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 deleteIcon: const Icon(Icons.close),
               ),
               const SizedBox(height: 20),
-              
-              // Equipment Choice
               const Text("Equipment Type", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Wrap(
@@ -134,10 +123,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   );
                 }).toList(),
               ),
-              
               const SizedBox(height: 25),
-              
-              // Volume Inputs
               Row(
                 children: [
                   Expanded(
@@ -174,22 +160,23 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
       actions: [
         TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
         Obx(() {
-          // Final validation
-          bool isValid = selectedExercise.value != null && 
-                         selectedEquipmentId.value != null;
-          
+          final bool isValid =
+              selectedExercise.value != null && selectedEquipmentId.value != null;
+
           return ElevatedButton(
-            onPressed: !isValid ? null : () {
-              controller.addExerciseToDay(
-                widget.dayId,
-                selectedExercise.value!,
-                selectedEquipmentId.value!,
-                int.tryParse(setsController.text) ?? 0,
-                int.tryParse(repsController.text) ?? 0,
-                int.tryParse(timerController.text),
-              );
-              Get.back();
-            },
+            onPressed: !isValid
+                ? null
+                : () {
+                    controller.addExerciseToDay(
+                      widget.dayId,
+                      selectedExercise.value!,
+                      selectedEquipmentId.value!,
+                      int.tryParse(setsController.text) ?? 0,
+                      int.tryParse(repsController.text) ?? 0,
+                      int.tryParse(timerController.text),
+                    );
+                    Get.back();
+                  },
             child: const Text("Confirm"),
           );
         }),

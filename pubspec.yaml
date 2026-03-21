@@ -18,6 +18,7 @@ dependencies:
   rxdart: ^0.27.7
   intl: ^0.20.2
   audioplayers: ^6.5.1
+  flutter_launcher_icons: ^0.14.4
   
 
 dev_dependencies:
@@ -32,3 +33,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/exercises.csv
+    - assets/icons/icon_rounded.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/icon_rounded.png"

@@ -4,9 +4,6 @@ import 'package:reptrack/persistance/database.dart';
 
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
-    print("--- Starting Database Seed ---");
-
-    // 1. Seed Muscle Groups
     final muscleNames = {
       1: 'Chest', 2: 'Back', 3: 'Bicep', 4: 'Tricep', 5: 'Shoulders', 6: 'Abs', 7: 'Legs'
     };
@@ -16,29 +13,25 @@ Future<void> seedDatabase(AppDatabase db) async {
       );
     }
 
-    // 2. Seed Equipment
     final equipmentNames = {
       1: 'Bodyweight', 2: 'Barbell', 3: 'Dumbbells', 4: 'EZ-Bar', 5: 'Machine', 6: 'Cable', 7: 'Plate Loaded'
     };
     for (var entry in equipmentNames.entries) {
       await db.into(db.equipments).insertOnConflictUpdate(
         EquipmentsCompanion.insert(
-          id: Value(entry.key), 
-          name: entry.value, 
+          id: Value(entry.key),
+          name: entry.value,
           icon_name: entry.value.toLowerCase().replaceAll(' ', '_'),
         ),
       );
     }
 
-    // 3. Prevent Duplicates
     final allExisting = await db.select(db.exercises).get();
     final Set<String> existingNames = allExisting.map((e) => e.name.trim().toLowerCase()).toSet();
 
     try {
       final String rawData = await rootBundle.loadString('assets/data/exercises.csv');
       final lines = rawData.split(RegExp(r'\r?\n'));
-
-      int addedCount = 0;
 
       for (var line in lines) {
         final trimmedLine = line.trim();
@@ -53,9 +46,7 @@ Future<void> seedDatabase(AppDatabase db) async {
         try {
           final primaryId = int.parse(columns[1].trim());
           final secondaryId = columns[2].trim() == 'null' ? null : int.tryParse(columns[2].trim());
-          
-          // --- CRITICAL FIX FOR EQUIPMENT PARSING ---
-          // Strip quotes, then split by comma, then trim each ID
+
           final String rawEquipColumn = columns[3];
           final cleanEquipStr = rawEquipColumn.replaceAll('"', '').trim();
           final List<int> equipIds = cleanEquipStr
@@ -65,7 +56,6 @@ Future<void> seedDatabase(AppDatabase db) async {
               .map((e) => int.parse(e))
               .toList();
 
-          // A. Insert Exercise
           final exerciseId = await db.into(db.exercises).insert(
             ExercisesCompanion.insert(
               name: name,
@@ -73,7 +63,6 @@ Future<void> seedDatabase(AppDatabase db) async {
             ),
           );
 
-          // B. Link Primary Muscle
           await db.into(db.exerciseMuscleGroup).insert(
             ExerciseMuscleGroupCompanion.insert(
               exerciseId: exerciseId,
@@ -82,7 +71,6 @@ Future<void> seedDatabase(AppDatabase db) async {
             ),
           );
 
-          // C. Link Secondary Muscle
           if (secondaryId != null) {
             await db.into(db.exerciseMuscleGroup).insert(
               ExerciseMuscleGroupCompanion.insert(
@@ -93,7 +81,6 @@ Future<void> seedDatabase(AppDatabase db) async {
             );
           }
 
-          // D. Link Equipment
           for (var eId in equipIds) {
             await db.into(db.exerciseEquipment).insert(
               ExerciseEquipmentCompanion.insert(
@@ -104,21 +91,9 @@ Future<void> seedDatabase(AppDatabase db) async {
           }
 
           existingNames.add(name.toLowerCase());
-          addedCount++;
-        } catch (innerError) {
-          print("Error parsing equipment for $name: $innerError");
-        }
+        } catch (_) {}
       }
-      
-      // Verification log
-      final linkCount = await db.select(db.exerciseEquipment).get();
-      print("--- SEED FINISHED ---");
-      print("Exercises added: $addedCount");
-      print("Total Equipment Links in DB: ${linkCount.length}");
-      
-    } catch (e) {
-      print("CRITICAL SEED ERROR: $e");
-    }
+    } catch (_) {}
   });
 }
 

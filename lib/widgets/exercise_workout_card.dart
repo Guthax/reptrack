@@ -33,10 +33,9 @@ class ExerciseSwipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- HEADER WITH HISTORY/SWAP BUTTONS ---
+              // --- HEADER ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -98,24 +97,76 @@ class ExerciseSwipeCard extends StatelessWidget {
               const Divider(height: 30),
 
               // --- LOGGING SECTION ---
-              Expanded(
-                child: Obx(() {
-                  final currentEquipId = controller.selectedEquipments[item.exercise.id] ?? item.equipment?.id ?? 0;
-                  return ListView.builder(
-                    itemCount: item.volume.sets,
-                    itemBuilder: (context, index) => SetLogRow(
-                      key: ValueKey("${item.exercise.id}-$currentEquipId-${index + 1}"),
-                      setNum: index + 1,
-                      exerciseId: item.exercise.id,
-                      equipmentId: currentEquipId,
-                      plannedReps: item.volume.reps,
-                      plannedWeight: item.volume.weight,
-                      restSeconds: item.volume.restTimer ?? 60, // Passed from volume
-                    ),
-                  );
-                }),
-              ),
+     // --- LOGGING SECTION ---
+Expanded(
+  child: Obx(() {
+    final currentEquipId = controller.selectedEquipments[item.exercise.id] ?? item.equipment?.id ?? 0;
+    final totalSets = controller.getTotalSetsForExercise(item.exercise.id, item.volume.sets);
 
+    return ListView.builder(
+      itemCount: totalSets + 1,
+      itemBuilder: (context, index) {
+        // 1. Render the Add Button at the very end
+        if (index == totalSets) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8.0, bottom: 20),
+            child: OutlinedButton.icon(
+              onPressed: () => controller.addExtraSet(item.exercise.id),
+              icon: const Icon(Icons.add),
+              label: const Text("ADD EXTRA SET"),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blueGrey,
+                side: BorderSide(color: Colors.blueGrey.shade200),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          );
+        }
+
+        // 2. Render the Set Rows
+        final setNum = index + 1;
+        final isExtraSet = setNum > item.volume.sets;
+        final isSaved = controller.isSetCompleted(item.exercise.id, setNum);
+        
+        // NEW FIX: Is this the very last set in the entire list?
+        final isLastSet = setNum == totalSets;
+
+        // This unique key is vital for Dismissible to work
+        final itemKey = Key("set_${item.exercise.id}_${currentEquipId}_$setNum");
+
+        return Dismissible(
+          key: itemKey,
+          // Only allow swipe-to-delete if it's an extra set, NOT saved, AND it's the bottom-most set
+          direction: (isExtraSet && !isSaved && isLastSet) 
+              ? DismissDirection.startToEnd 
+              : DismissDirection.none,
+          background: Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          onDismissed: (direction) {
+            controller.removeExtraSet(item.exercise.id);
+          },
+          child: SetLogRow(
+            key: itemKey,
+            setNum: setNum,
+            exerciseId: item.exercise.id,
+            equipmentId: currentEquipId,
+            plannedReps: item.volume.reps,
+            plannedWeight: item.volume.weight,
+            restSeconds: item.volume.restTimer ?? 60,
+          ),
+        );
+      },
+    );
+  }),
+),
               // --- TIMER FOOTER ---
               Obx(() {
                 final timeLeft = controller.remainingRestTime.value;
@@ -184,10 +235,24 @@ class _SetLogRowState extends State<SetLogRow> {
   void initState() {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
-    final pastSet = controller.getPastSetData(widget.exerciseId, widget.setNum, widget.equipmentId);
+    
+    final lastSessionSet = controller.getLastLoggedSet(widget.exerciseId);
+    final pastWorkoutSet = controller.getPastSetData(widget.exerciseId, widget.setNum, widget.equipmentId);
 
-    repsController = TextEditingController(text: pastSet != null ? pastSet.reps.toString() : widget.plannedReps.toString());
-    weightController = TextEditingController(text: pastSet != null ? pastSet.weight.toString() : widget.plannedWeight.toString());
+    String initialReps = widget.plannedReps.toString();
+    String initialWeight = widget.plannedWeight.toString();
+
+    if (lastSessionSet != null) {
+      // FIX: Extraction of .value from Drift Companion Value wrapper
+      initialReps = lastSessionSet.reps.value.toString();
+      initialWeight = lastSessionSet.weight.value.toString();
+    } else if (pastWorkoutSet != null) {
+      initialReps = pastWorkoutSet.reps.toString();
+      initialWeight = pastWorkoutSet.weight.toString();
+    }
+
+    repsController = TextEditingController(text: initialReps);
+    weightController = TextEditingController(text: initialWeight);
   }
 
   @override
@@ -223,19 +288,19 @@ class _SetLogRowState extends State<SetLogRow> {
             const SizedBox(width: 12),
             Expanded(
               child: TextField(
-                controller: repsController,
+                controller: weightController,
                 enabled: !isSaved,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Reps", floatingLabelBehavior: FloatingLabelBehavior.always),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: "Kg", floatingLabelBehavior: FloatingLabelBehavior.always),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: TextField(
-                controller: weightController,
+                controller: repsController,
                 enabled: !isSaved,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: "Kg", floatingLabelBehavior: FloatingLabelBehavior.always),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Reps", floatingLabelBehavior: FloatingLabelBehavior.always),
               ),
             ),
             IconButton(
@@ -250,7 +315,7 @@ class _SetLogRowState extends State<SetLogRow> {
                         reps: int.tryParse(repsController.text) ?? 0,
                         weight: double.tryParse(weightController.text) ?? 0,
                         setNum: widget.setNum,
-                        restSeconds: widget.restSeconds, // Trigger timer on save
+                        restSeconds: widget.restSeconds,
                       );
                     },
             )

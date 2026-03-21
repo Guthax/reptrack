@@ -8,7 +8,6 @@ class WorkoutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the controller
     final controller = Get.put(WorkoutSelectionController());
 
     return Scaffold(
@@ -31,14 +30,13 @@ class WorkoutPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Program Selection Dropdown
                     Obx(() => DropdownButtonFormField<Program>(
                           decoration: const InputDecoration(
                             labelText: "Program",
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.list_alt),
                           ),
-                          value: controller.selectedProgram.value,
+                          initialValue: controller.selectedProgram.value,
                           items: controller.programs.map((p) {
                             return DropdownMenuItem(value: p, child: Text(p.name));
                           }).toList(),
@@ -47,14 +45,13 @@ class WorkoutPage extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Workout Day Selection Dropdown
                     Obx(() => DropdownButtonFormField<WorkoutDay>(
                           decoration: const InputDecoration(
                             labelText: "Workout Day",
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.calendar_today),
                           ),
-                          value: controller.selectedDay.value,
+                          initialValue: controller.selectedDay.value,
                           disabledHint: const Text("Select a program first"),
                           items: controller.workoutDays.map((d) {
                             return DropdownMenuItem(value: d, child: Text(d.dayName));
@@ -64,7 +61,6 @@ class WorkoutPage extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    // Start Button
                     Obx(() => ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
