@@ -69,7 +69,9 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
             const SizedBox(height: 16),
             Flexible(
               child: Container(
-                height: 350,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.35,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.outline),
                   borderRadius: BorderRadius.circular(12),
@@ -77,6 +79,8 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                 child: Obx(
                   () => ListView.separated(
                     shrinkWrap: true,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     itemCount: filteredExercises.length,
                     separatorBuilder: (context, index) =>
                         const Divider(height: 1),

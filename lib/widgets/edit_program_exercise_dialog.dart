@@ -153,13 +153,17 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                 const SizedBox(height: 10),
                 Flexible(
                   child: Container(
-                    height: 300,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.35,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppColors.outline),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListView.builder(
                       shrinkWrap: true,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       itemCount: filteredExercises.length,
                       itemBuilder: (ctx, i) {
                         final ex = filteredExercises[i];

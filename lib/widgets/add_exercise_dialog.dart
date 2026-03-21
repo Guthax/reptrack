@@ -152,13 +152,17 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 const SizedBox(height: 10),
                 Flexible(
                   child: Container(
-                    height: 300,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.35,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppColors.outline),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListView.builder(
                       shrinkWrap: true,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       itemCount: filteredExercises.length,
                       itemBuilder: (ctx, i) {
                         final ex = filteredExercises[i];
@@ -187,104 +191,108 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             );
           }
 
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Chip(
-                label: Text(selectedExercise.value!.name),
-                onDeleted: () {
-                  selectedExercise.value = null;
-                  selectedEquipmentId.value = null;
-                },
-                deleteIcon: const Icon(Icons.close),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Equipment Type",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: availableEquipment.map((e) {
-                  return ChoiceChip(
-                    label: Text(e.name),
-                    selected: selectedEquipmentId.value == e.id,
-                    showCheckmark: false,
-                    onSelected: (val) =>
-                        selectedEquipmentId.value = val ? e.id : null,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 25),
-              ...setControllers.asMap().entries.map((entry) {
-                final i = entry.key;
-                final ctrl = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          "Set ${i + 1}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Chip(
+                  label: Text(selectedExercise.value!.name),
+                  onDeleted: () {
+                    selectedExercise.value = null;
+                    selectedEquipmentId.value = null;
+                  },
+                  deleteIcon: const Icon(Icons.close),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Equipment Type",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: availableEquipment.map((e) {
+                    return ChoiceChip(
+                      label: Text(e.name),
+                      selected: selectedEquipmentId.value == e.id,
+                      showCheckmark: false,
+                      onSelected: (val) =>
+                          selectedEquipmentId.value = val ? e.id : null,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 25),
+                ...setControllers.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final ctrl = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            "Set ${i + 1}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: ctrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: const InputDecoration(
-                            labelText: "Reps",
-                            border: OutlineInputBorder(),
-                            isDense: true,
+                        Expanded(
+                          child: TextField(
+                            controller: ctrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: "Reps",
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
                           ),
                         ),
-                      ),
-                      if (setControllers.length > 1)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.remove_circle_outline,
-                            color: AppColors.error,
+                        if (setControllers.length > 1)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.remove_circle_outline,
+                              color: AppColors.error,
+                            ),
+                            onPressed: () => setState(() {
+                              setControllers[i].dispose();
+                              setControllers.removeAt(i);
+                            }),
                           ),
-                          onPressed: () => setState(() {
-                            setControllers[i].dispose();
-                            setControllers.removeAt(i);
-                          }),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-              TextButton.icon(
-                onPressed: () => setState(() {
-                  setControllers.add(
-                    TextEditingController(text: setControllers.last.text),
+                      ],
+                    ),
                   );
                 }),
-                icon: const Icon(Icons.add),
-                label: const Text("ADD SET"),
-                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: timerController,
-                decoration: const InputDecoration(
-                  labelText: "Rest Timer (seconds)",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.timer),
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    setControllers.add(
+                      TextEditingController(text: setControllers.last.text),
+                    );
+                  }),
+                  icon: const Icon(Icons.add),
+                  label: const Text("ADD SET"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+                const SizedBox(height: 15),
+                TextField(
+                  controller: timerController,
+                  decoration: const InputDecoration(
+                    labelText: "Rest Timer (seconds)",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.timer),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           );
         }),
       ),
