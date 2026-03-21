@@ -26,15 +26,15 @@ class WorkoutSelectionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchPrograms();
-  }
-
-  /// Loads all programs from the database into [programs].
-  ///
-  /// Declared as [Future<void>] so callers can await completion and
-  /// propagated errors are not silently swallowed.
-  Future<void> fetchPrograms() async {
-    programs.value = await db.getAllPrograms();
+    programs.bindStream(db.watchAllPrograms());
+    ever(programs, (_) {
+      if (selectedProgram.value != null &&
+          !programs.any((p) => p.id == selectedProgram.value!.id)) {
+        selectedProgram.value = null;
+        selectedDay.value = null;
+        workoutDays.clear();
+      }
+    });
   }
 
   /// Called when the user selects a different [program] from the dropdown.

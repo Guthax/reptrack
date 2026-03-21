@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/build_program_controller.dart';
 import 'package:reptrack/persistance/database.dart';
@@ -204,6 +205,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: availableEquipment.map((e) {
                   return ChoiceChip(
                     label: Text(e.name),
@@ -236,6 +238,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                         child: TextField(
                           controller: ctrl,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           decoration: const InputDecoration(
                             labelText: "Reps",
                             border: OutlineInputBorder(),

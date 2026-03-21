@@ -124,6 +124,7 @@ class _ExerciseProgressView extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final equipment in controller.availableEquipment)
                     Obx(() {

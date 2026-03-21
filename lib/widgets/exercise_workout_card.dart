@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/composites.dart';
@@ -9,7 +10,8 @@ import 'package:reptrack/widgets/swap_exercise_dialog.dart';
 
 class ExerciseSwipeCard extends StatelessWidget {
   final ExerciseWithVolume item;
-  ExerciseSwipeCard({super.key, required this.item});
+  final int exerciseIndex;
+  ExerciseSwipeCard({super.key, required this.item, required this.exerciseIndex});
 
   final RxList<Equipment> alternatives = <Equipment>[].obs;
 
@@ -77,6 +79,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                     onPressed: () => showDialog(
                       context: context,
                       builder: (context) => SwapExerciseDialog(
+                        exerciseIndex: exerciseIndex,
                         exerciseId: item.exercise.id,
                         exerciseName: item.exercise.name,
                       ),
@@ -113,15 +116,15 @@ class ExerciseSwipeCard extends StatelessWidget {
                   runSpacing: 8,
                   children: alternatives.map((e) {
                     final isSelected =
-                        controller.selectedEquipments[item.exercise.id] == e.id;
+                        controller.selectedEquipments[exerciseIndex] == e.id;
                     return ChoiceChip(
                       label: Text(e.name),
                       selected: isSelected,
                       showCheckmark: false,
                       onSelected: (val) {
-                        if (val)
-                          controller.selectedEquipments[item.exercise.id] =
-                              e.id;
+                        if (val) {
+                          controller.selectedEquipments[exerciseIndex] = e.id;
+                        }
                       },
                     );
                   }).toList(),
@@ -139,12 +142,12 @@ class ExerciseSwipeCard extends StatelessWidget {
                   controller.completedSets.length;
 
                   final currentEquipId =
-                      controller.selectedEquipments[item.exercise.id] ??
+                      controller.selectedEquipments[exerciseIndex] ??
                       item.equipment?.id ??
                       0;
                   final plannedSetsReps = item.volume.setsRepsList;
                   final totalSets = controller.getTotalSetsForExercise(
-                    item.exercise.id,
+                    exerciseIndex,
                     plannedSetsReps.length,
                   );
 
@@ -157,7 +160,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 8.0, bottom: 20),
                           child: OutlinedButton.icon(
                             onPressed: () =>
-                                controller.addExtraSet(item.exercise.id),
+                                controller.addExtraSet(exerciseIndex),
                             icon: const Icon(Icons.add),
                             label: const Text("ADD EXTRA SET"),
                             style: OutlinedButton.styleFrom(
@@ -173,7 +176,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                       final setNum = index + 1;
                       final isExtraSet = setNum > plannedSetsReps.length;
                       final isSaved = controller.isSetCompleted(
-                        item.exercise.id,
+                        exerciseIndex,
                         currentEquipId,
                         setNum,
                       );
@@ -183,7 +186,7 @@ class ExerciseSwipeCard extends StatelessWidget {
 
                       // This unique key is vital for Dismissible to work
                       final itemKey = Key(
-                        "set_${item.exercise.id}_${currentEquipId}_$setNum",
+                        "set_${exerciseIndex}_$setNum",
                       );
 
                       return Dismissible(
@@ -203,11 +206,12 @@ class ExerciseSwipeCard extends StatelessWidget {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         onDismissed: (direction) {
-                          controller.removeExtraSet(item.exercise.id);
+                          controller.removeExtraSet(exerciseIndex);
                         },
                         child: SetLogRow(
                           key: itemKey,
                           setNum: setNum,
+                          exerciseIndex: exerciseIndex,
                           exerciseId: item.exercise.id,
                           equipmentId: currentEquipId,
                           plannedReps: isExtraSet
@@ -339,6 +343,7 @@ class _ExerciseCommentDialogState extends State<_ExerciseCommentDialog> {
 
 class SetLogRow extends StatefulWidget {
   final int setNum;
+  final int exerciseIndex;
   final int exerciseId;
   final int equipmentId;
   final int plannedReps;
@@ -349,6 +354,7 @@ class SetLogRow extends StatefulWidget {
   const SetLogRow({
     super.key,
     required this.setNum,
+    required this.exerciseIndex,
     required this.exerciseId,
     required this.equipmentId,
     required this.plannedReps,
@@ -370,7 +376,7 @@ class _SetLogRowState extends State<SetLogRow> {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
 
-    final lastSessionSet = controller.getLastLoggedSet(widget.exerciseId);
+    final lastSessionSet = controller.getLastLoggedSet(widget.exerciseIndex);
     final pastWorkoutSet = controller.getPastSetData(
       widget.exerciseId,
       widget.setNum,
@@ -406,7 +412,7 @@ class _SetLogRowState extends State<SetLogRow> {
 
     return Obx(() {
       final bool isSaved = controller.completedSets.contains(
-        "${widget.exerciseId}-${widget.equipmentId}-${widget.setNum}",
+        "${widget.exerciseIndex}-${widget.equipmentId}-${widget.setNum}",
       );
 
       return AnimatedContainer(
@@ -444,6 +450,9 @@ class _SetLogRowState extends State<SetLogRow> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
                 decoration: const InputDecoration(
                   labelText: "Kg",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -456,6 +465,7 @@ class _SetLogRowState extends State<SetLogRow> {
                 controller: repsController,
                 enabled: !isSaved,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: "Reps",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -470,6 +480,7 @@ class _SetLogRowState extends State<SetLogRow> {
                 onPressed: () {},
                 onLongPress: () async {
                   await controller.unlogSet(
+                    exerciseIndex: widget.exerciseIndex,
                     exerciseId: widget.exerciseId,
                     equipmentId: widget.equipmentId,
                     setNum: widget.setNum,
@@ -482,6 +493,7 @@ class _SetLogRowState extends State<SetLogRow> {
                 color: AppColors.textDisabled,
                 onPressed: () async {
                   await controller.logSet(
+                    exerciseIndex: widget.exerciseIndex,
                     exerciseId: widget.exerciseId,
                     equipmentId: widget.equipmentId,
                     reps: int.tryParse(repsController.text) ?? 0,
@@ -496,7 +508,7 @@ class _SetLogRowState extends State<SetLogRow> {
                         (i) => i + 1,
                       ).every(
                         (s) => controller.isSetCompleted(
-                          widget.exerciseId,
+                          widget.exerciseIndex,
                           widget.equipmentId,
                           s,
                         ),

@@ -208,8 +208,7 @@ class BuildProgramPage extends StatelessWidget {
                                         ),
                                         onPressed: () {
                                           controller.removeExerciseFromDay(
-                                            day.id,
-                                            ex.exercise.id,
+                                            ex.volume.id,
                                           );
                                           Get.back();
                                         },

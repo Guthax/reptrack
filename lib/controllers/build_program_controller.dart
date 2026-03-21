@@ -86,9 +86,12 @@ class BuildProgramController extends GetxController {
     );
   }
 
-  /// Removes the exercise identified by [exerciseId] from workout day [dayId].
-  Future<void> removeExerciseFromDay(int dayId, int exerciseId) async {
-    await db.deleteExerciseFromWorkoutDay(dayId, exerciseId);
+  /// Removes the exercise entry identified by [volumeId] from its workout day.
+  ///
+  /// Deletes by the [ProgramExercise] primary key so that duplicate exercise
+  /// entries on the same day can be removed independently.
+  Future<void> removeExerciseFromDay(int volumeId) async {
+    await db.deleteProgramExercise(volumeId);
   }
 
   /// Persists the display order of [exercises] within their workout day.

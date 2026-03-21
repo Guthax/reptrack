@@ -177,13 +177,32 @@ class AppDatabase extends _$AppDatabase {
   /// Returns all programs ordered by insertion.
   Future<List<Program>> getAllPrograms() => select(programs).get();
 
+  /// Emits the full program list whenever a program is added, renamed, or deleted.
+  Stream<List<Program>> watchAllPrograms() => select(programs).watch();
+
   /// Inserts a new program with the given [name] and returns its id.
   Future<int> addProgram(String name) =>
       into(programs).insert(ProgramsCompanion(name: Value(name)));
 
-  /// Permanently deletes the program with [id] and cascades to its days.
-  Future<int> deleteProgram(int id) =>
-      (delete(programs)..where((tbl) => tbl.id.equals(id))).go();
+  /// Permanently deletes the program with [id], its workout days, and their
+  /// program exercises. Logged [Workouts] and [WorkoutSets] are preserved.
+  Future<void> deleteProgram(int id) async {
+    await transaction(() async {
+      final days = await (select(
+        workoutDays,
+      )..where((d) => d.programId.equals(id))).get();
+
+      if (days.isNotEmpty) {
+        final dayIds = days.map((d) => d.id).toList();
+        await (delete(
+          programExercise,
+        )..where((pe) => pe.workoutDayId.isIn(dayIds))).go();
+      }
+
+      await (delete(workoutDays)..where((d) => d.programId.equals(id))).go();
+      await (delete(programs)..where((p) => p.id.equals(id))).go();
+    });
+  }
 
   /// Updates the name of program [id].
   Future<void> renameProgram(int id, String name) =>

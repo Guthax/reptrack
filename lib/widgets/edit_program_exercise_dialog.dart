@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/build_program_controller.dart';
@@ -229,6 +230,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                 Obx(
                   () => Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children: availableEquipment.map((e) {
                       return ChoiceChip(
                         label: Text(e.name),
@@ -262,6 +264,9 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                           child: TextField(
                             controller: ctrl,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             decoration: const InputDecoration(
                               labelText: 'Reps',
                               border: OutlineInputBorder(),

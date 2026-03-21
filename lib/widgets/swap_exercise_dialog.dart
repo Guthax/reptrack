@@ -6,11 +6,13 @@ import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 
 class SwapExerciseDialog extends StatefulWidget {
+  final int exerciseIndex;
   final int exerciseId;
   final String exerciseName;
 
   const SwapExerciseDialog({
     super.key,
+    required this.exerciseIndex,
     required this.exerciseId,
     required this.exerciseName,
   });
@@ -103,7 +105,7 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
 
                           // 3. Perform the swap in the controller
                           activeController.swapExercise(
-                            oldExerciseId: widget.exerciseId,
+                            exerciseIndex: widget.exerciseIndex,
                             newExercise: ex,
                             newEquipmentId: defaultEquipId,
                           );

@@ -94,6 +94,7 @@ class TrackWorkoutPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return ExerciseSwipeCard(
                       item: controller.exercisesWithVolume[index],
+                      exerciseIndex: index,
                     );
                   },
                 ),

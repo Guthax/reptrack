@@ -101,15 +101,15 @@ class ActiveWorkoutController extends GetxController {
 
       final rows = await query.get();
       final List<ExerciseWithVolume> items = rows.map((row) {
-        final ex = row.readTable(db.exercises);
-        final eq = row.readTable(db.equipments);
-        selectedEquipments[ex.id] = eq.id;
         return ExerciseWithVolume(
-          exercise: ex,
+          exercise: row.readTable(db.exercises),
           volume: row.readTable(db.programExercise),
-          equipment: eq,
+          equipment: row.readTable(db.equipments),
         );
       }).toList();
+      for (var i = 0; i < items.length; i++) {
+        selectedEquipments[i] = items[i].equipment.id;
+      }
 
       for (var item in items) {
         final sets =
@@ -133,28 +133,28 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
-  /// Increments the extra-set count for [exerciseId] by one.
-  void addExtraSet(int exerciseId) {
-    extraSetsCount[exerciseId] = (extraSetsCount[exerciseId] ?? 0) + 1;
+  /// Increments the extra-set count for the exercise at [exerciseIndex].
+  void addExtraSet(int exerciseIndex) {
+    extraSetsCount[exerciseIndex] = (extraSetsCount[exerciseIndex] ?? 0) + 1;
   }
 
-  /// Decrements the extra-set count for [exerciseId] by one, flooring at zero.
-  void removeExtraSet(int exerciseId) {
-    if ((extraSetsCount[exerciseId] ?? 0) > 0) {
-      extraSetsCount[exerciseId] = extraSetsCount[exerciseId]! - 1;
+  /// Decrements the extra-set count for the exercise at [exerciseIndex], flooring at zero.
+  void removeExtraSet(int exerciseIndex) {
+    if ((extraSetsCount[exerciseIndex] ?? 0) > 0) {
+      extraSetsCount[exerciseIndex] = extraSetsCount[exerciseIndex]! - 1;
     }
   }
 
-  /// Returns the total number of sets for [exerciseId], combining the
-  /// program-prescribed [plannedSets] with any extra sets the user added.
-  int getTotalSetsForExercise(int exerciseId, int plannedSets) {
-    return plannedSets + (extraSetsCount[exerciseId] ?? 0);
+  /// Returns the total number of sets for the exercise at [exerciseIndex],
+  /// combining the program-prescribed [plannedSets] with any extra sets added.
+  int getTotalSetsForExercise(int exerciseIndex, int plannedSets) {
+    return plannedSets + (extraSetsCount[exerciseIndex] ?? 0);
   }
 
-  /// Returns the last [WorkoutSetsCompanion] logged for [exerciseId] in
-  /// this session, or `null` if none has been logged yet.
-  WorkoutSetsCompanion? getLastLoggedSet(int exerciseId) {
-    final list = sessionLoggedSets[exerciseId];
+  /// Returns the last [WorkoutSetsCompanion] logged for the exercise at
+  /// [exerciseIndex] in this session, or `null` if none has been logged yet.
+  WorkoutSetsCompanion? getLastLoggedSet(int exerciseIndex) {
+    final list = sessionLoggedSets[exerciseIndex];
     if (list == null || list.isEmpty) return null;
     return list.last;
   }
@@ -199,6 +199,7 @@ class ActiveWorkoutController extends GetxController {
   ///
   /// Does nothing if [currentWorkoutId] is `null` (setup not complete).
   Future<void> logSet({
+    required int exerciseIndex,
     required int exerciseId,
     required int equipmentId,
     required int reps,
@@ -220,29 +221,30 @@ class ActiveWorkoutController extends GetxController {
 
     await db.into(db.workoutSets).insert(entry);
 
-    if (!sessionLoggedSets.containsKey(exerciseId)) {
-      sessionLoggedSets[exerciseId] = [];
+    if (!sessionLoggedSets.containsKey(exerciseIndex)) {
+      sessionLoggedSets[exerciseIndex] = [];
     }
-    sessionLoggedSets[exerciseId]!.add(entry);
+    sessionLoggedSets[exerciseIndex]!.add(entry);
     sessionLoggedSets.refresh();
 
-    completedSets.add("$exerciseId-$equipmentId-$setNum");
+    completedSets.add("$exerciseIndex-$equipmentId-$setNum");
 
     if (restSeconds != null) {
       startRestTimer(restSeconds);
     }
   }
 
-  /// Returns whether the set identified by [exerciseId], [equipmentId], and
-  /// [setNum] has been completed in this session.
-  bool isSetCompleted(int exerciseId, int equipmentId, int setNum) =>
-      completedSets.contains("$exerciseId-$equipmentId-$setNum");
+  /// Returns whether the set [setNum] for the exercise at [exerciseIndex]
+  /// using [equipmentId] has been completed in this session.
+  bool isSetCompleted(int exerciseIndex, int equipmentId, int setNum) =>
+      completedSets.contains("$exerciseIndex-$equipmentId-$setNum");
 
   /// Marks a previously logged set as incomplete in the database and removes
   /// it from the local completed-sets tracking.
   ///
   /// Does nothing if [currentWorkoutId] is `null`.
   Future<void> unlogSet({
+    required int exerciseIndex,
     required int exerciseId,
     required int equipmentId,
     required int setNum,
@@ -256,8 +258,8 @@ class ActiveWorkoutController extends GetxController {
               tbl.setNumber.equals(setNum),
         ))
         .write(const WorkoutSetsCompanion(isCompleted: d.Value(false)));
-    completedSets.remove("$exerciseId-$equipmentId-$setNum");
-    final list = sessionLoggedSets[exerciseId];
+    completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+    final list = sessionLoggedSets[exerciseIndex];
     if (list != null) {
       list.removeWhere((s) => s.setNumber.value == setNum);
       sessionLoggedSets.refresh();
@@ -280,52 +282,49 @@ class ActiveWorkoutController extends GetxController {
   /// Historical sets for [newExercise] are loaded for reference display, and
   /// any completed-set keys referencing [oldExerciseId] are cleared.
   Future<void> swapExercise({
-    required int oldExerciseId,
+    required int exerciseIndex,
     required Exercise newExercise,
     required int newEquipmentId,
   }) async {
     try {
-      final index = exercisesWithVolume.indexWhere(
-        (item) => item.exercise.id == oldExerciseId,
-      );
-      if (index != -1) {
-        final equipmentList = await db.getEquipmentForExercise(newExercise.id);
-        final newEquip = equipmentList.firstWhere(
-          (e) => e.id == newEquipmentId,
-          orElse: () => equipmentList.isNotEmpty
-              ? equipmentList.first
-              : Equipment(
-                  id: newEquipmentId,
-                  name: "Default",
-                  icon_name: "fitness_center",
-                ),
-        );
-
-        final originalItem = exercisesWithVolume[index];
-        final swappedItem = ExerciseWithVolume(
-          exercise: newExercise,
-          volume: originalItem.volume,
-          equipment: newEquip,
-        );
-
-        selectedEquipments[newExercise.id] = newEquipmentId;
-        exercisesWithVolume[index] = swappedItem;
-
-        final sets =
-            await (db.select(db.workoutSets)
-                  ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
-                  ..orderBy([
-                    (u) => d.OrderingTerm(
-                      expression: u.id,
-                      mode: d.OrderingMode.desc,
-                    ),
-                  ]))
-                .get();
-        if (sets.isNotEmpty) lastWorkoutSets[newExercise.id] = sets;
-
-        completedSets.removeWhere((key) => key.startsWith("$oldExerciseId-"));
-        exercisesWithVolume.refresh();
+      if (exerciseIndex < 0 || exerciseIndex >= exercisesWithVolume.length) {
+        return;
       }
+      final equipmentList = await db.getEquipmentForExercise(newExercise.id);
+      final newEquip = equipmentList.firstWhere(
+        (e) => e.id == newEquipmentId,
+        orElse: () => equipmentList.isNotEmpty
+            ? equipmentList.first
+            : Equipment(
+                id: newEquipmentId,
+                name: "Default",
+                icon_name: "fitness_center",
+              ),
+      );
+
+      final originalItem = exercisesWithVolume[exerciseIndex];
+      exercisesWithVolume[exerciseIndex] = ExerciseWithVolume(
+        exercise: newExercise,
+        volume: originalItem.volume,
+        equipment: newEquip,
+      );
+
+      selectedEquipments[exerciseIndex] = newEquipmentId;
+
+      final sets =
+          await (db.select(db.workoutSets)
+                ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
+                ..orderBy([
+                  (u) => d.OrderingTerm(
+                    expression: u.id,
+                    mode: d.OrderingMode.desc,
+                  ),
+                ]))
+              .get();
+      if (sets.isNotEmpty) lastWorkoutSets[newExercise.id] = sets;
+
+      completedSets.removeWhere((key) => key.startsWith("$exerciseIndex-"));
+      exercisesWithVolume.refresh();
     } catch (e) {
       Get.snackbar("Swap Error", "Could not swap exercise: $e");
     }
