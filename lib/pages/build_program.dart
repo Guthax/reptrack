@@ -31,14 +31,19 @@ class BuildProgramPage extends StatelessWidget {
     if (Get.isRegistered<BuildProgramController>()) {
       Get.delete<BuildProgramController>(force: true);
     }
-    controller = Get.put(BuildProgramController(program.id));
+    controller = Get.put(BuildProgramController(program.id, program.name));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit ${program.name}'),
+        title: Obx(
+          () => GestureDetector(
+            onTap: () => _showRenameProgramDialog(),
+            child: Text('Edit ${controller.programName}'),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -84,13 +89,14 @@ class BuildProgramPage extends StatelessWidget {
       child: ExpansionTile(
         title: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              day.dayName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            GestureDetector(
+              onTap: () => _showRenameDayDialog(day.id, day.dayName),
+              child: Text(
+                day.dayName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 12),
             GestureDetector(
               onTap: () =>
                   Get.dialog(WorkoutInformationDialog(dayWithExercises: entry)),
@@ -132,85 +138,91 @@ class BuildProgramPage extends StatelessWidget {
                         BlendMode.srcIn,
                       ),
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            ex.exercise.name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Center(
-                            child: Text(
-                              ex.volume.setsRepsLabel,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Expanded(flex: 1, child: SizedBox()),
-                      ],
+                    title: Text(
+                      ex.exercise.name,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text(
-                      "${ex.exercise.muscleGroup} • ${ex.equipment.name}",
+                      '${ex.exercise.muscleGroup} • ${ex.equipment.name} • ${ex.volume.setsRepsLabel}',
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          color: AppColors.primary,
-                          onPressed: () => Get.dialog(
-                            EditProgramExerciseDialog(exerciseWithVolume: ex),
+                    trailing: ReorderableDragStartListener(
+                      index: exercises.indexOf(ex),
+                      child: const Icon(
+                        Icons.drag_handle,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    onTap: () => Get.dialog(
+                      EditProgramExerciseDialog(exerciseWithVolume: ex),
+                    ),
+                    onLongPress: () => Get.bottomSheet(
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(Get.context!).colorScheme.surface,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
                           ),
                         ),
-                        ReorderableDragStartListener(
-                          index: exercises.indexOf(ex),
-                          child: const Icon(
-                            Icons.drag_handle,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: AppColors.error,
-                          ),
-                          onPressed: () => Get.dialog(
-                            AlertDialog(
-                              title: const Text("Remove Exercise?"),
-                              content: Text(
-                                'Remove "${ex.exercise.name}" from this day?',
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(
+                                Icons.edit_outlined,
+                                color: AppColors.primary,
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: Get.back,
-                                  child: const Text("CANCEL"),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.error,
-                                    foregroundColor: Colors.white,
+                              title: const Text('Edit'),
+                              onTap: () {
+                                Get.back();
+                                Get.dialog(
+                                  EditProgramExerciseDialog(
+                                    exerciseWithVolume: ex,
                                   ),
-                                  onPressed: () {
-                                    controller.removeExerciseFromDay(
-                                      day.id,
-                                      ex.exercise.id,
-                                    );
-                                    Get.back();
-                                  },
-                                  child: const Text("REMOVE"),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          ),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.error,
+                              ),
+                              title: const Text('Remove'),
+                              onTap: () {
+                                Get.back();
+                                Get.dialog(
+                                  AlertDialog(
+                                    title: const Text('Remove Exercise?'),
+                                    content: Text(
+                                      'Remove "${ex.exercise.name}" from this day?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: Get.back,
+                                        child: const Text('CANCEL'),
+                                      ),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.error,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () {
+                                          controller.removeExerciseFromDay(
+                                            day.id,
+                                            ex.exercise.id,
+                                          );
+                                          Get.back();
+                                        },
+                                        child: const Text('REMOVE'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 )
@@ -223,6 +235,56 @@ class BuildProgramPage extends StatelessWidget {
               icon: const Icon(Icons.add),
               label: const Text("Add Exercise"),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRenameProgramDialog() {
+    final textController = TextEditingController(
+      text: controller.programName.value,
+    );
+    Get.dialog(
+      AlertDialog(
+        title: const Text("Rename Program"),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: "Program name"),
+        ),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text("CANCEL")),
+          ElevatedButton(
+            onPressed: () {
+              controller.renameProgram(textController.text);
+              Get.back();
+            },
+            child: const Text("RENAME"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRenameDayDialog(int dayId, String currentName) {
+    final textController = TextEditingController(text: currentName);
+    Get.dialog(
+      AlertDialog(
+        title: const Text("Rename Day"),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: "Day name"),
+        ),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text("CANCEL")),
+          ElevatedButton(
+            onPressed: () {
+              controller.renameDay(dayId, textController.text);
+              Get.back();
+            },
+            child: const Text("RENAME"),
           ),
         ],
       ),

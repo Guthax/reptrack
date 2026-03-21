@@ -26,6 +26,8 @@ extension ProgramExerciseDataX on ProgramExerciseData {
   }
 }
 
+/// A joined view of an exercise, its program-level volume settings, and the
+/// equipment variant selected for that entry.
 class ExerciseWithVolume {
   final Exercise exercise;
   final ProgramExerciseData volume;
@@ -38,6 +40,7 @@ class ExerciseWithVolume {
   });
 }
 
+/// A workout day paired with its ordered list of exercises.
 class WorkoutDayWithExercises {
   final WorkoutDay workoutDay;
   final List<ExerciseWithVolume> exercises;

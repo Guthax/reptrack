@@ -110,6 +110,7 @@ class ExerciseSwipeCard extends StatelessWidget {
               Obx(
                 () => Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: alternatives.map((e) {
                     final isSelected =
                         controller.selectedEquipments[item.exercise.id] == e.id;

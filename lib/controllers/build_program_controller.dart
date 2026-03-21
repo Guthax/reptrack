@@ -18,8 +18,12 @@ class BuildProgramController extends GetxController {
   /// The ID of the program being edited.
   final int programId;
 
+  /// Reactive program name, kept in sync with the database.
+  late final RxString programName;
+
   /// Creates a [BuildProgramController] for the program identified by [programId].
-  BuildProgramController(this.programId);
+  BuildProgramController(this.programId, String initialName)
+    : programName = initialName.obs;
 
   /// Reactive list of workout days with their exercises for [programId].
   ///
@@ -35,6 +39,21 @@ class BuildProgramController extends GetxController {
 
   /// Returns all exercises available in the database for the exercise picker.
   Future<List<Exercise>> getAvailableExercises() => db.getAllExercises();
+
+  /// Renames the current program to [name].
+  Future<void> renameProgram(String name) async {
+    if (name.trim().isNotEmpty) {
+      await db.renameProgram(programId, name.trim());
+      programName.value = name.trim();
+    }
+  }
+
+  /// Renames the workout day identified by [dayId] to [name].
+  Future<void> renameDay(int dayId, String name) async {
+    if (name.trim().isNotEmpty) {
+      await db.renameWorkoutDay(dayId, name.trim());
+    }
+  }
 
   /// Adds a new workout day named [name] to the current program.
   ///

@@ -26,6 +26,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
   Set<int> selectedEquipmentIds = {};
 
   bool _loaded = false;
+  String? _error;
 
   @override
   void initState() {
@@ -219,6 +220,29 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
               ),
             ),
       actions: [
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -230,12 +254,13 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
               : () async {
                   final name = nameController.text.trim();
                   if (name.isEmpty) {
-                    AppSnackbar.error('Exercise name is required');
+                    setState(() => _error = 'Exercise name is required');
                     return;
                   }
                   if (selectedEquipmentIds.isEmpty) {
-                    AppSnackbar.error(
-                      'Please select at least one equipment type',
+                    setState(
+                      () =>
+                          _error = 'Please select at least one equipment type',
                     );
                     return;
                   }
@@ -243,29 +268,33 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                       widget.exercise.name.toLowerCase()) {
                     final existing = await db.getExerciseByName(name);
                     if (existing != null) {
-                      AppSnackbar.error('"$name" already exists');
+                      setState(() => _error = '"$name" already exists');
                       return;
                     }
                   }
-                  final muscleGroup = muscleGroupController.text.trim();
-                  final note = noteController.text.trim();
-                  await db.updateExerciseDetails(
-                    widget.exercise.id,
-                    name,
-                    muscleGroup.isEmpty ? null : muscleGroup,
-                    note.isEmpty ? null : note,
-                    selectedEquipmentIds,
-                  );
-                  AppSnackbar.success('"$name" updated');
-                  Get.back(
-                    result: Exercise(
-                      id: widget.exercise.id,
-                      name: name,
-                      muscleGroup: muscleGroup.isEmpty ? null : muscleGroup,
-                      note: note.isEmpty ? null : note,
-                      timer: widget.exercise.timer,
-                    ),
-                  );
+                  try {
+                    final muscleGroup = muscleGroupController.text.trim();
+                    final note = noteController.text.trim();
+                    await db.updateExerciseDetails(
+                      widget.exercise.id,
+                      name,
+                      muscleGroup.isEmpty ? null : muscleGroup,
+                      note.isEmpty ? null : note,
+                      selectedEquipmentIds,
+                    );
+                    Get.back(
+                      result: Exercise(
+                        id: widget.exercise.id,
+                        name: name,
+                        muscleGroup: muscleGroup.isEmpty ? null : muscleGroup,
+                        note: note.isEmpty ? null : note,
+                        timer: widget.exercise.timer,
+                      ),
+                    );
+                    AppSnackbar.success('"$name" updated');
+                  } catch (e) {
+                    setState(() => _error = 'Failed to save: ${e.toString()}');
+                  }
                 },
           child: const Text('Save'),
         ),

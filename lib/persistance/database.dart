@@ -9,14 +9,16 @@ import 'package:rxdart/rxdart.dart';
 
 part 'database.g.dart';
 
+/// Opens the app's SQLite database file, creating it on first launch.
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'db.sqlite'));
+    final file = File(p.join(dbFolder.path, 'reptrack.sqlite'));
     return NativeDatabase(file);
   });
 }
 
+/// Stores the exercise library — both seeded and user-created entries.
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
@@ -27,22 +29,26 @@ class Exercises extends Table {
       integer().nullable().references(ExerciseTypes, #id)();
 }
 
+/// Lookup table for exercise categories (e.g. Strength, Cardio).
 class ExerciseTypes extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
 }
 
+/// Lookup table for muscle groups used to tag exercises.
 class MuscleGroups extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
 }
 
+/// Lookup table for equipment types (e.g. Barbell, Dumbbells).
 class Equipments extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
   TextColumn get icon_name => text().unique()();
 }
 
+/// Join table linking exercises to the equipment variants they support.
 class ExerciseEquipment extends Table {
   IntColumn get exerciseId => integer().references(Exercises, #id)();
   IntColumn get equipmentId => integer().references(Equipments, #id)();
@@ -51,6 +57,7 @@ class ExerciseEquipment extends Table {
   Set<Column> get primaryKey => {exerciseId, equipmentId};
 }
 
+/// Join table mapping exercises to muscle groups with a primary/secondary focus.
 class ExerciseMuscleGroup extends Table {
   IntColumn get exerciseId => integer().references(Exercises, #id)();
   IntColumn get muscleGroupId => integer().references(MuscleGroups, #id)();
@@ -60,11 +67,13 @@ class ExerciseMuscleGroup extends Table {
   Set<Column> get primaryKey => {exerciseId, muscleGroupId};
 }
 
+/// A user-created training program (e.g. "Push Pull Legs").
 class Programs extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
 }
 
+/// A named training day belonging to a [Programs] entry (e.g. "Push Day").
 class WorkoutDays extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get programId =>
@@ -73,6 +82,7 @@ class WorkoutDays extends Table {
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 }
 
+/// An exercise entry within a workout day, carrying volume and equipment config.
 class ProgramExercise extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get workoutDayId =>
@@ -88,6 +98,7 @@ class ProgramExercise extends Table {
   RealColumn get weight => real().withDefault(const Constant(0.0))();
 }
 
+/// A logged workout session tied to a specific [WorkoutDays] entry.
 class Workouts extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get workoutDayId => integer().references(WorkoutDays, #id)();
@@ -95,6 +106,7 @@ class Workouts extends Table {
   TextColumn get note => text().nullable()();
 }
 
+/// An individual set logged during a workout session.
 class WorkoutSets extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get workoutId =>
@@ -124,6 +136,10 @@ class WorkoutSets extends Table {
     WorkoutSets,
   ],
 )
+/// Central Drift database for RepTrack.
+///
+/// All tables and queries for exercises, programs, workout days, and logged
+/// sets live here. Register as a permanent GetX singleton via [Get.put].
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -145,6 +161,7 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
+  /// Inserts [entry] or updates its [muscleGroup] if the name already exists.
   Future<int> upsertExercise(ExercisesCompanion entry) async {
     return into(exercises).insert(
       entry,
@@ -157,17 +174,38 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Returns all programs ordered by insertion.
   Future<List<Program>> getAllPrograms() => select(programs).get();
+
+  /// Inserts a new program with the given [name] and returns its id.
   Future<int> addProgram(String name) =>
       into(programs).insert(ProgramsCompanion(name: Value(name)));
+
+  /// Permanently deletes the program with [id] and cascades to its days.
   Future<int> deleteProgram(int id) =>
       (delete(programs)..where((tbl) => tbl.id.equals(id))).go();
 
+  /// Updates the name of program [id].
+  Future<void> renameProgram(int id, String name) =>
+      (update(programs)..where((tbl) => tbl.id.equals(id))).write(
+        ProgramsCompanion(name: Value(name)),
+      );
+
+  /// Updates the name of workout day [id].
+  Future<void> renameWorkoutDay(int id, String name) =>
+      (update(workoutDays)..where((tbl) => tbl.id.equals(id))).write(
+        WorkoutDaysCompanion(dayName: Value(name)),
+      );
+
+  /// Returns all exercises in the library.
   Future<List<Exercise>> getAllExercises() => select(exercises).get();
 
+  /// Finds an exercise by [name] using a case-insensitive match, or null.
   Future<Exercise?> getExerciseByName(String name) => (select(
     exercises,
   )..where((e) => e.name.lower().equals(name.toLowerCase()))).getSingleOrNull();
+
+  /// Inserts a new exercise and returns its id.
   Future<int> addExercise(
     String name, {
     String? muscleGroup,
@@ -184,9 +222,12 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Permanently deletes the exercise with [id].
   Future<int> deleteExercise(int id) =>
       (delete(exercises)..where((tbl) => tbl.id.equals(id))).go();
 
+  /// Updates an exercise's name, muscle group, note, and equipment associations
+  /// in a single transaction.
   Future<void> updateExerciseDetails(
     int id,
     String name,
@@ -216,18 +257,21 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Updates only the note field of exercise [exerciseId].
   Future<void> updateExerciseNote(int exerciseId, String? note) {
     return (update(exercises)..where((tbl) => tbl.id.equals(exerciseId))).write(
       ExercisesCompanion(note: Value(note)),
     );
   }
 
+  /// Returns all workout days for [programId], unordered.
   Future<List<WorkoutDay>> getWorkoutDaysForProgram(int programId) {
     return (select(
       workoutDays,
     )..where((tbl) => tbl.programId.equals(programId))).get();
   }
 
+  /// Adds a new workout day named [dayName] to program [programId].
   Future<int> addWorkoutDay(int programId, String dayName) {
     return into(workoutDays).insert(
       WorkoutDaysCompanion(
@@ -237,15 +281,18 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Deletes workout day [id] and cascades to its exercises.
   Future<int> deleteWorkoutDay(int id) =>
       (delete(workoutDays)..where((tbl) => tbl.id.equals(id))).go();
 
+  /// Returns the raw program exercise rows for [workoutDayId].
   Future<List<ProgramExerciseData>> getExercisesForDay(int workoutDayId) {
     return (select(
       programExercise,
     )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
   }
 
+  /// Removes exercise [exerciseId] from workout day [dayId].
   Future<void> deleteExerciseFromWorkoutDay(int dayId, int exerciseId) async {
     await (delete(programExercise)..where(
           (tbl) =>
@@ -255,6 +302,7 @@ class AppDatabase extends _$AppDatabase {
         .go();
   }
 
+  /// Appends an exercise to a workout day, appending it after existing entries.
   Future<int> addExerciseToDay({
     required int workoutDayId,
     required int exerciseId,
@@ -279,6 +327,7 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Persists the display order of [programExerciseIds] (index = sort order).
   Future<void> reorderExercisesInDay(List<int> programExerciseIds) async {
     await transaction(() async {
       for (int i = 0; i < programExerciseIds.length; i++) {
@@ -289,6 +338,7 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Persists the display order of [workoutDayIds] (index = sort order).
   Future<void> reorderDays(List<int> workoutDayIds) async {
     await transaction(() async {
       for (int i = 0; i < workoutDayIds.length; i++) {
@@ -299,6 +349,7 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Applies [companion] fields to the program exercise row with [id].
   Future<int> updateProgramExercise(
     ProgramExerciseCompanion companion,
     int id,
@@ -308,9 +359,11 @@ class AppDatabase extends _$AppDatabase {
     )..where((tbl) => tbl.id.equals(id))).write(companion);
   }
 
+  /// Deletes the program exercise row with [id].
   Future<int> deleteProgramExercise(int id) =>
       (delete(programExercise)..where((tbl) => tbl.id.equals(id))).go();
 
+  /// Returns the lowercased names of secondary muscle groups for [exerciseIds].
   Future<Set<String>> getSecondaryMuscleGroupsForExercises(
     List<int> exerciseIds,
   ) async {
@@ -331,6 +384,7 @@ class AppDatabase extends _$AppDatabase {
         .toSet();
   }
 
+  /// Returns the most recently logged set for [exerciseId], or null.
   Future<WorkoutSet?> getLastSetForExercise(int exerciseId) {
     return (select(workoutSets)
           ..where((tbl) => tbl.exerciseId.equals(exerciseId))
@@ -341,6 +395,7 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
+  /// Returns the equipment variants supported by [exerciseId].
   Future<List<Equipment>> getEquipmentForExercise(int exerciseId) async {
     final query = select(equipments).join([
       innerJoin(
@@ -352,12 +407,14 @@ class AppDatabase extends _$AppDatabase {
     return rows.map((row) => row.readTable(equipments)).toList();
   }
 
+  /// Returns the equipment row for [equipmentId], or null if not found.
   Future<Equipment?> getEquipmentById(int equipmentId) {
     return (select(
       equipments,
     )..where((tbl) => tbl.id.equals(equipmentId))).getSingleOrNull();
   }
 
+  /// Deletes a specific set identified by [workoutId], [exerciseId], and [setNumber].
   Future<void> deleteWorkoutSet(int workoutId, int exerciseId, int setNumber) {
     return (delete(workoutSets)..where(
           (tbl) =>
@@ -368,6 +425,7 @@ class AppDatabase extends _$AppDatabase {
         .go();
   }
 
+  /// Returns all completed sets for [exerciseId], newest first.
   Future<List<WorkoutSet>> getSetsForExercise(int exerciseId) {
     return (select(workoutSets)
           ..where(
@@ -381,6 +439,10 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  /// Emits the ordered list of workout days with their exercises for [programId].
+  ///
+  /// Reacts to any change in [WorkoutDays] or [ProgramExercise] via Drift
+  /// streams combined with [switchMap].
   Stream<List<WorkoutDayWithExercises>> watchWorkoutDaysWithExercises(
     int programId,
   ) {

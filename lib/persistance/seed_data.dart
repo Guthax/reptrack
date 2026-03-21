@@ -2,6 +2,16 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:drift/drift.dart';
 import 'package:reptrack/persistance/database.dart';
 
+/// Populates [db] with the static reference data needed on first launch.
+///
+/// Idempotent — uses insert-or-update for lookup tables and skips exercises
+/// that already exist by name. Safe to call on every app start.
+///
+/// Seeds:
+/// - Exercise types (Strength, Cardio)
+/// - Muscle groups (Chest, Back, …)
+/// - Equipment types (Bodyweight, Barbell, …)
+/// - Exercises from `assets/data/exercises.csv`
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
     final exerciseTypes = {1: 'Strength', 2: 'Cardio'};
@@ -146,6 +156,7 @@ Future<void> seedDatabase(AppDatabase db) async {
   });
 }
 
+/// Splits a single CSV [line] into fields, respecting double-quoted values.
 List<String> _splitCsvLine(String line) {
   final result = <String>[];
   bool inQuotes = false;

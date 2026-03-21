@@ -1,6 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+/// Legacy sqflite database helper, superseded by [AppDatabase] (Drift).
+///
+/// Kept for reference only. New code should use [AppDatabase] instead.
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
