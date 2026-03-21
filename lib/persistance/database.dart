@@ -311,6 +311,26 @@ class AppDatabase extends _$AppDatabase {
   Future<int> deleteProgramExercise(int id) =>
       (delete(programExercise)..where((tbl) => tbl.id.equals(id))).go();
 
+  Future<Set<String>> getSecondaryMuscleGroupsForExercises(
+    List<int> exerciseIds,
+  ) async {
+    if (exerciseIds.isEmpty) return {};
+    final query =
+        select(exerciseMuscleGroup).join([
+          innerJoin(
+            muscleGroups,
+            muscleGroups.id.equalsExp(exerciseMuscleGroup.muscleGroupId),
+          ),
+        ])..where(
+          exerciseMuscleGroup.exerciseId.isIn(exerciseIds) &
+              exerciseMuscleGroup.focus.equals('secondary'),
+        );
+    final rows = await query.get();
+    return rows
+        .map((r) => r.readTable(muscleGroups).name.toLowerCase())
+        .toSet();
+  }
+
   Future<WorkoutSet?> getLastSetForExercise(int exerciseId) {
     return (select(workoutSets)
           ..where((tbl) => tbl.exerciseId.equals(exerciseId))

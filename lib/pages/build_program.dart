@@ -7,6 +7,7 @@ import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/add_exercise_dialog.dart';
 import 'package:reptrack/widgets/edit_program_exercise_dialog.dart';
+import 'package:reptrack/widgets/workout_information_dialog.dart';
 
 class BuildProgramPage extends StatelessWidget {
   final Program program;
@@ -68,6 +69,16 @@ class BuildProgramPage extends StatelessWidget {
               day.dayName,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () =>
+                  Get.dialog(WorkoutInformationDialog(dayWithExercises: entry)),
+              child: const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
         subtitle: Text("${exercises.length} Exercises"),
@@ -77,6 +88,7 @@ class BuildProgramPage extends StatelessWidget {
         ),
         children: [
           ReorderableListView(
+            buildDefaultDragHandles: false,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             onReorder: (oldIndex, newIndex) {
