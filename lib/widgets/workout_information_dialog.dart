@@ -20,11 +20,6 @@ class WorkoutInformationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryMuscles = dayWithExercises.exercises
-        .map((e) => (e.exercise.muscleGroup ?? '').toLowerCase().trim())
-        .where((m) => m.isNotEmpty)
-        .toSet();
-
     final exerciseIds = dayWithExercises.exercises
         .map((e) => e.exercise.id)
         .toList();
@@ -34,10 +29,14 @@ class WorkoutInformationDialog extends StatelessWidget {
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-        child: FutureBuilder<Set<String>>(
-          future: db.getSecondaryMuscleGroupsForExercises(exerciseIds),
+        child: FutureBuilder<List<Set<String>>>(
+          future: Future.wait([
+            db.getPrimaryMuscleGroupsForExercises(exerciseIds),
+            db.getSecondaryMuscleGroupsForExercises(exerciseIds),
+          ]),
           builder: (context, snapshot) {
-            final secondaryMuscles = (snapshot.data ?? {}).difference(
+            final primaryMuscles = snapshot.data?[0] ?? {};
+            final secondaryMuscles = (snapshot.data?[1] ?? {}).difference(
               primaryMuscles,
             );
 

@@ -93,6 +93,17 @@ class ActiveWorkoutController extends GetxController {
           db.equipments,
           db.equipments.id.equalsExp(db.programExercise.equipmentId),
         ),
+        d.leftOuterJoin(
+          db.exerciseMuscleGroup,
+          db.exerciseMuscleGroup.exerciseId.equalsExp(
+                db.programExercise.exerciseId,
+              ) &
+              db.exerciseMuscleGroup.focus.equals('primary'),
+        ),
+        d.leftOuterJoin(
+          db.muscleGroups,
+          db.muscleGroups.id.equalsExp(db.exerciseMuscleGroup.muscleGroupId),
+        ),
       ])..where(db.programExercise.workoutDayId.equals(workoutDayId));
 
       query.orderBy([
@@ -101,10 +112,12 @@ class ActiveWorkoutController extends GetxController {
 
       final rows = await query.get();
       final List<ExerciseWithVolume> items = rows.map((row) {
+        final muscleGroupRow = row.readTableOrNull(db.muscleGroups);
         return ExerciseWithVolume(
           exercise: row.readTable(db.exercises),
           volume: row.readTable(db.programExercise),
           equipment: row.readTable(db.equipments),
+          primaryMuscleGroup: muscleGroupRow?.name,
         );
       }).toList();
       for (var i = 0; i < items.length; i++) {
@@ -298,7 +311,7 @@ class ActiveWorkoutController extends GetxController {
             : Equipment(
                 id: newEquipmentId,
                 name: "Default",
-                icon_name: "fitness_center",
+                iconName: "fitness_center",
               ),
       );
 

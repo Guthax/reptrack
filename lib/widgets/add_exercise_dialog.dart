@@ -164,7 +164,6 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                         final ex = filteredExercises[i];
                         return ListTile(
                           title: Text(ex.name),
-                          subtitle: Text(ex.muscleGroup ?? ""),
                           onTap: () async {
                             final equips = await Get.find<AppDatabase>()
                                 .getEquipmentForExercise(ex.id);
@@ -175,7 +174,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                                 : null;
                             selectedExercise.value = ex;
 
-                            if (mounted) FocusScope.of(context).unfocus();
+                            if (context.mounted) {
+                              FocusScope.of(context).unfocus();
+                            }
                           },
                         );
                       },

@@ -87,10 +87,6 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                           ex.name,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        subtitle: Text(
-                          ex.muscleGroup ?? "General",
-                          style: const TextStyle(fontSize: 12),
-                        ),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                         onTap: () async {
                           // 1. Get available equipment for the new exercise

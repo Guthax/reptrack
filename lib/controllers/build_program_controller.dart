@@ -64,6 +64,9 @@ class BuildProgramController extends GetxController {
     }
   }
 
+  /// Permanently deletes the workout day with [dayId] and all its exercises.
+  Future<void> deleteDay(int dayId) => db.deleteWorkoutDay(dayId);
+
   /// Adds [exercise] to the workout day identified by [dayId].
   ///
   /// - [equipmentId]: the equipment variant to use for this exercise.

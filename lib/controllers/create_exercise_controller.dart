@@ -59,7 +59,7 @@ class CreateExerciseController extends GetxController {
   /// validation fails. Error messages are shown via [AppSnackbar].
   Future<Exercise?> createExercise({
     required String name,
-    String? muscleGroup,
+    String? muscleGroupName,
     String? note,
     required Set<int> equipmentIds,
   }) async {
@@ -83,7 +83,7 @@ class CreateExerciseController extends GetxController {
 
     final id = await db.addExercise(
       trimmedName,
-      muscleGroup: muscleGroup?.trim(),
+      muscleGroupName: muscleGroupName?.trim(),
       comment: note?.trim(),
     );
 
@@ -99,12 +99,6 @@ class CreateExerciseController extends GetxController {
     }
 
     AppSnackbar.success('"$trimmedName" created');
-    return Exercise(
-      id: id,
-      name: trimmedName,
-      muscleGroup: muscleGroup?.trim(),
-      note: note?.trim(),
-      timer: null,
-    );
+    return Exercise(id: id, name: trimmedName, note: note?.trim());
   }
 }

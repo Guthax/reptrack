@@ -22,9 +22,7 @@ LazyDatabase _openConnection() {
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
-  TextColumn get muscleGroup => text().nullable()();
   TextColumn get note => text().nullable()();
-  IntColumn get timer => integer().nullable()();
   IntColumn get exerciseTypeId =>
       integer().nullable().references(ExerciseTypes, #id)();
 }
@@ -45,7 +43,7 @@ class MuscleGroups extends Table {
 class Equipments extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
-  TextColumn get icon_name => text().unique()();
+  TextColumn get iconName => text().unique()();
 }
 
 /// Join table linking exercises to the equipment variants they support.
@@ -103,7 +101,6 @@ class Workouts extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get workoutDayId => integer().references(WorkoutDays, #id)();
   DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();
-  TextColumn get note => text().nullable()();
 }
 
 /// An individual set logged during a workout session.
@@ -144,7 +141,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -158,20 +155,17 @@ class AppDatabase extends _$AppDatabase {
           'ALTER TABLE workout_sets ADD COLUMN seconds INTEGER NOT NULL DEFAULT 0',
         );
       }
+      if (from < 3) {
+        await customStatement('ALTER TABLE exercises DROP COLUMN muscle_group');
+        await customStatement('ALTER TABLE exercises DROP COLUMN timer');
+        await customStatement('ALTER TABLE workouts DROP COLUMN note');
+      }
     },
   );
 
-  /// Inserts [entry] or updates its [muscleGroup] if the name already exists.
+  /// Inserts [entry] or ignores if the name already exists.
   Future<int> upsertExercise(ExercisesCompanion entry) async {
-    return into(exercises).insert(
-      entry,
-      onConflict: DoUpdate(
-        (old) => ExercisesCompanion.custom(
-          muscleGroup: Constant(entry.muscleGroup.value),
-        ),
-        target: [exercises.name],
-      ),
-    );
+    return into(exercises).insertOnConflictUpdate(entry);
   }
 
   /// Returns all programs ordered by insertion.
@@ -225,42 +219,55 @@ class AppDatabase extends _$AppDatabase {
   )..where((e) => e.name.lower().equals(name.toLowerCase()))).getSingleOrNull();
 
   /// Inserts a new exercise and returns its id.
+  ///
+  /// If [muscleGroupName] is provided, a primary entry is also inserted into
+  /// [exerciseMuscleGroup] by looking up the matching [MuscleGroups] row.
   Future<int> addExercise(
     String name, {
-    String? muscleGroup,
+    String? muscleGroupName,
     String? comment,
-    int? timer,
-  }) {
-    return into(exercises).insert(
-      ExercisesCompanion(
-        name: Value(name),
-        muscleGroup: Value(muscleGroup),
-        note: Value(comment),
-        timer: Value(timer),
-      ),
-    );
+  }) async {
+    final id = await into(
+      exercises,
+    ).insert(ExercisesCompanion(name: Value(name), note: Value(comment)));
+    if (muscleGroupName != null && muscleGroupName.isNotEmpty) {
+      final group =
+          await (select(muscleGroups)..where(
+                (g) => g.name.lower().equals(muscleGroupName.toLowerCase()),
+              ))
+              .getSingleOrNull();
+      if (group != null) {
+        await into(exerciseMuscleGroup).insertOnConflictUpdate(
+          ExerciseMuscleGroupCompanion.insert(
+            exerciseId: id,
+            muscleGroupId: group.id,
+            focus: 'primary',
+          ),
+        );
+      }
+    }
+    return id;
   }
 
   /// Permanently deletes the exercise with [id].
   Future<int> deleteExercise(int id) =>
       (delete(exercises)..where((tbl) => tbl.id.equals(id))).go();
 
-  /// Updates an exercise's name, muscle group, note, and equipment associations
-  /// in a single transaction.
+  /// Updates an exercise's name, primary muscle group, note, and equipment
+  /// associations in a single transaction.
+  ///
+  /// The primary [ExerciseMuscleGroup] entry is replaced with a lookup on
+  /// [muscleGroupName]; if no matching row exists the primary entry is cleared.
   Future<void> updateExerciseDetails(
     int id,
     String name,
-    String? muscleGroup,
+    String? muscleGroupName,
     String? note,
     Set<int> equipmentIds,
   ) async {
     await transaction(() async {
       await (update(exercises)..where((e) => e.id.equals(id))).write(
-        ExercisesCompanion(
-          name: Value(name),
-          muscleGroup: Value(muscleGroup),
-          note: Value(note),
-        ),
+        ExercisesCompanion(name: Value(name), note: Value(note)),
       );
       await (delete(
         exerciseEquipment,
@@ -272,6 +279,25 @@ class AppDatabase extends _$AppDatabase {
             equipmentId: Value(equipId),
           ),
         );
+      }
+      await (delete(exerciseMuscleGroup)
+            ..where((m) => m.exerciseId.equals(id) & m.focus.equals('primary')))
+          .go();
+      if (muscleGroupName != null && muscleGroupName.isNotEmpty) {
+        final group =
+            await (select(muscleGroups)..where(
+                  (g) => g.name.lower().equals(muscleGroupName.toLowerCase()),
+                ))
+                .getSingleOrNull();
+        if (group != null) {
+          await into(exerciseMuscleGroup).insert(
+            ExerciseMuscleGroupCompanion.insert(
+              exerciseId: id,
+              muscleGroupId: group.id,
+              focus: 'primary',
+            ),
+          );
+        }
       }
     });
   }
@@ -288,6 +314,15 @@ class AppDatabase extends _$AppDatabase {
     return (select(
       workoutDays,
     )..where((tbl) => tbl.programId.equals(programId))).get();
+  }
+
+  /// Emits the ordered list of workout days for [programId] whenever
+  /// the [WorkoutDays] table changes.
+  Stream<List<WorkoutDay>> watchWorkoutDaysForProgram(int programId) {
+    return (select(workoutDays)
+          ..where((tbl) => tbl.programId.equals(programId))
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.sortOrder)]))
+        .watch();
   }
 
   /// Adds a new workout day named [dayName] to program [programId].
@@ -381,6 +416,44 @@ class AppDatabase extends _$AppDatabase {
   /// Deletes the program exercise row with [id].
   Future<int> deleteProgramExercise(int id) =>
       (delete(programExercise)..where((tbl) => tbl.id.equals(id))).go();
+
+  /// Returns the name of the primary muscle group for [exerciseId], or null.
+  Future<String?> getPrimaryMuscleGroupForExercise(int exerciseId) async {
+    final query =
+        select(exerciseMuscleGroup).join([
+          innerJoin(
+            muscleGroups,
+            muscleGroups.id.equalsExp(exerciseMuscleGroup.muscleGroupId),
+          ),
+        ])..where(
+          exerciseMuscleGroup.exerciseId.equals(exerciseId) &
+              exerciseMuscleGroup.focus.equals('primary'),
+        );
+    final rows = await query.get();
+    if (rows.isEmpty) return null;
+    return rows.first.readTable(muscleGroups).name;
+  }
+
+  /// Returns the lowercased names of primary muscle groups for [exerciseIds].
+  Future<Set<String>> getPrimaryMuscleGroupsForExercises(
+    List<int> exerciseIds,
+  ) async {
+    if (exerciseIds.isEmpty) return {};
+    final query =
+        select(exerciseMuscleGroup).join([
+          innerJoin(
+            muscleGroups,
+            muscleGroups.id.equalsExp(exerciseMuscleGroup.muscleGroupId),
+          ),
+        ])..where(
+          exerciseMuscleGroup.exerciseId.isIn(exerciseIds) &
+              exerciseMuscleGroup.focus.equals('primary'),
+        );
+    final rows = await query.get();
+    return rows
+        .map((r) => r.readTable(muscleGroups).name.toLowerCase())
+        .toSet();
+  }
 
   /// Returns the lowercased names of secondary muscle groups for [exerciseIds].
   Future<Set<String>> getSecondaryMuscleGroupsForExercises(
@@ -484,6 +557,15 @@ class AppDatabase extends _$AppDatabase {
           equipments,
           equipments.id.equalsExp(programExercise.equipmentId),
         ),
+        leftOuterJoin(
+          exerciseMuscleGroup,
+          exerciseMuscleGroup.exerciseId.equalsExp(programExercise.exerciseId) &
+              exerciseMuscleGroup.focus.equals('primary'),
+        ),
+        leftOuterJoin(
+          muscleGroups,
+          muscleGroups.id.equalsExp(exerciseMuscleGroup.muscleGroupId),
+        ),
       ])..where(programExercise.workoutDayId.isIn(dayIds));
 
       query.orderBy([OrderingTerm(expression: programExercise.orderInProgram)]);
@@ -495,12 +577,14 @@ class AppDatabase extends _$AppDatabase {
           final exercise = row.readTableOrNull(exercises);
           final volume = row.readTableOrNull(programExercise);
           final equipment = row.readTableOrNull(equipments);
+          final muscleGroupRow = row.readTableOrNull(muscleGroups);
 
           if (exercise != null && volume != null && equipment != null) {
             final entry = ExerciseWithVolume(
               exercise: exercise,
               volume: volume,
               equipment: equipment,
+              primaryMuscleGroup: muscleGroupRow?.name,
             );
             resultMap
                 .putIfAbsent(volume.workoutDayId, () => <ExerciseWithVolume>[])

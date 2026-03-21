@@ -63,7 +63,7 @@ Future<void> seedDatabase(AppDatabase db) async {
             EquipmentsCompanion.insert(
               id: Value(entry.key),
               name: entry.value,
-              icon_name: entry.value.toLowerCase().replaceAll(' ', '_'),
+              iconName: entry.value.toLowerCase().replaceAll(' ', '_'),
             ),
           );
     }
@@ -81,14 +81,19 @@ Future<void> seedDatabase(AppDatabase db) async {
 
       for (var line in lines) {
         final trimmedLine = line.trim();
-        if (trimmedLine.isEmpty) continue;
+        if (trimmedLine.isEmpty) {
+          continue;
+        }
 
         final columns = _splitCsvLine(trimmedLine);
-        if (columns.length < 5) continue;
+        if (columns.length < 5) {
+          continue;
+        }
 
         final String name = columns[0].trim();
-        if (name.isEmpty || existingNames.contains(name.toLowerCase()))
+        if (name.isEmpty || existingNames.contains(name.toLowerCase())) {
           continue;
+        }
 
         try {
           final exerciseTypeId = int.tryParse(columns[1].trim());
@@ -111,7 +116,6 @@ Future<void> seedDatabase(AppDatabase db) async {
               .insert(
                 ExercisesCompanion.insert(
                   name: name,
-                  muscleGroup: Value(muscleNames[primaryId] ?? 'General'),
                   exerciseTypeId: Value(exerciseTypeId),
                 ),
               );

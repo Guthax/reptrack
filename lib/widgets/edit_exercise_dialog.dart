@@ -32,9 +32,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.exercise.name);
-    muscleGroupController = TextEditingController(
-      text: widget.exercise.muscleGroup ?? '',
-    );
+    muscleGroupController = TextEditingController();
     noteController = TextEditingController(text: widget.exercise.note ?? '');
     _loadData();
   }
@@ -43,12 +41,16 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
     final groups = await db.select(db.muscleGroups).get();
     final equips = await db.select(db.equipments).get();
     final currentEquips = await db.getEquipmentForExercise(widget.exercise.id);
+    final primaryGroup = await db.getPrimaryMuscleGroupForExercise(
+      widget.exercise.id,
+    );
 
     if (mounted) {
       setState(() {
         muscleGroups = groups.map((g) => g.name).toList();
         availableEquipment = equips;
         selectedEquipmentIds = currentEquips.map((e) => e.id).toSet();
+        muscleGroupController.text = primaryGroup ?? '';
         _loaded = true;
       });
     }
@@ -273,12 +275,12 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                     }
                   }
                   try {
-                    final muscleGroup = muscleGroupController.text.trim();
+                    final muscleGroupName = muscleGroupController.text.trim();
                     final note = noteController.text.trim();
                     await db.updateExerciseDetails(
                       widget.exercise.id,
                       name,
-                      muscleGroup.isEmpty ? null : muscleGroup,
+                      muscleGroupName.isEmpty ? null : muscleGroupName,
                       note.isEmpty ? null : note,
                       selectedEquipmentIds,
                     );
@@ -286,9 +288,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                       result: Exercise(
                         id: widget.exercise.id,
                         name: name,
-                        muscleGroup: muscleGroup.isEmpty ? null : muscleGroup,
                         note: note.isEmpty ? null : note,
-                        timer: widget.exercise.timer,
                       ),
                     );
                     AppSnackbar.success('"$name" updated');

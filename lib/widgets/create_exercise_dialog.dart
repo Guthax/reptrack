@@ -209,7 +209,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
           onPressed: () async {
             final exercise = await controller.createExercise(
               name: nameController.text,
-              muscleGroup: muscleGroupController.text.isEmpty
+              muscleGroupName: muscleGroupController.text.isEmpty
                   ? null
                   : muscleGroupController.text,
               note: noteController.text.isEmpty ? null : noteController.text,

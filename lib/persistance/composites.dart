@@ -33,10 +33,14 @@ class ExerciseWithVolume {
   final ProgramExerciseData volume;
   final Equipment equipment;
 
+  /// The name of the primary muscle group from [ExerciseMuscleGroup], or null.
+  final String? primaryMuscleGroup;
+
   ExerciseWithVolume({
     required this.exercise,
     required this.volume,
     required this.equipment,
+    this.primaryMuscleGroup,
   });
 }
 

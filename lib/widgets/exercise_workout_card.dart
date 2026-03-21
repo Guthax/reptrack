@@ -11,7 +11,11 @@ import 'package:reptrack/widgets/swap_exercise_dialog.dart';
 class ExerciseSwipeCard extends StatelessWidget {
   final ExerciseWithVolume item;
   final int exerciseIndex;
-  ExerciseSwipeCard({super.key, required this.item, required this.exerciseIndex});
+  ExerciseSwipeCard({
+    super.key,
+    required this.item,
+    required this.exerciseIndex,
+  });
 
   final RxList<Equipment> alternatives = <Equipment>[].obs;
 
@@ -52,7 +56,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          item.exercise.muscleGroup ?? "General",
+                          item.primaryMuscleGroup ?? "General",
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                       ],
@@ -143,8 +147,7 @@ class ExerciseSwipeCard extends StatelessWidget {
 
                   final currentEquipId =
                       controller.selectedEquipments[exerciseIndex] ??
-                      item.equipment?.id ??
-                      0;
+                      item.equipment.id;
                   final plannedSetsReps = item.volume.setsRepsList;
                   final totalSets = controller.getTotalSetsForExercise(
                     exerciseIndex,
@@ -185,9 +188,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                       final isLastSet = setNum == totalSets;
 
                       // This unique key is vital for Dismissible to work
-                      final itemKey = Key(
-                        "set_${exerciseIndex}_$setNum",
-                      );
+                      final itemKey = Key("set_${exerciseIndex}_$setNum");
 
                       return Dismissible(
                         key: itemKey,

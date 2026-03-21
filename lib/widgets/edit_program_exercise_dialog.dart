@@ -165,7 +165,6 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                         final ex = filteredExercises[i];
                         return ListTile(
                           title: Text(ex.name),
-                          subtitle: Text(ex.muscleGroup ?? ''),
                           onTap: () async {
                             final equips = await Get.find<AppDatabase>()
                                 .getEquipmentForExercise(ex.id);
@@ -193,7 +192,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     Expanded(
                       child: Chip(
                         avatar: SvgPicture.asset(
-                          'assets/icons/equipments/${widget.exerciseWithVolume.equipment.icon_name}.svg',
+                          'assets/icons/equipments/${widget.exerciseWithVolume.equipment.iconName}.svg',
                           width: 20,
                           height: 20,
                           colorFilter: const ColorFilter.mode(

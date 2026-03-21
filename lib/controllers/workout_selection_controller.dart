@@ -35,20 +35,24 @@ class WorkoutSelectionController extends GetxController {
         workoutDays.clear();
       }
     });
+    ever(workoutDays, (_) {
+      if (selectedDay.value != null &&
+          !workoutDays.any((d) => d.id == selectedDay.value!.id)) {
+        selectedDay.value = null;
+      }
+    });
   }
 
   /// Called when the user selects a different [program] from the dropdown.
   ///
-  /// Resets [selectedDay] and fetches the workout days for [program].
-  /// If [program] is `null` the day list is cleared.
-  ///
-  /// Declared as [Future<void>] so propagated errors are not silently swallowed.
-  Future<void> onProgramChanged(Program? program) async {
+  /// Resets [selectedDay] and binds a live stream of workout days for
+  /// [program]. If [program] is `null` the day list is cleared.
+  void onProgramChanged(Program? program) {
     selectedProgram.value = program;
     selectedDay.value = null;
 
     if (program != null) {
-      workoutDays.value = await db.getWorkoutDaysForProgram(program.id);
+      workoutDays.bindStream(db.watchWorkoutDaysForProgram(program.id));
     } else {
       workoutDays.clear();
     }

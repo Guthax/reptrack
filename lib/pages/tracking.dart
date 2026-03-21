@@ -77,9 +77,6 @@ class _ExerciseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(exercise.name),
-      subtitle: exercise.muscleGroup != null
-          ? Text(exercise.muscleGroup!)
-          : null,
       trailing: const Icon(Icons.chevron_right),
       onTap: () => controller.selectExercise(exercise),
     );
