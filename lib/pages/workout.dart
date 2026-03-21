@@ -3,13 +3,16 @@ import 'package:get/get.dart';
 import 'package:reptrack/controllers/workout_selection_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 
+/// Page where the user selects a program and workout day before starting.
+///
+/// Presents two dropdowns (program → day) and a START button that navigates
+/// to [TrackWorkoutPage] via [WorkoutSelectionController.startWorkout].
 class WorkoutPage extends StatelessWidget {
   const WorkoutPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(WorkoutSelectionController());
-    controller.fetchPrograms();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Start Workout')),

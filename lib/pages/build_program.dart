@@ -9,11 +9,28 @@ import 'package:reptrack/widgets/add_exercise_dialog.dart';
 import 'package:reptrack/widgets/edit_program_exercise_dialog.dart';
 import 'package:reptrack/widgets/workout_information_dialog.dart';
 
+/// Page for editing the workout days and exercises of a [Program].
+///
+/// Workout days are displayed as reorderable expansion tiles; each tile
+/// contains a reorderable list of [ExerciseWithVolume] entries.
+///
+/// A fresh [BuildProgramController] is force-registered on each navigation
+/// to ensure stale state from a previous program is never reused.
 class BuildProgramPage extends StatelessWidget {
+  /// The program being edited.
   final Program program;
+
   late final BuildProgramController controller;
 
+  /// Creates a [BuildProgramPage] for [program].
+  ///
+  /// Deletes any previously registered [BuildProgramController] before
+  /// registering a new one, preventing stale-controller bugs when the user
+  /// navigates between different programs.
   BuildProgramPage({super.key, required this.program}) {
+    if (Get.isRegistered<BuildProgramController>()) {
+      Get.delete<BuildProgramController>(force: true);
+    }
     controller = Get.put(BuildProgramController(program.id));
   }
 
@@ -53,6 +70,10 @@ class BuildProgramPage extends StatelessWidget {
     );
   }
 
+  /// Builds an expansion tile card for a single [entry] (workout day + exercises).
+  ///
+  /// Includes a drag handle for day reordering, an info icon, and a nested
+  /// reorderable list of exercises with edit/delete controls.
   Widget _buildDayCard(WorkoutDayWithExercises entry, int index) {
     final day = entry.workoutDay;
     final exercises = entry.exercises;
@@ -208,6 +229,9 @@ class BuildProgramPage extends StatelessWidget {
     );
   }
 
+  /// Shows an [AlertDialog] that lets the user name a new workout day.
+  ///
+  /// Delegates creation to [BuildProgramController.addDay].
   void _showAddDayDialog() {
     final textController = TextEditingController();
     Get.dialog(

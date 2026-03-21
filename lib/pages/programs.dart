@@ -4,6 +4,10 @@ import 'package:reptrack/pages/build_program.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import '../controllers/programs_controller.dart';
 
+/// Page that lists all training programs and allows creating or deleting them.
+///
+/// Tapping a program navigates to [BuildProgramPage]. Tapping the FAB opens
+/// a dialog to create a new program and then immediately navigates to it.
 class ProgramsPage extends StatelessWidget {
   const ProgramsPage({super.key});
 
@@ -79,40 +83,53 @@ class ProgramsPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final TextEditingController nameController = TextEditingController();
-
-          Get.dialog(
-            AlertDialog(
-              title: const Text("New Program"),
-              content: TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  hintText: "Enter program name (e.g. Push Pull Legs)",
-                ),
-                autofocus: true,
-              ),
-              actions: [
-                TextButton(onPressed: Get.back, child: const Text("CANCEL")),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isNotEmpty) {
-                      final newProgram = await controller.addProgram(
-                        nameController.text.trim(),
-                      );
-                      Get.back();
-                      if (newProgram != null) {
-                        Get.to(() => BuildProgramPage(program: newProgram));
-                      }
-                    }
-                  },
-                  child: const Text("ADD"),
-                ),
-              ],
-            ),
-          );
-        },
+        onPressed: () => _showAddProgramDialog(controller),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  /// Shows an [AlertDialog] that lets the user name a new program.
+  ///
+  /// On confirmation, delegates creation to [controller] and navigates
+  /// to [BuildProgramPage] for the newly created program.
+  void _showAddProgramDialog(ProgramsController controller) {
+    final TextEditingController nameController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text("New Program"),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            hintText: "Enter program name (e.g. Push Pull Legs)",
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              nameController.dispose();
+              Get.back();
+            },
+            child: const Text("CANCEL"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty) {
+                final newProgram = await controller.addProgram(
+                  nameController.text.trim(),
+                );
+                nameController.dispose();
+                Get.back();
+                if (newProgram != null) {
+                  Get.to(() => BuildProgramPage(program: newProgram));
+                }
+              }
+            },
+            child: const Text("ADD"),
+          ),
+        ],
       ),
     );
   }

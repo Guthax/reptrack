@@ -7,8 +7,18 @@ import 'package:reptrack/utils/fuzzy_search.dart';
 import 'package:reptrack/widgets/create_exercise_dialog.dart';
 import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 
+/// Dialog for adding an exercise to a workout day.
+///
+/// Presents a two-step flow:
+/// 1. **Select** — fuzzy-search the exercise list; optionally create or edit
+///    an exercise inline.
+/// 2. **Configure** — choose equipment, per-set rep targets, and rest timer.
+///
+/// On confirmation, delegates to [BuildProgramController.addExerciseToDay].
 class AddExerciseDialog extends StatefulWidget {
+  /// The workout day ID that the selected exercise will be added to.
   final int dayId;
+
   const AddExerciseDialog({super.key, required this.dayId});
 
   @override
@@ -37,10 +47,22 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     _loadInitialData();
   }
 
+  /// Loads all available exercises via [BuildProgramController] and
+  /// initialises [filteredExercises].
   void _loadInitialData() async {
     final controller = Get.find<BuildProgramController>();
     allExercises = await controller.getAvailableExercises();
     filteredExercises.assignAll(allExercises);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    timerController.dispose();
+    for (final c in setControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   @override

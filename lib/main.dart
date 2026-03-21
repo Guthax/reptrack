@@ -9,9 +9,15 @@ import 'package:reptrack/persistance/seed_data.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'controllers/navigation_controller.dart';
 
+/// Controller for the post-workout confetti celebration overlay.
+///
+/// Registered as a permanent GetX singleton in [main] so it survives
+/// navigation resets. Call [celebrate] after finishing a workout.
 class CelebrationController extends GetxController {
+  /// The confetti animation controller; disposed in [onClose].
   final confetti = ConfettiController(duration: const Duration(seconds: 3));
 
+  /// Starts the confetti burst animation.
   void celebrate() => confetti.play();
 
   @override
@@ -21,6 +27,10 @@ class CelebrationController extends GetxController {
   }
 }
 
+/// Application entry point.
+///
+/// Registers permanent singletons ([AppDatabase], [CelebrationController]),
+/// seeds the database with initial data, then runs [MainApp].
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
@@ -30,6 +40,7 @@ void main() async {
   runApp(const MainApp());
 }
 
+/// Root widget; configures [GetMaterialApp] with the app theme.
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -43,6 +54,10 @@ class MainApp extends StatelessWidget {
   }
 }
 
+/// Shell page that hosts the bottom navigation bar and the three main tabs.
+///
+/// Uses [NavigationController] to drive the visible tab reactively.
+/// The confetti overlay is rendered on top of all tabs via a [Stack].
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 

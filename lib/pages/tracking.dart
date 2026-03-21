@@ -6,6 +6,11 @@ import 'package:reptrack/controllers/tracking_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 
+/// Page for viewing historical weight-progress charts per exercise.
+///
+/// Presents a searchable exercise list when no exercise is selected
+/// ([_ExerciseSearchView]), and switches to a progress chart view
+/// ([_ExerciseProgressView]) once an exercise is tapped.
 class TrackingPage extends StatelessWidget {
   const TrackingPage({super.key});
 
@@ -24,8 +29,10 @@ class TrackingPage extends StatelessWidget {
   }
 }
 
+/// Displays a search field and a list of [Exercise]s filtered by the query.
 class _ExerciseSearchView extends StatelessWidget {
   final TrackingController controller;
+
   const _ExerciseSearchView({required this.controller});
 
   @override
@@ -59,6 +66,7 @@ class _ExerciseSearchView extends StatelessWidget {
   }
 }
 
+/// A single row in the exercise search list.
 class _ExerciseTile extends StatelessWidget {
   final Exercise exercise;
   final TrackingController controller;
@@ -78,8 +86,11 @@ class _ExerciseTile extends StatelessWidget {
   }
 }
 
+/// Shows the weight-progress chart and equipment filter chips for the
+/// currently selected exercise.
 class _ExerciseProgressView extends StatelessWidget {
   final TrackingController controller;
+
   const _ExerciseProgressView({required this.controller});
 
   @override
@@ -168,8 +179,12 @@ class _ExerciseProgressView extends StatelessWidget {
   }
 }
 
+/// Renders a [LineChart] of max weight lifted per session.
+///
+/// [data] contains `(date, maxWeightKg)` entries in chronological order.
 class _WeightChart extends StatelessWidget {
   final List<MapEntry<DateTime, double>> data;
+
   const _WeightChart({required this.data});
 
   @override

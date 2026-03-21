@@ -489,16 +489,17 @@ class _SetLogRowState extends State<SetLogRow> {
                     restSeconds: widget.restSeconds,
                   );
 
-                  final allDone = List.generate(
-                    widget.totalPlannedSets,
-                    (i) => i + 1,
-                  ).every(
-                    (s) => controller.isSetCompleted(
-                      widget.exerciseId,
-                      widget.equipmentId,
-                      s,
-                    ),
-                  );
+                  final allDone =
+                      List.generate(
+                        widget.totalPlannedSets,
+                        (i) => i + 1,
+                      ).every(
+                        (s) => controller.isSetCompleted(
+                          widget.exerciseId,
+                          widget.equipmentId,
+                          s,
+                        ),
+                      );
 
                   if (allDone) {
                     final current = controller.currentPageIndex.value;

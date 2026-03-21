@@ -5,8 +5,16 @@ import 'package:reptrack/main.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/exercise_workout_card.dart';
 
+/// Page that drives an active workout session.
+///
+/// Renders a horizontally swipeable [PageView] of exercise cards and a
+/// progress indicator. Back-navigation is intercepted to warn the user
+/// before ending the session early.
 class TrackWorkoutPage extends StatelessWidget {
+  /// The database ID of the workout day being performed.
   final int dayId;
+
+  /// The display name of the workout day shown in the app bar.
   final String dayName;
 
   const TrackWorkoutPage({
@@ -97,6 +105,10 @@ class TrackWorkoutPage extends StatelessWidget {
     );
   }
 
+  /// Shows a confirmation dialog before finishing the workout.
+  ///
+  /// On confirmation, navigates to [HomePage] and triggers the celebration
+  /// confetti via [CelebrationController].
   void _showFinishDialog() {
     Get.dialog(
       AlertDialog(
@@ -125,6 +137,9 @@ class TrackWorkoutPage extends StatelessWidget {
     );
   }
 
+  /// Shows a warning dialog when the user attempts to leave mid-workout.
+  ///
+  /// Choosing LEAVE navigates back to [HomePage]; STAY dismisses the dialog.
   void _showExitWarning() {
     Get.dialog(
       AlertDialog(

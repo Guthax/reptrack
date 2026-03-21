@@ -4,7 +4,16 @@ import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 
+/// Dialog that summarises the muscle groups targeted by a workout day.
+///
+/// Displays a front/back body diagram with primary and secondary muscles
+/// highlighted, followed by labelled [_MuscleChip]s.
+///
+/// Primary muscles are derived from each exercise's [Exercise.muscleGroup].
+/// Secondary muscles are fetched from the database via
+/// [AppDatabase.getSecondaryMuscleGroupsForExercises].
 class WorkoutInformationDialog extends StatelessWidget {
+  /// The workout day (with its exercises) to summarise.
   final WorkoutDayWithExercises dayWithExercises;
 
   const WorkoutInformationDialog({super.key, required this.dayWithExercises});
@@ -28,7 +37,6 @@ class WorkoutInformationDialog extends StatelessWidget {
         child: FutureBuilder<Set<String>>(
           future: db.getSecondaryMuscleGroupsForExercises(exerciseIds),
           builder: (context, snapshot) {
-            // Secondary muscles that aren't already primary
             final secondaryMuscles = (snapshot.data ?? {}).difference(
               primaryMuscles,
             );
@@ -105,10 +113,13 @@ class WorkoutInformationDialog extends StatelessWidget {
   }
 }
 
+/// Renders a single (front or back) body diagram view with a label.
 class _BodyView extends StatelessWidget {
   final String label;
   final Set<String> primaryMuscles;
   final Set<String> secondaryMuscles;
+
+  /// Whether to draw the front or back of the body silhouette.
   final BodyView view;
 
   const _BodyView({
@@ -147,17 +158,22 @@ class _BodyView extends StatelessWidget {
   }
 }
 
+/// A styled pill-shaped label for a muscle group.
+///
+/// Primary muscles are highlighted in [AppColors.primary]; secondary muscles
+/// in a darker lime tone.
 class _MuscleChip extends StatelessWidget {
   final String label;
+
+  /// Whether this muscle is a primary (`true`) or secondary (`false`) target.
   final bool isPrimary;
 
   const _MuscleChip({required this.label, required this.isPrimary});
 
   @override
   Widget build(BuildContext context) {
-    // Primary: Electric Lime. Secondary: dark lime.
     const primaryColor = AppColors.primary;
-    const secondaryColor = Color(0xFF8AB800); // mid-tone lime for chips
+    const secondaryColor = Color(0xFF8AB800);
     final color = isPrimary ? primaryColor : secondaryColor;
 
     return Container(
@@ -202,11 +218,26 @@ class _MuscleChip extends StatelessWidget {
   }
 }
 
+/// Selects which side of the body diagram to render.
 enum BodyView { front, back }
 
+/// [CustomPainter] that draws a schematic human body silhouette and overlays
+/// muscle group shapes coloured by activation level.
+///
+/// - **Primary** muscles: Electric Lime (`0xCCC6FF00`)
+/// - **Secondary** muscles: Dark lime (`0xFF527700`)
+/// - **Inactive** muscles: [AppColors.surfaceVariant]
+///
+/// The diagram is drawn in a 100×330 logical coordinate space and scaled
+/// uniformly to fit the available [Canvas] [Size].
 class BodyDiagramPainter extends CustomPainter {
+  /// Muscle group names (lowercased) that are primary targets for this day.
   final Set<String> primaryMuscles;
+
+  /// Muscle group names (lowercased) that are secondary targets for this day.
   final Set<String> secondaryMuscles;
+
+  /// Whether to render the front or back view.
   final BodyView view;
 
   const BodyDiagramPainter({
@@ -221,18 +252,16 @@ class BodyDiagramPainter extends CustomPainter {
   bool _isSecondary(String muscle) =>
       secondaryMuscles.contains(muscle.toLowerCase());
 
-  // Electric Lime for primary, darker lime for secondary, surfaceVariant for inactive
+  /// Returns a fill [Paint] coloured according to [muscle]'s activation level.
   Paint _fill(String muscle) {
     if (_isPrimary(muscle)) {
       return Paint()
-        ..color =
-            const Color(0xCCC6FF00) // Lime ~80%
+        ..color = const Color(0xCCC6FF00)
         ..style = PaintingStyle.fill;
     }
     if (_isSecondary(muscle)) {
       return Paint()
-        ..color =
-            const Color(0xFF527700) // Dark lime
+        ..color = const Color(0xFF527700)
         ..style = PaintingStyle.fill;
     }
     return Paint()
@@ -254,9 +283,11 @@ class BodyDiagramPainter extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 0.7;
 
+  /// Draws an oval within the given LTRB bounds on [c] using paint [p].
   void _oval(Canvas c, double l, double t, double r, double b, Paint p) =>
       c.drawOval(Rect.fromLTRB(l, t, r, b), p);
 
+  /// Draws a rounded rectangle within the given LTRB bounds on [c].
   void _rr(
     Canvas c,
     double l,
@@ -293,7 +324,6 @@ class BodyDiagramPainter extends CustomPainter {
   }
 
   void _drawFront(Canvas canvas) {
-    // ── Base silhouette ────────────────────────────────────────────────────
     _oval(canvas, 3, 58, 31, 155, _base);
     _oval(canvas, 69, 58, 97, 155, _base);
     _rr(canvas, 28, 60, 72, 180, 10, _base);
@@ -303,71 +333,56 @@ class BodyDiagramPainter extends CustomPainter {
     _rr(canvas, 24, 260, 48, 328, 7, _base);
     _rr(canvas, 52, 260, 76, 328, 7, _base);
 
-    // ── Muscle overlays ────────────────────────────────────────────────────
-
-    // Triceps (outer strip, partially visible from front)
     _oval(canvas, 3, 92, 16, 150, _fill('tricep'));
     _oval(canvas, 3, 92, 16, 150, _stroke);
     _oval(canvas, 84, 92, 97, 150, _fill('tricep'));
     _oval(canvas, 84, 92, 97, 150, _stroke);
 
-    // Biceps
     _oval(canvas, 7, 92, 30, 150, _fill('bicep'));
     _oval(canvas, 7, 92, 30, 150, _stroke);
     _oval(canvas, 70, 92, 93, 150, _fill('bicep'));
     _oval(canvas, 70, 92, 93, 150, _stroke);
 
-    // Shoulders
     _oval(canvas, 8, 58, 38, 92, _fill('shoulders'));
     _oval(canvas, 8, 58, 38, 92, _stroke);
     _oval(canvas, 62, 58, 92, 92, _fill('shoulders'));
     _oval(canvas, 62, 58, 92, 92, _stroke);
 
-    // Chest
     _oval(canvas, 30, 62, 70, 112, _fill('chest'));
     _oval(canvas, 30, 62, 70, 112, _stroke);
 
-    // Abs
     _rr(canvas, 34, 110, 66, 174, 8, _fill('abs'));
     _rr(canvas, 34, 110, 66, 174, 8, _stroke);
 
-    // Hips overlay (neutral)
     _rr(canvas, 22, 174, 78, 212, 8, _base);
     _rr(canvas, 22, 174, 78, 212, 8, _baseStroke);
 
-    // Quads
     _rr(canvas, 23, 209, 49, 262, 6, _fill('legs'));
     _rr(canvas, 23, 209, 49, 262, 6, _stroke);
     _rr(canvas, 51, 209, 77, 262, 6, _fill('legs'));
     _rr(canvas, 51, 209, 77, 262, 6, _stroke);
 
-    // Calves
     _rr(canvas, 25, 264, 47, 326, 6, _fill('legs'));
     _rr(canvas, 25, 264, 47, 326, 6, _stroke);
     _rr(canvas, 53, 264, 75, 326, 6, _fill('legs'));
     _rr(canvas, 53, 264, 75, 326, 6, _stroke);
 
-    // Forearms (neutral)
     _oval(canvas, 3, 150, 25, 210, _base);
     _oval(canvas, 3, 150, 25, 210, _baseStroke);
     _oval(canvas, 75, 150, 97, 210, _base);
     _oval(canvas, 75, 150, 97, 210, _baseStroke);
 
-    // Upper arm outlines
     _oval(canvas, 3, 58, 31, 155, _baseStroke);
     _oval(canvas, 69, 58, 97, 155, _baseStroke);
 
-    // Head
     _oval(canvas, 34, 0, 66, 48, _base);
     _oval(canvas, 34, 0, 66, 48, _baseStroke);
 
-    // Neck
     _rr(canvas, 44, 44, 56, 64, 4, _base);
     _rr(canvas, 44, 44, 56, 64, 4, _baseStroke);
   }
 
   void _drawBack(Canvas canvas) {
-    // ── Base silhouette ────────────────────────────────────────────────────
     _oval(canvas, 3, 58, 31, 155, _base);
     _oval(canvas, 69, 58, 97, 155, _base);
     _rr(canvas, 28, 60, 72, 180, 10, _base);
@@ -377,65 +392,51 @@ class BodyDiagramPainter extends CustomPainter {
     _rr(canvas, 24, 260, 48, 328, 7, _base);
     _rr(canvas, 52, 260, 76, 328, 7, _base);
 
-    // ── Muscle overlays ────────────────────────────────────────────────────
-
-    // Biceps (small strip visible from back)
     _oval(canvas, 3, 92, 13, 150, _fill('bicep'));
     _oval(canvas, 3, 92, 13, 150, _stroke);
     _oval(canvas, 87, 92, 97, 150, _fill('bicep'));
     _oval(canvas, 87, 92, 97, 150, _stroke);
 
-    // Triceps (dominant from back)
     _oval(canvas, 6, 90, 32, 152, _fill('tricep'));
     _oval(canvas, 6, 90, 32, 152, _stroke);
     _oval(canvas, 68, 90, 94, 152, _fill('tricep'));
     _oval(canvas, 68, 90, 94, 152, _stroke);
 
-    // Shoulders (rear delt)
     _oval(canvas, 8, 56, 38, 90, _fill('shoulders'));
     _oval(canvas, 8, 56, 38, 90, _stroke);
     _oval(canvas, 62, 56, 92, 90, _fill('shoulders'));
     _oval(canvas, 62, 56, 92, 90, _stroke);
 
-    // Trapezius
     _rr(canvas, 30, 60, 70, 96, 8, _fill('back'));
     _rr(canvas, 30, 60, 70, 96, 8, _stroke);
 
-    // Lats
     _oval(canvas, 28, 94, 72, 178, _fill('back'));
     _oval(canvas, 28, 94, 72, 178, _stroke);
 
-    // Glutes
     _oval(canvas, 24, 176, 76, 214, _fill('legs'));
     _oval(canvas, 24, 176, 76, 214, _stroke);
 
-    // Hamstrings
     _rr(canvas, 23, 209, 49, 262, 6, _fill('legs'));
     _rr(canvas, 23, 209, 49, 262, 6, _stroke);
     _rr(canvas, 51, 209, 77, 262, 6, _fill('legs'));
     _rr(canvas, 51, 209, 77, 262, 6, _stroke);
 
-    // Calves
     _rr(canvas, 25, 264, 47, 326, 6, _fill('legs'));
     _rr(canvas, 25, 264, 47, 326, 6, _stroke);
     _rr(canvas, 53, 264, 75, 326, 6, _fill('legs'));
     _rr(canvas, 53, 264, 75, 326, 6, _stroke);
 
-    // Forearms (neutral)
     _oval(canvas, 3, 150, 25, 210, _base);
     _oval(canvas, 3, 150, 25, 210, _baseStroke);
     _oval(canvas, 75, 150, 97, 210, _base);
     _oval(canvas, 75, 150, 97, 210, _baseStroke);
 
-    // Upper arm outlines
     _oval(canvas, 3, 58, 31, 155, _baseStroke);
     _oval(canvas, 69, 58, 97, 155, _baseStroke);
 
-    // Head
     _oval(canvas, 34, 0, 66, 48, _base);
     _oval(canvas, 34, 0, 66, 48, _baseStroke);
 
-    // Neck
     _rr(canvas, 44, 44, 56, 64, 4, _base);
     _rr(canvas, 44, 44, 56, 64, 4, _baseStroke);
   }

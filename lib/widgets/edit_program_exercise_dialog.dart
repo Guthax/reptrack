@@ -8,7 +8,14 @@ import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 
+/// Dialog for editing an existing [ExerciseWithVolume] entry in a program day.
+///
+/// Pre-populates the exercise, equipment, rep scheme, and rest timer from
+/// [exerciseWithVolume]. The user can optionally swap the exercise by
+/// searching the list. On confirmation, delegates to
+/// [BuildProgramController.updateExerciseInDay].
 class EditProgramExerciseDialog extends StatefulWidget {
+  /// The exercise entry being edited.
   final ExerciseWithVolume exerciseWithVolume;
 
   const EditProgramExerciseDialog({
@@ -51,6 +58,8 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
     _loadInitialData();
   }
 
+  /// Fetches all exercises and the current exercise's equipment options,
+  /// pre-populating [filteredExercises] and [availableEquipment].
   Future<void> _loadInitialData() async {
     final controller = Get.find<BuildProgramController>();
     allExercises = await controller.getAvailableExercises();
