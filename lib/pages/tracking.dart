@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:reptrack/controllers/tracking_controller.dart';
@@ -263,6 +264,10 @@ class _BodyweightView extends StatelessWidget {
           controller: textController,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
+            MaxValueInputFormatter(100000),
+          ],
           decoration: const InputDecoration(
             hintText: 'Weight in kg',
             suffixText: 'kg',

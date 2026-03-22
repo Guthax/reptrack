@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/create_exercise_controller.dart';
 import 'package:reptrack/utils/app_theme.dart';
@@ -57,6 +58,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               TextField(
                 controller: nameController,
                 autofocus: true,
+                inputFormatters: [LengthLimitingTextInputFormatter(100)],
                 decoration: InputDecoration(
                   hintText: 'e.g. Bench Press',
                   border: OutlineInputBorder(
@@ -85,6 +87,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                 () => controller.muscleGroups.isEmpty
                     ? TextField(
                         controller: muscleGroupController,
+                        inputFormatters: [LengthLimitingTextInputFormatter(50)],
                         decoration: InputDecoration(
                           hintText: 'e.g. Chest',
                           border: OutlineInputBorder(
@@ -184,6 +187,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               TextField(
                 controller: noteController,
                 maxLines: 3,
+                inputFormatters: [LengthLimitingTextInputFormatter(500)],
                 decoration: InputDecoration(
                   hintText: 'Add any notes about this exercise...',
                   border: OutlineInputBorder(
@@ -218,6 +222,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
 
             if (exercise != null && mounted) {
               Get.back(result: exercise);
+              AppSnackbar.success('"${exercise.name}" created');
             }
           },
           child: const Text('Create'),

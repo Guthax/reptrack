@@ -54,6 +54,8 @@ class ExerciseSwipeCard extends StatelessWidget {
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           item.primaryMuscleGroup ?? "General",
@@ -152,6 +154,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                   final totalSets = controller.getTotalSetsForExercise(
                     exerciseIndex,
                     plannedSetsReps.length,
+                    currentEquipId,
                   );
 
                   return ListView.builder(
@@ -162,8 +165,10 @@ class ExerciseSwipeCard extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0, bottom: 20),
                           child: OutlinedButton.icon(
-                            onPressed: () =>
-                                controller.addExtraSet(exerciseIndex),
+                            onPressed: () => controller.addExtraSet(
+                              exerciseIndex,
+                              currentEquipId,
+                            ),
                             icon: const Icon(Icons.add),
                             label: const Text("ADD EXTRA SET"),
                             style: OutlinedButton.styleFrom(
@@ -187,8 +192,10 @@ class ExerciseSwipeCard extends StatelessWidget {
                       // NEW FIX: Is this the very last set in the entire list?
                       final isLastSet = setNum == totalSets;
 
-                      // This unique key is vital for Dismissible to work
-                      final itemKey = Key("set_${exerciseIndex}_$setNum");
+                      // Include equipmentId so state resets when equipment changes
+                      final itemKey = Key(
+                        "set_${exerciseIndex}_${currentEquipId}_$setNum",
+                      );
 
                       return Dismissible(
                         key: itemKey,
@@ -207,7 +214,10 @@ class ExerciseSwipeCard extends StatelessWidget {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         onDismissed: (direction) {
-                          controller.removeExtraSet(exerciseIndex);
+                          controller.removeExtraSet(
+                            exerciseIndex,
+                            currentEquipId,
+                          );
                         },
                         child: SetLogRow(
                           key: itemKey,
@@ -315,6 +325,7 @@ class _ExerciseCommentDialogState extends State<_ExerciseCommentDialog> {
       content: TextField(
         controller: _commentController,
         maxLines: 4,
+        inputFormatters: [LengthLimitingTextInputFormatter(500)],
         decoration: const InputDecoration(
           hintText: 'Add a note for this exercise...',
           border: OutlineInputBorder(),
@@ -329,10 +340,10 @@ class _ExerciseCommentDialogState extends State<_ExerciseCommentDialog> {
           onPressed: () async {
             final db = Get.find<AppDatabase>();
             final note = _commentController.text.trim();
-            await db.updateExerciseNote(
-              widget.exerciseId,
-              note.isEmpty ? null : note,
-            );
+            final savedNote = note.isEmpty ? null : note;
+            await db.updateExerciseNote(widget.exerciseId, savedNote);
+            Get.find<ActiveWorkoutController>()
+                .updateExerciseNoteInMemory(widget.exerciseId, savedNote);
             if (context.mounted) Navigator.of(context).pop();
           },
           child: const Text('SAVE'),
@@ -377,7 +388,10 @@ class _SetLogRowState extends State<SetLogRow> {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
 
-    final lastSessionSet = controller.getLastLoggedSet(widget.exerciseIndex);
+    final lastSessionSet = controller.getLastLoggedSet(
+      widget.exerciseIndex,
+      widget.equipmentId,
+    );
     final pastWorkoutSet = controller.getPastSetData(
       widget.exerciseId,
       widget.setNum,
@@ -453,10 +467,12 @@ class _SetLogRowState extends State<SetLogRow> {
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  MaxValueInputFormatter(100000),
                 ],
                 decoration: const InputDecoration(
                   labelText: "Kg",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
+                  isDense: true,
                 ),
               ),
             ),
@@ -466,10 +482,14 @@ class _SetLogRowState extends State<SetLogRow> {
                 controller: repsController,
                 enabled: !isSaved,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  MaxValueInputFormatter(100000),
+                ],
                 decoration: const InputDecoration(
                   labelText: "Reps",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
+                  isDense: true,
                 ),
               ),
             ),

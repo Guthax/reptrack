@@ -68,6 +68,28 @@ abstract final class AppSnackbar {
   }
 }
 
+/// Rejects input when the parsed numeric value exceeds [maxValue].
+///
+/// Use alongside [FilteringTextInputFormatter.digitsOnly] (or a decimal
+/// regex formatter) so that the text is always a valid number before
+/// this formatter inspects it.
+class MaxValueInputFormatter extends TextInputFormatter {
+  final num maxValue;
+
+  const MaxValueInputFormatter(this.maxValue);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+    final parsed = num.tryParse(newValue.text);
+    if (parsed == null || parsed > maxValue) return oldValue;
+    return newValue;
+  }
+}
+
 /// Central color palette for RepTrack.
 /// Aesthetic: "High-Performance Dark Mode" — deep charcoal + Electric Lime accent.
 abstract final class AppColors {
@@ -331,6 +353,9 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         elevation: 8,
+        // Reduce horizontal inset from the default 40px so dialogs use more
+        // of the screen on narrow phones (360px and below).
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: AppColors.outline),

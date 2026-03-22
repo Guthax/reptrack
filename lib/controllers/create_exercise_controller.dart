@@ -98,7 +98,6 @@ class CreateExerciseController extends GetxController {
           );
     }
 
-    AppSnackbar.success('"$trimmedName" created');
     return Exercise(id: id, name: trimmedName, note: note?.trim());
   }
 }

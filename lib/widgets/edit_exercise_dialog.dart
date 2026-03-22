@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
@@ -94,6 +95,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                     TextField(
                       controller: nameController,
                       autofocus: true,
+                      inputFormatters: [LengthLimitingTextInputFormatter(100)],
                       decoration: InputDecoration(
                         hintText: 'e.g. Bench Press',
                         border: OutlineInputBorder(
@@ -119,6 +121,9 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                     muscleGroups.isEmpty
                         ? TextField(
                             controller: muscleGroupController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(50),
+                            ],
                             decoration: InputDecoration(
                               hintText: 'e.g. Chest',
                               border: OutlineInputBorder(
@@ -206,6 +211,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                     TextField(
                       controller: noteController,
                       maxLines: 3,
+                      inputFormatters: [LengthLimitingTextInputFormatter(500)],
                       decoration: InputDecoration(
                         hintText: 'Add any notes about this exercise...',
                         border: OutlineInputBorder(

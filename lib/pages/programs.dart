@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/pages/build_program.dart';
 import 'package:reptrack/utils/app_theme.dart';
@@ -101,10 +102,11 @@ class ProgramsPage extends StatelessWidget {
         title: const Text("New Program"),
         content: TextField(
           controller: nameController,
+          autofocus: true,
+          inputFormatters: [LengthLimitingTextInputFormatter(100)],
           decoration: const InputDecoration(
             hintText: "Enter program name (e.g. Push Pull Legs)",
           ),
-          autofocus: true,
         ),
         actions: [
           TextButton(

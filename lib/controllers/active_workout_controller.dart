@@ -53,8 +53,8 @@ class ActiveWorkoutController extends GetxController {
   var selectedEquipments = <int, int>{}.obs;
 
   /// Extra sets the user has added beyond the program-prescribed count,
-  /// keyed by exercise ID.
-  var extraSetsCount = <int, int>{}.obs;
+  /// keyed by "$exerciseIndex-$equipmentId".
+  var extraSetsCount = <String, int>{}.obs;
 
   /// Sets logged during this session, keyed by exercise ID.
   ///
@@ -146,30 +146,40 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
-  /// Increments the extra-set count for the exercise at [exerciseIndex].
-  void addExtraSet(int exerciseIndex) {
-    extraSetsCount[exerciseIndex] = (extraSetsCount[exerciseIndex] ?? 0) + 1;
+  /// Increments the extra-set count for the exercise at [exerciseIndex] with [equipmentId].
+  void addExtraSet(int exerciseIndex, int equipmentId) {
+    final key = '$exerciseIndex-$equipmentId';
+    extraSetsCount[key] = (extraSetsCount[key] ?? 0) + 1;
   }
 
-  /// Decrements the extra-set count for the exercise at [exerciseIndex], flooring at zero.
-  void removeExtraSet(int exerciseIndex) {
-    if ((extraSetsCount[exerciseIndex] ?? 0) > 0) {
-      extraSetsCount[exerciseIndex] = extraSetsCount[exerciseIndex]! - 1;
+  /// Decrements the extra-set count for the exercise at [exerciseIndex] with [equipmentId], flooring at zero.
+  void removeExtraSet(int exerciseIndex, int equipmentId) {
+    final key = '$exerciseIndex-$equipmentId';
+    if ((extraSetsCount[key] ?? 0) > 0) {
+      extraSetsCount[key] = extraSetsCount[key]! - 1;
     }
   }
 
-  /// Returns the total number of sets for the exercise at [exerciseIndex],
+  /// Returns the total number of sets for the exercise at [exerciseIndex] with [equipmentId],
   /// combining the program-prescribed [plannedSets] with any extra sets added.
-  int getTotalSetsForExercise(int exerciseIndex, int plannedSets) {
-    return plannedSets + (extraSetsCount[exerciseIndex] ?? 0);
+  int getTotalSetsForExercise(
+    int exerciseIndex,
+    int plannedSets,
+    int equipmentId,
+  ) {
+    final key = '$exerciseIndex-$equipmentId';
+    return plannedSets + (extraSetsCount[key] ?? 0);
   }
 
   /// Returns the last [WorkoutSetsCompanion] logged for the exercise at
-  /// [exerciseIndex] in this session, or `null` if none has been logged yet.
-  WorkoutSetsCompanion? getLastLoggedSet(int exerciseIndex) {
+  /// [exerciseIndex] with [equipmentId] in this session, or `null` if none.
+  WorkoutSetsCompanion? getLastLoggedSet(int exerciseIndex, int equipmentId) {
     final list = sessionLoggedSets[exerciseIndex];
     if (list == null || list.isEmpty) return null;
-    return list.last;
+    for (var i = list.length - 1; i >= 0; i--) {
+      if (list[i].equipmentId.value == equipmentId) return list[i];
+    }
+    return null;
   }
 
   /// Starts a countdown timer for [seconds] and plays an alert when it ends.
@@ -341,6 +351,23 @@ class ActiveWorkoutController extends GetxController {
     } catch (e) {
       Get.snackbar("Swap Error", "Could not swap exercise: $e");
     }
+  }
+
+  /// Updates the note for [exerciseId] in the in-memory [exercisesWithVolume]
+  /// list so the comment icon reflects the saved note immediately.
+  void updateExerciseNoteInMemory(int exerciseId, String? note) {
+    for (var i = 0; i < exercisesWithVolume.length; i++) {
+      final item = exercisesWithVolume[i];
+      if (item.exercise.id == exerciseId) {
+        exercisesWithVolume[i] = ExerciseWithVolume(
+          exercise: item.exercise.copyWith(note: d.Value(note)),
+          volume: item.volume,
+          equipment: item.equipment,
+          primaryMuscleGroup: item.primaryMuscleGroup,
+        );
+      }
+    }
+    exercisesWithVolume.refresh();
   }
 
   @override

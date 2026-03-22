@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/build_program_controller.dart';
@@ -58,6 +59,9 @@ class BuildProgramPage extends StatelessWidget {
 
         return ReorderableListView.builder(
           buildDefaultDragHandles: false,
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.paddingOf(context).bottom + 8,
+          ),
           itemCount: controller.daysWithExercises.length,
           onReorder: (oldIndex, newIndex) {
             if (newIndex > oldIndex) newIndex--;
@@ -313,6 +317,7 @@ class BuildProgramPage extends StatelessWidget {
         content: TextField(
           controller: textController,
           autofocus: true,
+          inputFormatters: [LengthLimitingTextInputFormatter(100)],
           decoration: const InputDecoration(hintText: "Program name"),
         ),
         actions: [
@@ -337,6 +342,7 @@ class BuildProgramPage extends StatelessWidget {
         content: TextField(
           controller: textController,
           autofocus: true,
+          inputFormatters: [LengthLimitingTextInputFormatter(100)],
           decoration: const InputDecoration(hintText: "Day name"),
         ),
         actions: [
@@ -364,6 +370,7 @@ class BuildProgramPage extends StatelessWidget {
         content: TextField(
           controller: textController,
           autofocus: true,
+          inputFormatters: [LengthLimitingTextInputFormatter(100)],
           decoration: const InputDecoration(hintText: "e.g. Push Day"),
         ),
         actions: [

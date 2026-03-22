@@ -153,7 +153,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 Flexible(
                   child: Container(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.35,
+                      maxHeight:
+                          (MediaQuery.sizeOf(context).height -
+                              MediaQuery.viewInsetsOf(context).bottom) *
+                          0.35,
                     ),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppColors.outline),
@@ -246,6 +249,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
+                              MaxValueInputFormatter(100000),
                             ],
                             decoration: const InputDecoration(
                               labelText: "Reps",
@@ -290,6 +294,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     prefixIcon: Icon(Icons.timer),
                   ),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    MaxValueInputFormatter(100000),
+                  ],
                 ),
               ],
             ),

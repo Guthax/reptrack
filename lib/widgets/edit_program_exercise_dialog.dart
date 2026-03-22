@@ -154,7 +154,10 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                 Flexible(
                   child: Container(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.35,
+                      maxHeight:
+                          (MediaQuery.sizeOf(context).height -
+                              MediaQuery.viewInsetsOf(context).bottom) *
+                          0.35,
                     ),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppColors.outline),
@@ -269,6 +272,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
+                              MaxValueInputFormatter(100000),
                             ],
                             decoration: const InputDecoration(
                               labelText: 'Reps',
@@ -313,6 +317,10 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     prefixIcon: Icon(Icons.timer),
                   ),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    MaxValueInputFormatter(100000),
+                  ],
                 ),
               ],
             ),

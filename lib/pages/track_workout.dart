@@ -67,41 +67,44 @@ class TrackWorkoutPage extends StatelessWidget {
             ),
           ],
         ),
-        body: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (controller.exercisesWithVolume.isEmpty) {
-            return const Center(child: Text("No exercises found."));
-          }
+        body: SafeArea(
+          top: false,
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.exercisesWithVolume.isEmpty) {
+              return const Center(child: Text("No exercises found."));
+            }
 
-          return Column(
-            children: [
-              Obx(
-                () => LinearProgressIndicator(
-                  value: controller.exercisesWithVolume.isEmpty
-                      ? 0
-                      : (controller.currentPageIndex.value + 1) /
-                            controller.exercisesWithVolume.length,
+            return Column(
+              children: [
+                Obx(
+                  () => LinearProgressIndicator(
+                    value: controller.exercisesWithVolume.isEmpty
+                        ? 0
+                        : (controller.currentPageIndex.value + 1) /
+                              controller.exercisesWithVolume.length,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: PageView.builder(
-                  controller: controller.pageController,
-                  onPageChanged: (index) =>
-                      controller.currentPageIndex.value = index,
-                  itemCount: controller.exercisesWithVolume.length,
-                  itemBuilder: (context, index) {
-                    return ExerciseSwipeCard(
-                      item: controller.exercisesWithVolume[index],
-                      exerciseIndex: index,
-                    );
-                  },
+                Expanded(
+                  child: PageView.builder(
+                    controller: controller.pageController,
+                    onPageChanged: (index) =>
+                        controller.currentPageIndex.value = index,
+                    itemCount: controller.exercisesWithVolume.length,
+                    itemBuilder: (context, index) {
+                      return ExerciseSwipeCard(
+                        item: controller.exercisesWithVolume[index],
+                        exerciseIndex: index,
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        }),
+              ],
+            );
+          }),
+        ),
       ),
     );
   }

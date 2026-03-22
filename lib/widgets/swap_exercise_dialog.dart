@@ -70,7 +70,10 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
             Flexible(
               child: Container(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.35,
+                  maxHeight:
+                      (MediaQuery.sizeOf(context).height -
+                          MediaQuery.viewInsetsOf(context).bottom) *
+                      0.35,
                 ),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.outline),
