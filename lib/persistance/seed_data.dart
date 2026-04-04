@@ -1,6 +1,9 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:drift/drift.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 /// Populates [db] with the static reference data needed on first launch.
 ///
@@ -14,7 +17,7 @@ import 'package:reptrack/persistance/database.dart';
 /// - Exercises from `assets/data/exercises.csv`
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
-    final exerciseTypes = {1: 'Strength', 2: 'Cardio'};
+    final exerciseTypes = {'1': 'Strength', '2': 'Cardio'};
     for (var entry in exerciseTypes.entries) {
       await db
           .into(db.exerciseTypes)
@@ -27,13 +30,13 @@ Future<void> seedDatabase(AppDatabase db) async {
     }
 
     final muscleNames = {
-      1: 'Chest',
-      2: 'Back',
-      3: 'Bicep',
-      4: 'Tricep',
-      5: 'Shoulders',
-      6: 'Abs',
-      7: 'Legs',
+      '1': 'Chest',
+      '2': 'Back',
+      '3': 'Bicep',
+      '4': 'Tricep',
+      '5': 'Shoulders',
+      '6': 'Abs',
+      '7': 'Legs',
     };
     for (var entry in muscleNames.entries) {
       await db
@@ -47,14 +50,14 @@ Future<void> seedDatabase(AppDatabase db) async {
     }
 
     final equipmentNames = {
-      1: 'Bodyweight',
-      2: 'Barbell',
-      3: 'Dumbbells',
-      4: 'EZ-Bar',
-      5: 'Machine',
-      6: 'Cable',
-      7: 'Plate Loaded',
-      8: 'Smith Machine',
+      '1': 'Bodyweight',
+      '2': 'Barbell',
+      '3': 'Dumbbells',
+      '4': 'EZ-Bar',
+      '5': 'Machine',
+      '6': 'Cable',
+      '7': 'Plate Loaded',
+      '8': 'Smith Machine',
     };
     for (var entry in equipmentNames.entries) {
       await db
@@ -96,26 +99,26 @@ Future<void> seedDatabase(AppDatabase db) async {
         }
 
         try {
-          final exerciseTypeId = int.tryParse(columns[1].trim());
-          final primaryId = int.parse(columns[2].trim());
-          final secondaryId = columns[3].trim() == 'null'
-              ? null
-              : int.tryParse(columns[3].trim());
+          final exerciseTypeId = int.tryParse(columns[1].trim())?.toString();
+          final primaryId = columns[2].trim();
+          final secondaryIdRaw = columns[3].trim();
+          final secondaryId = secondaryIdRaw == 'null' ? null : secondaryIdRaw;
 
           final String rawEquipColumn = columns[4];
           final cleanEquipStr = rawEquipColumn.replaceAll('"', '').trim();
-          final List<int> equipIds = cleanEquipStr
+          final List<String> equipIds = cleanEquipStr
               .split(',')
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty)
-              .map((e) => int.parse(e))
               .toList();
 
-          final exerciseId = await db
+          final exerciseId = _uuid.v4();
+          await db
               .into(db.exercises)
               .insert(
-                ExercisesCompanion.insert(
-                  name: name,
+                ExercisesCompanion(
+                  id: Value(exerciseId),
+                  name: Value(name),
                   exerciseTypeId: Value(exerciseTypeId),
                 ),
               );

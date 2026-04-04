@@ -37,7 +37,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
   late final Rx<Exercise?> selectedExercise;
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
-  late final Rx<int?> selectedEquipmentId;
+  late final Rx<String?> selectedEquipmentId;
 
   List<Exercise> allExercises = [];
 
@@ -46,7 +46,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
     super.initState();
     final vol = widget.exerciseWithVolume;
     selectedExercise = Rx<Exercise?>(vol.exercise);
-    selectedEquipmentId = Rx<int?>(vol.volume.equipmentId);
+    selectedEquipmentId = Rx<String?>(vol.volume.equipmentId);
     timerController = TextEditingController(
       text: vol.volume.restTimer?.toString() ?? '60',
     );

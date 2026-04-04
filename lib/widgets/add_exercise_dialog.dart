@@ -18,7 +18,7 @@ import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 /// On confirmation, delegates to [BuildProgramController.addExerciseToDay].
 class AddExerciseDialog extends StatefulWidget {
   /// The workout day ID that the selected exercise will be added to.
-  final int dayId;
+  final String dayId;
 
   const AddExerciseDialog({super.key, required this.dayId});
 
@@ -33,12 +33,14 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
   );
   final List<TextEditingController> setControllers = [
     TextEditingController(text: "12"),
+    TextEditingController(text: "12"),
+    TextEditingController(text: "12"),
   ];
 
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
-  final Rx<int?> selectedEquipmentId = Rx<int?>(null);
+  final Rx<String?> selectedEquipmentId = Rx<String?>(null);
 
   List<Exercise> allExercises = [];
 

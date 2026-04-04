@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:reptrack/controllers/settings_controller.dart';
 import 'package:reptrack/controllers/tracking_controller.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
 
 /// Page for viewing historical weight-progress charts per exercise and
@@ -21,6 +23,13 @@ class TrackingPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tracking'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Get.to(() => const SettingsPage()),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: Padding(
@@ -120,7 +129,8 @@ class _ExerciseProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final exercise = controller.selectedExercise.value!;
-      final data = controller.weightProgressData;
+      final chartType = controller.selectedChartType.value;
+      final data = controller.activeChartData;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +146,10 @@ class _ExerciseProgressView extends StatelessWidget {
                 Expanded(
                   child: Text(
                     exercise.name,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -144,10 +157,10 @@ class _ExerciseProgressView extends StatelessWidget {
           ),
           if (controller.availableEquipment.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 6,
+                runSpacing: 6,
                 children: [
                   for (final equipment in controller.availableEquipment)
                     Obx(() {
@@ -158,12 +171,14 @@ class _ExerciseProgressView extends StatelessWidget {
                         label: Text(
                           equipment.name,
                           style: TextStyle(
+                            fontSize: 12,
                             color: isSelected ? Colors.black : null,
                             fontWeight: isSelected ? FontWeight.w600 : null,
                           ),
                         ),
                         selected: isSelected,
                         showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
                         backgroundColor: AppColors.surfaceVariant,
                         selectedColor: AppColors.primary,
                         onSelected: (_) {
@@ -180,23 +195,46 @@ class _ExerciseProgressView extends StatelessWidget {
                 child: Text('No workout data for this exercise yet.'),
               ),
             )
-          else ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: Text(
-                'Max weight per session',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-            ),
+          else
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 24, 24),
-                child: _WeightChart(data: data),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 24, 64),
+                    child: _WeightChart(data: data),
+                  ),
+                  Positioned(
+                    left: 16,
+                    bottom: 16,
+                    child: SegmentedButton<ChartType>(
+                      style: ButtonStyle(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                      ),
+                      segments: const [
+                        ButtonSegment(
+                          value: ChartType.maxWeight,
+                          icon: Icon(Icons.trending_up, size: 16),
+                          label: Text('Max Weight'),
+                        ),
+                        ButtonSegment(
+                          value: ChartType.totalVolume,
+                          icon: Icon(Icons.bar_chart, size: 16),
+                          label: Text('Volume over time'),
+                        ),
+                      ],
+                      selected: {chartType},
+                      onSelectionChanged: (s) =>
+                          controller.selectedChartType.value = s.first,
+                      showSelectedIcon: false,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
         ],
       );
     });
@@ -224,7 +262,7 @@ class _BodyweightView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(
-                'Bodyweight over time',
+                'Bodyweight over time — tap a point to delete',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
@@ -235,6 +273,7 @@ class _BodyweightView extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(8, 0, 24, 16),
                 child: _WeightChart(
                   data: entries.map((e) => MapEntry(e.date, e.weight)).toList(),
+                  onTapIndex: (idx) => _confirmDelete(entries[idx]),
                 ),
               ),
             ),
@@ -246,7 +285,7 @@ class _BodyweightView extends StatelessWidget {
               child: FilledButton.icon(
                 icon: const Icon(Icons.add),
                 label: const Text('Log Bodyweight'),
-                onPressed: () => _showLogDialog(context),
+                onPressed: _showLogDialog,
               ),
             ),
           ),
@@ -255,37 +294,103 @@ class _BodyweightView extends StatelessWidget {
     });
   }
 
-  void _showLogDialog(BuildContext context) {
+  void _showLogDialog() {
+    final settings = Get.find<SettingsController>();
+    controller.logDate.value = DateTime.now();
     final textController = TextEditingController();
     Get.dialog(
-      AlertDialog(
-        title: const Text('Log Bodyweight'),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
-            MaxValueInputFormatter(100000),
-          ],
-          decoration: const InputDecoration(
-            hintText: 'Weight in kg',
-            suffixText: 'kg',
+      Builder(
+        builder: (context) => AlertDialog(
+          title: const Text('Log Bodyweight'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Obx(
+                () => TextField(
+                  controller: textController,
+                  autofocus: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
+                    MaxValueInputFormatter(100000),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Weight in ${settings.unitLabel}',
+                    suffixText: settings.unitLabel,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Obx(() {
+                final now = DateTime.now();
+                final d = controller.logDate.value;
+                final isToday =
+                    d.year == now.year &&
+                    d.month == now.month &&
+                    d.day == now.day;
+                return OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(
+                    isToday ? 'Today' : DateFormat('d MMM yyyy').format(d),
+                  ),
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: controller.logDate.value,
+                      firstDate: DateTime(2000),
+                      lastDate: now,
+                    );
+                    if (picked != null) {
+                      controller.logDate.value = picked;
+                    }
+                  },
+                );
+              }),
+            ],
           ),
+          actions: [
+            TextButton(onPressed: Get.back, child: const Text('CANCEL')),
+            ElevatedButton(
+              onPressed: () {
+                final value = double.tryParse(
+                  textController.text.replaceAll(',', '.'),
+                );
+                if (value != null && value > 0) {
+                  controller.logBodyweight(
+                    settings.toKg(value),
+                    date: controller.logDate.value,
+                  );
+                  Get.back();
+                }
+              },
+              child: const Text('LOG'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BodyweightEntry entry) {
+    final settings = Get.find<SettingsController>();
+    final date = DateFormat('d MMM yyyy').format(entry.date);
+    final displayWeight = settings.displayWeight(entry.weight);
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Delete entry?'),
+        content: Text(
+          '${displayWeight.toStringAsFixed(1)} ${settings.unitLabel} on $date will be removed.',
         ),
         actions: [
           TextButton(onPressed: Get.back, child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () {
-              final value = double.tryParse(
-                textController.text.replaceAll(',', '.'),
-              );
-              if (value != null && value > 0) {
-                controller.logBodyweight(value);
-                Get.back();
-              }
+              controller.deleteBodyweight(entry.id);
+              Get.back();
             },
-            child: const Text('LOG'),
+            child: const Text('DELETE'),
           ),
         ],
       ),
@@ -295,127 +400,155 @@ class _BodyweightView extends StatelessWidget {
 
 /// Renders a [LineChart] of max weight lifted per session.
 ///
-/// [data] contains `(date, maxWeightKg)` entries in chronological order.
+/// [data] contains `(date, weightKg)` entries in chronological order.
+/// Values are converted to the active display unit via [SettingsController].
+/// [onTapIndex] is called with the tapped spot index when provided.
 class _WeightChart extends StatelessWidget {
   final List<MapEntry<DateTime, double>> data;
+  final void Function(int index)? onTapIndex;
 
-  const _WeightChart({required this.data});
+  const _WeightChart({required this.data, this.onTapIndex});
 
   @override
   Widget build(BuildContext context) {
+    final settings = Get.find<SettingsController>();
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final spots = data
-        .asMap()
-        .entries
-        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
-        .toList();
-
-    final maxY = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final minY = data.map((e) => e.value).reduce((a, b) => a < b ? a : b);
-    final yPad = ((maxY - minY) * 0.2).clamp(2.0, double.infinity);
     final dateFormat = DateFormat('d MMM');
     final labelInterval = (data.length / 5).ceilToDouble().clamp(
       1.0,
       double.infinity,
     );
 
-    return LineChart(
-      LineChartData(
-        minY: (minY - yPad).clamp(0.0, double.infinity),
-        maxY: maxY + yPad,
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 52,
-              getTitlesWidget: (val, meta) => Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Text(
-                    '${val.toStringAsFixed(1)} kg',
-                    style: const TextStyle(fontSize: 10),
+    return Obx(() {
+      final displayValues = data
+          .map((e) => settings.displayWeight(e.value))
+          .toList();
+      final unit = settings.unitLabel;
+
+      final spots = data
+          .asMap()
+          .entries
+          .map((e) => FlSpot(e.key.toDouble(), displayValues[e.key]))
+          .toList();
+
+      final maxY = displayValues.reduce((a, b) => a > b ? a : b);
+      final minY = displayValues.reduce((a, b) => a < b ? a : b);
+      final yPad = ((maxY - minY) * 0.2).clamp(2.0, double.infinity);
+
+      return LineChart(
+        LineChartData(
+          minY: (minY - yPad).clamp(0.0, double.infinity),
+          maxY: maxY + yPad,
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 56,
+                getTitlesWidget: (val, meta) => Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      '${val.toStringAsFixed(2)} $unit',
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              interval: labelInterval,
-              getTitlesWidget: (val, meta) {
-                final idx = val.toInt();
-                if (idx < 0 || idx >= data.length) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    dateFormat.format(data[idx].key),
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (val) =>
-              const FlLine(color: AppColors.outline, strokeWidth: 1),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: const Border(
-            bottom: BorderSide(color: AppColors.outline),
-            left: BorderSide(color: AppColors.outline),
-          ),
-        ),
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            curveSmoothness: 0.3,
-            color: primaryColor,
-            barWidth: 2.5,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-                radius: 4,
-                color: primaryColor,
-                strokeWidth: 1.5,
-                strokeColor: AppColors.background,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 28,
+                interval: labelInterval,
+                getTitlesWidget: (val, meta) {
+                  final idx = val.toInt();
+                  if (idx < 0 || idx >= data.length) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      dateFormat.format(data[idx].key),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                },
               ),
             ),
-            belowBarData: BarAreaData(
-              show: true,
-              color: primaryColor.withValues(alpha: 0.08),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (val) =>
+                const FlLine(color: AppColors.outline, strokeWidth: 1),
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: const Border(
+              bottom: BorderSide(color: AppColors.outline),
+              left: BorderSide(color: AppColors.outline),
             ),
           ),
-        ],
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => AppColors.surfaceVariant,
-            getTooltipItems: (touchedSpots) => touchedSpots.map((s) {
-              final idx = s.x.toInt();
-              if (idx < 0 || idx >= data.length) return null;
-              return LineTooltipItem(
-                '${dateFormat.format(data[idx].key)}\n${s.y.toStringAsFixed(1)} kg',
-                const TextStyle(color: Colors.white, fontSize: 12, height: 1.5),
-              );
-            }).toList(),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: false,
+              color: primaryColor,
+              barWidth: 2.5,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, bar, index) =>
+                    FlDotCirclePainter(
+                      radius: 4,
+                      color: primaryColor,
+                      strokeWidth: 1.5,
+                      strokeColor: AppColors.background,
+                    ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                color: primaryColor.withValues(alpha: 0.08),
+              ),
+            ),
+          ],
+          lineTouchData: LineTouchData(
+            touchCallback: onTapIndex == null
+                ? null
+                : (event, response) {
+                    if (event is FlTapUpEvent &&
+                        response?.lineBarSpots != null &&
+                        response!.lineBarSpots!.isNotEmpty) {
+                      final idx = response.lineBarSpots!.first.spotIndex;
+                      if (idx >= 0 && idx < data.length) {
+                        onTapIndex!(idx);
+                      }
+                    }
+                  },
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => AppColors.surfaceVariant,
+              getTooltipItems: (touchedSpots) => touchedSpots.map((s) {
+                final idx = s.x.toInt();
+                if (idx < 0 || idx >= data.length) return null;
+                return LineTooltipItem(
+                  '${dateFormat.format(data[idx].key)}\n${s.y.toStringAsFixed(2)} $unit',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

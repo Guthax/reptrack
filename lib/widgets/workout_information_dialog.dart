@@ -83,23 +83,39 @@ class WorkoutInformationDialog extends StatelessWidget {
                 if (primaryMuscles.isNotEmpty ||
                     secondaryMuscles.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      for (final m in primaryMuscles)
-                        _MuscleChip(
-                          label: m[0].toUpperCase() + m.substring(1),
-                          isPrimary: true,
-                        ),
-                      for (final m in secondaryMuscles)
-                        _MuscleChip(
-                          label: m[0].toUpperCase() + m.substring(1),
-                          isPrimary: false,
-                        ),
-                    ],
-                  ),
+                  if (primaryMuscles.isNotEmpty) ...[
+                    const _SectionLabel('PRIMARY'),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        for (final m in primaryMuscles)
+                          _MuscleChip(
+                            label: m[0].toUpperCase() + m.substring(1),
+                            isPrimary: true,
+                          ),
+                      ],
+                    ),
+                  ],
+                  if (secondaryMuscles.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    const _SectionLabel('SECONDARY'),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        for (final m in secondaryMuscles)
+                          _MuscleChip(
+                            label: m[0].toUpperCase() + m.substring(1),
+                            isPrimary: false,
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 16),
                 TextButton(onPressed: Get.back, child: const Text('CLOSE')),
@@ -153,6 +169,26 @@ class _BodyView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A small all-caps section header used to separate primary and secondary chips.
+class _SectionLabel extends StatelessWidget {
+  final String text;
+
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.0,
+        color: AppColors.textSecondary,
+      ),
     );
   }
 }

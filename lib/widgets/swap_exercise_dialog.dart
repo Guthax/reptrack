@@ -7,7 +7,7 @@ import 'package:reptrack/utils/fuzzy_search.dart';
 
 class SwapExerciseDialog extends StatefulWidget {
   final int exerciseIndex;
-  final int exerciseId;
+  final String exerciseId;
   final String exerciseName;
 
   const SwapExerciseDialog({
@@ -104,7 +104,7 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                           // 2. Default to the first equipment found (or 0 if none)
                           final defaultEquipId = equips.isNotEmpty
                               ? equips.first.id
-                              : 0;
+                              : '';
 
                           // 3. Perform the swap in the controller
                           activeController.swapExercise(

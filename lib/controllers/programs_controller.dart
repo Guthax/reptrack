@@ -38,9 +38,7 @@ class ProgramsController extends GetxController {
   Future<Program?> addProgram(String name) async {
     try {
       final database = Get.find<AppDatabase>();
-      final id = await database
-          .into(database.programs)
-          .insert(ProgramsCompanion.insert(name: name));
+      final id = await database.addProgram(name);
       await loadPrograms();
       return programs.firstWhere((p) => p.id == id);
     } catch (e) {

@@ -2,6 +2,9 @@ import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 
+/// Which metric to plot on the exercise progress chart.
+enum ChartType { maxWeight, totalVolume }
+
 /// Controller for the Tracking screen.
 ///
 /// Manages two tabs: exercise progress charts and bodyweight tracking.
@@ -27,7 +30,7 @@ class TrackingController extends GetxController {
   final RxList<WorkoutSet> exerciseSets = <WorkoutSet>[].obs;
 
   /// Map from equipment ID to [Equipment] for every set in [exerciseSets].
-  final RxMap<int, Equipment> setEquipment = <int, Equipment>{}.obs;
+  final RxMap<String, Equipment> setEquipment = <String, Equipment>{}.obs;
 
   /// Equipment variants that appear in [exerciseSets] or the exercise definition.
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
@@ -35,8 +38,14 @@ class TrackingController extends GetxController {
   /// The equipment variant currently selected for the weight progress chart.
   final Rx<Equipment?> selectedEquipment = Rx<Equipment?>(null);
 
+  /// Which metric is currently plotted on the exercise chart.
+  final Rx<ChartType> selectedChartType = ChartType.maxWeight.obs;
+
   /// All bodyweight entries in chronological order.
   final RxList<BodyweightEntry> bodyweightEntries = <BodyweightEntry>[].obs;
+
+  /// Selected date in the "Log Bodyweight" dialog.
+  final Rx<DateTime> logDate = DateTime.now().obs;
 
   @override
   void onInit() {
@@ -72,7 +81,7 @@ class TrackingController extends GetxController {
     exerciseSets.assignAll(sets.reversed.toList());
 
     setEquipment.clear();
-    final equipmentIds = <int>{};
+    final equipmentIds = <String>{};
     for (final set in exerciseSets) {
       equipmentIds.add(set.equipmentId);
     }
@@ -94,9 +103,15 @@ class TrackingController extends GetxController {
     equipmentList.sort((a, b) => a.name.compareTo(b.name));
     availableEquipment.assignAll(equipmentList);
 
-    selectedEquipment.value = equipmentList.isNotEmpty
-        ? equipmentList.first
+    final lastSet = exerciseSets.isNotEmpty
+        ? exerciseSets.reduce(
+            (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
+          )
         : null;
+    selectedEquipment.value = equipmentList.isEmpty
+        ? null
+        : equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
+              equipmentList.first;
   }
 
   /// Resets the exercise selection and clears all related state.
@@ -108,9 +123,14 @@ class TrackingController extends GetxController {
     setEquipment.clear();
   }
 
-  /// Logs a bodyweight entry for today with [weight] in kg.
-  Future<void> logBodyweight(double weight) {
-    return db.addBodyweightEntry(DateTime.now(), weight);
+  /// Logs a bodyweight entry for [date] (defaults to today) with [weight] in kg.
+  Future<void> logBodyweight(double weight, {DateTime? date}) {
+    return db.addBodyweightEntry(date ?? DateTime.now(), weight);
+  }
+
+  /// Deletes the bodyweight entry with the given [id].
+  Future<void> deleteBodyweight(String id) {
+    return db.deleteBodyweightEntry(id);
   }
 
   /// Returns `(date, maxWeight)` pairs grouped by calendar day, sorted
@@ -145,4 +165,39 @@ class TrackingController extends GetxController {
           ..sort((a, b) => a.key.compareTo(b.key));
     return result;
   }
+
+  /// Returns `(date, totalVolume)` pairs grouped by calendar day, sorted
+  /// chronologically. Volume = sum of `weight × reps` across all sets that day.
+  ///
+  /// Only sets matching [selectedEquipment] are included.
+  List<MapEntry<DateTime, double>> get volumeProgressData {
+    final Map<String, double> volumeByDate = {};
+    final Map<String, DateTime> dateByKey = {};
+    final selectedEquip = selectedEquipment.value;
+
+    for (final s in exerciseSets) {
+      if (selectedEquip != null && s.equipmentId != selectedEquip.id) {
+        continue;
+      }
+
+      final d = s.dateLogged;
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      dateByKey[key] = DateTime(d.year, d.month, d.day);
+      volumeByDate[key] = (volumeByDate[key] ?? 0) + s.weight * s.reps;
+    }
+
+    final result =
+        volumeByDate.entries
+            .map((e) => MapEntry(dateByKey[e.key]!, e.value))
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
+    return result;
+  }
+
+  /// Returns the active chart data based on [selectedChartType].
+  List<MapEntry<DateTime, double>> get activeChartData =>
+      selectedChartType.value == ChartType.maxWeight
+      ? weightProgressData
+      : volumeProgressData;
 }

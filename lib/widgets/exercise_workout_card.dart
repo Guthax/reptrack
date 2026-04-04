@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
+import 'package:reptrack/controllers/settings_controller.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/exercise_history_card_widget.dart';
+import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 import 'package:reptrack/widgets/swap_exercise_dialog.dart';
 
 class ExerciseSwipeCard extends StatelessWidget {
@@ -63,6 +65,23 @@ class ExerciseSwipeCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.secondary,
+                    ),
+                    onPressed: () async {
+                      final updated = await Get.dialog<Exercise>(
+                        EditExerciseDialog(exercise: item.exercise),
+                      );
+                      if (updated != null) {
+                        controller.updateExerciseInMemory(
+                          exerciseIndex,
+                          updated,
+                        );
+                      }
+                    },
                   ),
                   IconButton(
                     icon: const Icon(
@@ -292,7 +311,7 @@ class ExerciseSwipeCard extends StatelessWidget {
 }
 
 class _ExerciseCommentDialog extends StatefulWidget {
-  final int exerciseId;
+  final String exerciseId;
   final String? initialComment;
 
   const _ExerciseCommentDialog({required this.exerciseId, this.initialComment});
@@ -342,8 +361,10 @@ class _ExerciseCommentDialogState extends State<_ExerciseCommentDialog> {
             final note = _commentController.text.trim();
             final savedNote = note.isEmpty ? null : note;
             await db.updateExerciseNote(widget.exerciseId, savedNote);
-            Get.find<ActiveWorkoutController>()
-                .updateExerciseNoteInMemory(widget.exerciseId, savedNote);
+            Get.find<ActiveWorkoutController>().updateExerciseNoteInMemory(
+              widget.exerciseId,
+              savedNote,
+            );
             if (context.mounted) Navigator.of(context).pop();
           },
           child: const Text('SAVE'),
@@ -356,8 +377,8 @@ class _ExerciseCommentDialogState extends State<_ExerciseCommentDialog> {
 class SetLogRow extends StatefulWidget {
   final int setNum;
   final int exerciseIndex;
-  final int exerciseId;
-  final int equipmentId;
+  final String exerciseId;
+  final String equipmentId;
   final int plannedReps;
   final double plannedWeight;
   final int restSeconds;
@@ -399,16 +420,22 @@ class _SetLogRowState extends State<SetLogRow> {
     );
 
     String initialReps = widget.plannedReps.toString();
-    String initialWeight = widget.plannedWeight.toString();
+    double initialWeightKg = widget.plannedWeight;
 
     if (lastSessionSet != null) {
       // FIX: Extraction of .value from Drift Companion Value wrapper
       initialReps = lastSessionSet.reps.value.toString();
-      initialWeight = lastSessionSet.weight.value.toString();
+      initialWeightKg = lastSessionSet.weight.value;
     } else if (pastWorkoutSet != null) {
       initialReps = pastWorkoutSet.reps.toString();
-      initialWeight = pastWorkoutSet.weight.toString();
+      initialWeightKg = pastWorkoutSet.weight;
     }
+
+    final settings = Get.find<SettingsController>();
+    final displayWeight = settings.displayWeight(initialWeightKg);
+    final initialWeight = displayWeight == displayWeight.truncateToDouble()
+        ? displayWeight.toInt().toString()
+        : displayWeight.toStringAsFixed(1);
 
     repsController = TextEditingController(text: initialReps);
     weightController = TextEditingController(text: initialWeight);
@@ -469,8 +496,9 @@ class _SetLogRowState extends State<SetLogRow> {
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                   MaxValueInputFormatter(100000),
                 ],
-                decoration: const InputDecoration(
-                  labelText: "Kg",
+                decoration: InputDecoration(
+                  labelText: Get.find<SettingsController>().unitLabel
+                      .toUpperCase(),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   isDense: true,
                 ),
@@ -518,7 +546,9 @@ class _SetLogRowState extends State<SetLogRow> {
                     exerciseId: widget.exerciseId,
                     equipmentId: widget.equipmentId,
                     reps: int.tryParse(repsController.text) ?? 0,
-                    weight: double.tryParse(weightController.text) ?? 0,
+                    weight: Get.find<SettingsController>().toKg(
+                      double.tryParse(weightController.text) ?? 0,
+                    ),
                     setNum: widget.setNum,
                     restSeconds: widget.restSeconds,
                   );

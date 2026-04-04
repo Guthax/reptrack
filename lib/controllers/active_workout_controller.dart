@@ -5,6 +5,9 @@ import 'package:drift/drift.dart' as d;
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 /// Controller for an active workout session.
 ///
@@ -19,7 +22,7 @@ class ActiveWorkoutController extends GetxController {
   final AppDatabase db = Get.find<AppDatabase>();
 
   /// The workout day being performed.
-  final int workoutDayId;
+  final String workoutDayId;
 
   /// Creates an [ActiveWorkoutController] for the given [workoutDayId].
   ActiveWorkoutController(this.workoutDayId);
@@ -34,7 +37,7 @@ class ActiveWorkoutController extends GetxController {
   var currentPageIndex = 0.obs;
 
   /// The database ID of the [Workout] row created for this session.
-  int? currentWorkoutId;
+  String? currentWorkoutId;
 
   /// Remaining rest-timer seconds. `0` means the timer is idle.
   var remainingRestTime = 0.obs;
@@ -43,20 +46,20 @@ class ActiveWorkoutController extends GetxController {
 
   /// Historical sets from the most recent previous session, keyed by
   /// exercise ID. Used to pre-fill weight/reps inputs.
-  var lastWorkoutSets = <int, List<WorkoutSet>>{}.obs;
+  var lastWorkoutSets = <String, List<WorkoutSet>>{}.obs;
 
   /// Keys of the form `"exerciseId-equipmentId-setNum"` for every set that
   /// has been logged during this session.
   var completedSets = <String>{}.obs;
 
-  /// Maps each exercise ID to the equipment ID the user has selected.
-  var selectedEquipments = <int, int>{}.obs;
+  /// Maps each exercise index to the equipment ID the user has selected.
+  var selectedEquipments = <int, String>{}.obs;
 
   /// Extra sets the user has added beyond the program-prescribed count,
   /// keyed by "$exerciseIndex-$equipmentId".
   var extraSetsCount = <String, int>{}.obs;
 
-  /// Sets logged during this session, keyed by exercise ID.
+  /// Sets logged during this session, keyed by exercise index.
   ///
   /// The inner [List] is mutated in place; call `.refresh()` on the map
   /// after mutations so that [Obx] listeners are notified.
@@ -75,14 +78,17 @@ class ActiveWorkoutController extends GetxController {
   /// pre-fetches historical sets for each exercise.
   Future<void> _setupWorkout() async {
     try {
-      currentWorkoutId = await db
+      final workoutUuid = _uuid.v4();
+      await db
           .into(db.workouts)
           .insert(
-            WorkoutsCompanion.insert(
-              workoutDayId: workoutDayId,
+            WorkoutsCompanion(
+              id: d.Value(workoutUuid),
+              workoutDayId: d.Value(workoutDayId),
               date: d.Value(DateTime.now()),
             ),
           );
+      currentWorkoutId = workoutUuid;
 
       final query = db.select(db.programExercise).join([
         d.innerJoin(
@@ -130,7 +136,7 @@ class ActiveWorkoutController extends GetxController {
                   ..where((tbl) => tbl.exerciseId.equals(item.exercise.id))
                   ..orderBy([
                     (u) => d.OrderingTerm(
-                      expression: u.id,
+                      expression: u.dateLogged,
                       mode: d.OrderingMode.desc,
                     ),
                   ]))
@@ -147,13 +153,13 @@ class ActiveWorkoutController extends GetxController {
   }
 
   /// Increments the extra-set count for the exercise at [exerciseIndex] with [equipmentId].
-  void addExtraSet(int exerciseIndex, int equipmentId) {
+  void addExtraSet(int exerciseIndex, String equipmentId) {
     final key = '$exerciseIndex-$equipmentId';
     extraSetsCount[key] = (extraSetsCount[key] ?? 0) + 1;
   }
 
   /// Decrements the extra-set count for the exercise at [exerciseIndex] with [equipmentId], flooring at zero.
-  void removeExtraSet(int exerciseIndex, int equipmentId) {
+  void removeExtraSet(int exerciseIndex, String equipmentId) {
     final key = '$exerciseIndex-$equipmentId';
     if ((extraSetsCount[key] ?? 0) > 0) {
       extraSetsCount[key] = extraSetsCount[key]! - 1;
@@ -165,7 +171,7 @@ class ActiveWorkoutController extends GetxController {
   int getTotalSetsForExercise(
     int exerciseIndex,
     int plannedSets,
-    int equipmentId,
+    String equipmentId,
   ) {
     final key = '$exerciseIndex-$equipmentId';
     return plannedSets + (extraSetsCount[key] ?? 0);
@@ -173,7 +179,10 @@ class ActiveWorkoutController extends GetxController {
 
   /// Returns the last [WorkoutSetsCompanion] logged for the exercise at
   /// [exerciseIndex] with [equipmentId] in this session, or `null` if none.
-  WorkoutSetsCompanion? getLastLoggedSet(int exerciseIndex, int equipmentId) {
+  WorkoutSetsCompanion? getLastLoggedSet(
+    int exerciseIndex,
+    String equipmentId,
+  ) {
     final list = sessionLoggedSets[exerciseIndex];
     if (list == null || list.isEmpty) return null;
     for (var i = list.length - 1; i >= 0; i--) {
@@ -223,8 +232,8 @@ class ActiveWorkoutController extends GetxController {
   /// Does nothing if [currentWorkoutId] is `null` (setup not complete).
   Future<void> logSet({
     required int exerciseIndex,
-    required int exerciseId,
-    required int equipmentId,
+    required String exerciseId,
+    required String equipmentId,
     required int reps,
     required double weight,
     required int setNum,
@@ -259,7 +268,7 @@ class ActiveWorkoutController extends GetxController {
 
   /// Returns whether the set [setNum] for the exercise at [exerciseIndex]
   /// using [equipmentId] has been completed in this session.
-  bool isSetCompleted(int exerciseIndex, int equipmentId, int setNum) =>
+  bool isSetCompleted(int exerciseIndex, String equipmentId, int setNum) =>
       completedSets.contains("$exerciseIndex-$equipmentId-$setNum");
 
   /// Marks a previously logged set as incomplete in the database and removes
@@ -268,8 +277,8 @@ class ActiveWorkoutController extends GetxController {
   /// Does nothing if [currentWorkoutId] is `null`.
   Future<void> unlogSet({
     required int exerciseIndex,
-    required int exerciseId,
-    required int equipmentId,
+    required String exerciseId,
+    required String equipmentId,
     required int setNum,
   }) async {
     if (currentWorkoutId == null) return;
@@ -291,7 +300,11 @@ class ActiveWorkoutController extends GetxController {
 
   /// Returns the historical [WorkoutSet] for [exerciseId] / [setNum] /
   /// [equipmentId] from the most recent past session, or `null` if not found.
-  WorkoutSet? getPastSetData(int exerciseId, int setNum, int equipmentId) {
+  WorkoutSet? getPastSetData(
+    String exerciseId,
+    int setNum,
+    String equipmentId,
+  ) {
     final sets = lastWorkoutSets[exerciseId];
     if (sets == null) return null;
     return sets.firstWhereOrNull(
@@ -307,7 +320,7 @@ class ActiveWorkoutController extends GetxController {
   Future<void> swapExercise({
     required int exerciseIndex,
     required Exercise newExercise,
-    required int newEquipmentId,
+    required String newEquipmentId,
   }) async {
     try {
       if (exerciseIndex < 0 || exerciseIndex >= exercisesWithVolume.length) {
@@ -339,7 +352,7 @@ class ActiveWorkoutController extends GetxController {
                 ..where((tbl) => tbl.exerciseId.equals(newExercise.id))
                 ..orderBy([
                   (u) => d.OrderingTerm(
-                    expression: u.id,
+                    expression: u.dateLogged,
                     mode: d.OrderingMode.desc,
                   ),
                 ]))
@@ -353,9 +366,27 @@ class ActiveWorkoutController extends GetxController {
     }
   }
 
+  /// Replaces the exercise at [exerciseIndex] in-memory with [exercise].
+  ///
+  /// Called after [EditExerciseDialog] returns an updated [Exercise] so the
+  /// workout card reflects the new name / muscle group immediately.
+  void updateExerciseInMemory(int exerciseIndex, Exercise exercise) {
+    if (exerciseIndex < 0 || exerciseIndex >= exercisesWithVolume.length) {
+      return;
+    }
+    final item = exercisesWithVolume[exerciseIndex];
+    exercisesWithVolume[exerciseIndex] = ExerciseWithVolume(
+      exercise: exercise,
+      volume: item.volume,
+      equipment: item.equipment,
+      primaryMuscleGroup: item.primaryMuscleGroup,
+    );
+    exercisesWithVolume.refresh();
+  }
+
   /// Updates the note for [exerciseId] in the in-memory [exercisesWithVolume]
   /// list so the comment icon reflects the saved note immediately.
-  void updateExerciseNoteInMemory(int exerciseId, String? note) {
+  void updateExerciseNoteInMemory(String exerciseId, String? note) {
     for (var i = 0; i < exercisesWithVolume.length; i++) {
       final item = exercisesWithVolume[i];
       if (item.exercise.id == exerciseId) {

@@ -19,7 +19,7 @@ class CreateExerciseController extends GetxController {
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
 
   /// The set of equipment IDs the user has toggled on.
-  final RxSet<int> selectedEquipmentIds = <int>{}.obs;
+  final RxSet<String> selectedEquipmentIds = <String>{}.obs;
 
   @override
   void onInit() {
@@ -40,7 +40,7 @@ class CreateExerciseController extends GetxController {
   ///
   /// If [equipmentId] is already in [selectedEquipmentIds] it is removed;
   /// otherwise it is added.
-  void toggleEquipment(int equipmentId) {
+  void toggleEquipment(String equipmentId) {
     if (selectedEquipmentIds.contains(equipmentId)) {
       selectedEquipmentIds.remove(equipmentId);
     } else {
@@ -61,7 +61,7 @@ class CreateExerciseController extends GetxController {
     required String name,
     String? muscleGroupName,
     String? note,
-    required Set<int> equipmentIds,
+    required Set<String> equipmentIds,
   }) async {
     final trimmedName = name.trim();
 

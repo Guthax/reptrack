@@ -24,7 +24,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
 
   List<String> muscleGroups = [];
   List<Equipment> availableEquipment = [];
-  Set<int> selectedEquipmentIds = {};
+  Set<String> selectedEquipmentIds = {};
 
   bool _loaded = false;
   String? _error;

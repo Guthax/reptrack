@@ -1,6 +1,8 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:reptrack/controllers/settings_controller.dart';
+import 'package:reptrack/pages/onboarding.dart';
 import 'package:reptrack/pages/programs.dart';
 import 'package:reptrack/pages/tracking.dart';
 import 'package:reptrack/pages/workout.dart';
@@ -36,6 +38,8 @@ void main() async {
   final db = AppDatabase();
   Get.put(db, permanent: true);
   Get.put(CelebrationController(), permanent: true);
+  final settings = Get.put(SettingsController(), permanent: true);
+  await settings.load();
   await seedDatabase(db);
   runApp(const MainApp());
 }
@@ -46,10 +50,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Get.find<SettingsController>();
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const HomePage(),
+      home: settings.isFirstLaunch.value
+          ? const OnboardingPage()
+          : const HomePage(),
     );
   }
 }

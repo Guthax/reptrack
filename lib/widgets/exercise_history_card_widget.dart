@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:reptrack/controllers/settings_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 
 class ExerciseHistoryDialog extends StatelessWidget {
-  final int exerciseId;
+  final String exerciseId;
   final String exerciseName;
 
   const ExerciseHistoryDialog({
@@ -63,7 +64,7 @@ class ExerciseHistoryDialog extends StatelessWidget {
 
             final equipMap = {for (var e in allEquip) e.id: e.name};
 
-            final Map<int, List<WorkoutSet>> sessions = {};
+            final Map<String, List<WorkoutSet>> sessions = {};
             for (var set in allSets) {
               sessions.putIfAbsent(set.workoutId, () => []).add(set);
             }
@@ -154,19 +155,33 @@ class ExerciseHistoryDialog extends StatelessWidget {
                                         ],
                                       ),
                                       const Spacer(),
-                                      Text(
-                                        "${set.weight}",
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Builder(
+                                        builder: (context) {
+                                          final settings =
+                                              Get.find<SettingsController>();
+                                          final display = settings
+                                              .displayWeight(set.weight);
+                                          return Text(
+                                            display.toStringAsFixed(1),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          );
+                                        },
                                       ),
-                                      const Text(
-                                        " kg",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                        ),
+                                      Builder(
+                                        builder: (context) {
+                                          final settings =
+                                              Get.find<SettingsController>();
+                                          return Text(
+                                            ' ${settings.unitLabel}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          );
+                                        },
                                       ),
                                       const SizedBox(width: 20),
                                       Text(

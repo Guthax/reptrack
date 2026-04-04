@@ -16,7 +16,7 @@ class BuildProgramController extends GetxController {
   final AppDatabase db = Get.find<AppDatabase>();
 
   /// The ID of the program being edited.
-  final int programId;
+  final String programId;
 
   /// Reactive program name, kept in sync with the database.
   late final RxString programName;
@@ -49,7 +49,7 @@ class BuildProgramController extends GetxController {
   }
 
   /// Renames the workout day identified by [dayId] to [name].
-  Future<void> renameDay(int dayId, String name) async {
+  Future<void> renameDay(String dayId, String name) async {
     if (name.trim().isNotEmpty) {
       await db.renameWorkoutDay(dayId, name.trim());
     }
@@ -65,7 +65,7 @@ class BuildProgramController extends GetxController {
   }
 
   /// Permanently deletes the workout day with [dayId] and all its exercises.
-  Future<void> deleteDay(int dayId) => db.deleteWorkoutDay(dayId);
+  Future<void> deleteDay(String dayId) => db.deleteWorkoutDay(dayId);
 
   /// Adds [exercise] to the workout day identified by [dayId].
   ///
@@ -73,9 +73,9 @@ class BuildProgramController extends GetxController {
   /// - [setsReps]: rep count per set, e.g. `[12, 10, 8]`.
   /// - [restTimer]: optional rest duration in seconds between sets.
   Future<void> addExerciseToDay(
-    int dayId,
+    String dayId,
     Exercise exercise,
-    int equipmentId,
+    String equipmentId,
     List<int> setsReps,
     int? restTimer,
   ) async {
@@ -93,7 +93,7 @@ class BuildProgramController extends GetxController {
   ///
   /// Deletes by the [ProgramExercise] primary key so that duplicate exercise
   /// entries on the same day can be removed independently.
-  Future<void> removeExerciseFromDay(int volumeId) async {
+  Future<void> removeExerciseFromDay(String volumeId) async {
     await db.deleteProgramExercise(volumeId);
   }
 
@@ -118,9 +118,9 @@ class BuildProgramController extends GetxController {
   /// - [setsReps]: new rep scheme per set.
   /// - [restTimer]: optional rest duration in seconds.
   Future<void> updateExerciseInDay(
-    int volumeId,
+    String volumeId,
     Exercise exercise,
-    int equipmentId,
+    String equipmentId,
     List<int> setsReps,
     int? restTimer,
   ) async {

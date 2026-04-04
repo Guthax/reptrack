@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/main.dart';
+import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/exercise_workout_card.dart';
 
@@ -12,7 +13,7 @@ import 'package:reptrack/widgets/exercise_workout_card.dart';
 /// before ending the session early.
 class TrackWorkoutPage extends StatelessWidget {
   /// The database ID of the workout day being performed.
-  final int dayId;
+  final String dayId;
 
   /// The display name of the workout day shown in the app bar.
   final String dayName;
@@ -41,6 +42,11 @@ class TrackWorkoutPage extends StatelessWidget {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+              onPressed: () => Get.to(() => const SettingsPage()),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 8.0,

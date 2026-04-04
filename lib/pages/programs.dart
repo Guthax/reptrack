@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:reptrack/controllers/settings_controller.dart';
 import 'package:reptrack/pages/build_program.dart';
+import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/widgets/hint_bubble.dart';
 import '../controllers/programs_controller.dart';
 
 /// Page that lists all training programs and allows creating or deleting them.
@@ -17,13 +20,18 @@ class ProgramsPage extends StatelessWidget {
     final ProgramsController controller = Get.put(ProgramsController());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Programs')),
+      appBar: AppBar(
+        title: const Text('Programs'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Get.to(() => const SettingsPage()),
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Workouts', style: TextStyle(fontSize: 18)),
-          ),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -37,45 +45,78 @@ class ProgramsPage extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 itemCount: controller.programs.length,
                 itemBuilder: (context, index) {
                   final program = controller.programs[index];
-                  return ListTile(
-                    leading: const Icon(Icons.fitness_center),
-                    title: Text(program.name),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: AppColors.error),
-                      onPressed: () {
-                        Get.dialog(
-                          AlertDialog(
-                            title: const Text("Delete Program?"),
-                            content: Text(
-                              'Are you sure you want to delete "${program.name}"?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: Get.back,
-                                child: const Text("CANCEL"),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.error,
-                                  foregroundColor: Colors.white,
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () =>
+                          Get.to(() => BuildProgramPage(program: program)),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
                                 ),
-                                onPressed: () {
-                                  controller.deleteProgram(program);
-                                  Get.back();
-                                },
-                                child: const Text("DELETE"),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            ],
-                          ),
-                        );
-                      },
+                              child: const Icon(
+                                Icons.fitness_center,
+                                color: AppColors.primary,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                program.name,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.error,
+                              ),
+                              onPressed: () => Get.dialog(
+                                AlertDialog(
+                                  title: const Text("Delete Program?"),
+                                  content: Text(
+                                    'Are you sure you want to delete "${program.name}"?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: Get.back,
+                                      child: const Text("CANCEL"),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.error,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      onPressed: () {
+                                        controller.deleteProgram(program);
+                                        Get.back();
+                                      },
+                                      child: const Text("DELETE"),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    onTap: () =>
-                        Get.to(() => BuildProgramPage(program: program)),
                   );
                 },
               );
@@ -83,10 +124,31 @@ class ProgramsPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddProgramDialog(controller),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: Obx(() {
+        final settings = Get.find<SettingsController>();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (settings.showAddProgramHint.value)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: HintBubble(
+                  message: 'Tap + to create your first workout program',
+                  arrowDirection: HintArrowDirection.down,
+                  onDismiss: settings.dismissAddProgramHint,
+                ),
+              ),
+            FloatingActionButton(
+              onPressed: () {
+                settings.dismissAddProgramHint();
+                _showAddProgramDialog(controller);
+              },
+              child: const Icon(Icons.add),
+            ),
+          ],
+        );
+      }),
     );
   }
 
