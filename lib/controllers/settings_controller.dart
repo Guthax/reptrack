@@ -10,7 +10,6 @@ class SettingsController extends GetxController {
   static const _keyUseImperial = 'use_imperial';
   static const _keyOnboardingSeen = 'onboarding_seen';
   static const _keyExpandDayHintSeen = 'expand_day_hint_seen';
-
   final RxBool useImperial = false.obs;
   final RxBool isFirstLaunch = true.obs;
 

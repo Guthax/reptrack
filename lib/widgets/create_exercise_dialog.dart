@@ -22,6 +22,16 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
   void initState() {
     super.initState();
     controller = Get.put(CreateExerciseController());
+
+    // Set Strength as default selection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final strengthType = controller.exerciseTypes.firstWhereOrNull(
+        (e) => e.name.toLowerCase().contains('strength'),
+      );
+      if (strengthType != null) {
+        controller.exerciseTypeSelected(strengthType.id);
+      }
+    });
   }
 
   @override
@@ -32,6 +42,14 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
     super.dispose();
   }
 
+  String _getExerciseSubtitle(String typeName) {
+    final name = typeName.toLowerCase();
+    if (name.contains('strength')) return 'Reps & Weight';
+    if (name.contains('cardio')) return 'Distance & Time';
+    if (name.contains('hybrid')) return 'Distance & Weight';
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -39,7 +57,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
       contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: double.maxFinite,
+          width: MediaQuery.of(context).size.width * 0.9,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,6 +90,68 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               ),
               const SizedBox(height: 20),
 
+              // Exercise Type Section (List Style)
+              const Text(
+                'Exercise Type',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Obx(
+                () => Column(
+                  children: controller.exerciseTypes.map((type) {
+                    final bool isSelected = controller.selectedExerciseType.contains(type.id);
+                    final String subtitle = _getExerciseSubtitle(type.name);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: InkWell(
+                        onTap: () => controller.exerciseTypeSelected(type.id),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            color: isSelected 
+                                ? AppColors.primary.withOpacity(0.05) 
+                                : Colors.transparent,
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            title: Text(
+                              type.name,
+                              style: TextStyle(
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? AppColors.primary : null,
+                              ),
+                            ),
+                            subtitle: subtitle.isNotEmpty 
+                                ? Text(
+                                    subtitle,
+                                    style: TextStyle(
+                                      color: isSelected ? AppColors.primary.withOpacity(0.8) : AppColors.textSecondary,
+                                    ),
+                                  ) 
+                                : null,
+                            trailing: isSelected 
+                                ? const Icon(Icons.check_circle, color: AppColors.primary) 
+                                : const Icon(Icons.circle_outlined, color: AppColors.surfaceVariant),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Muscle Group (Optional)
               const Text(
                 'Muscle Group',
@@ -100,7 +180,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                         ),
                       )
                     : DropdownButtonFormField<String>(
-                        initialValue: muscleGroupController.text.isEmpty
+                        value: muscleGroupController.text.isEmpty
                             ? null
                             : muscleGroupController.text,
                         decoration: InputDecoration(
@@ -128,7 +208,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
 
               // Equipment Types (Required)
               const Text(
-                'Equipment Types *',
+                'Compatible Equipment',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -222,7 +302,6 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
 
             if (exercise != null && mounted) {
               Get.back(result: exercise);
-              AppSnackbar.success('"${exercise.name}" created');
             }
           },
           child: const Text('Create'),

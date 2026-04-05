@@ -18,8 +18,12 @@ class CreateExerciseController extends GetxController {
   /// Reactive list of all equipment items available for selection.
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
 
+  final RxList<ExerciseType> exerciseTypes = <ExerciseType>[].obs;
+  
   /// The set of equipment IDs the user has toggled on.
   final RxSet<String> selectedEquipmentIds = <String>{}.obs;
+
+  final RxSet<String> selectedExerciseType = <String>{}.obs;
 
   @override
   void onInit() {
@@ -28,14 +32,29 @@ class CreateExerciseController extends GetxController {
   }
 
   /// Fetches muscle groups and equipment from the database.
-  Future<void> _loadData() async {
+Future<void> _loadData() async {
     final groups = await db.select(db.muscleGroups).get();
     muscleGroups.assignAll(groups.map((g) => g.name).toList());
 
     final equips = await db.select(db.equipments).get();
     availableEquipment.assignAll(equips);
+
+
+    final types = await db.select(db.exerciseTypes).get(); 
+    exerciseTypes.assignAll(types);
   }
 
+void exerciseTypeSelected(String id) {
+    // If you want single-selection (common for Exercise Type):
+    if (selectedExerciseType.contains(id)) {
+      selectedExerciseType.remove(id);
+    } else {
+      selectedExerciseType.clear(); // Clear others if only one type is allowed
+      selectedExerciseType.add(id);
+    }
+    
+    // If you want multi-selection, just remove the .clear() line.
+  }
   /// Toggles the selection state of the equipment identified by [equipmentId].
   ///
   /// If [equipmentId] is already in [selectedEquipmentIds] it is removed;

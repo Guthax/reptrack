@@ -258,22 +258,30 @@ class BuildProgramPage extends StatelessWidget {
                           .map(
                             (ex) => ListTile(
                               key: ValueKey(ex.volume.id),
-                              leading: SvgPicture.asset(
-                                'assets/icons/equipments/${ex.equipment.iconName}.svg',
-                                width: 36,
-                                height: 36,
-                                colorFilter: const ColorFilter.mode(
-                                  AppColors.secondary,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
+                              leading: ex.isCardio
+                                  ? const Icon(
+                                      Icons.directions_run,
+                                      size: 36,
+                                      color: AppColors.secondary,
+                                    )
+                                  : SvgPicture.asset(
+                                      'assets/icons/equipments/${ex.equipment!.iconName}.svg',
+                                      width: 36,
+                                      height: 36,
+                                      colorFilter: const ColorFilter.mode(
+                                        AppColors.secondary,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
                               title: Text(
                                 ex.exercise.name,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              subtitle: Text(
-                                '${ex.primaryMuscleGroup != null ? '${ex.primaryMuscleGroup} • ' : ''}${ex.equipment.name} • ${ex.volume.setsRepsLabel}',
-                              ),
+                              subtitle: ex.isCardio
+                                  ? Text('Cardio • ${ex.volume.durationLabel}')
+                                  : Text(
+                                      '${ex.primaryMuscleGroup != null ? '${ex.primaryMuscleGroup} • ' : ''}${ex.equipment!.name} • ${ex.volume.setsRepsLabel}',
+                                    ),
                               trailing: ReorderableDragStartListener(
                                 index: exercises.indexOf(ex),
                                 child: const Icon(
@@ -349,7 +357,7 @@ class BuildProgramPage extends StatelessWidget {
                                                   onPressed: () {
                                                     controller
                                                         .removeExerciseFromDay(
-                                                          ex.volume.id,
+                                                          ex.volume,
                                                         );
                                                     Get.back();
                                                   },

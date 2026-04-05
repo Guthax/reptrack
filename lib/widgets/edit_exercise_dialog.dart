@@ -289,6 +289,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                       muscleGroupName.isEmpty ? null : muscleGroupName,
                       note.isEmpty ? null : note,
                       selectedEquipmentIds,
+                      null,
                     );
                     Get.back(
                       result: Exercise(

@@ -33,12 +33,12 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
   }
 
   void _loadInitialData() async {
-    final db = Get.find<AppDatabase>();
-    allExercises = await db.getAllExercises();
-    // Remove the exercise currently in the slot
+    allExercises = await Get.find<AppDatabase>().getAllExercises();
     allExercises.removeWhere((e) => e.id == widget.exerciseId);
     filteredExercises.assignAll(allExercises);
   }
+
+  bool _isCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
   @override
   Widget build(BuildContext context) {
@@ -89,31 +89,35 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                         const Divider(height: 1),
                     itemBuilder: (ctx, i) {
                       final ex = filteredExercises[i];
+                      final cardio = _isCardio(ex);
                       return ListTile(
+                        leading: Icon(
+                          cardio ? Icons.directions_run : Icons.fitness_center,
+                          size: 20,
+                          color: AppColors.textSecondary,
+                        ),
                         title: Text(
                           ex.name,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
+                        subtitle: cardio ? const Text("Cardio") : null,
                         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                         onTap: () async {
-                          // 1. Get available equipment for the new exercise
-                          final equips = await db.getEquipmentForExercise(
-                            ex.id,
-                          );
-
-                          // 2. Default to the first equipment found (or 0 if none)
-                          final defaultEquipId = equips.isNotEmpty
-                              ? equips.first.id
-                              : '';
-
-                          // 3. Perform the swap in the controller
+                          String defaultEquipId = '';
+                          if (!cardio) {
+                            final equips = await db.getEquipmentForExercise(
+                              ex.id,
+                            );
+                            defaultEquipId = equips.isNotEmpty
+                                ? equips.first.id
+                                : '';
+                          }
                           activeController.swapExercise(
                             exerciseIndex: widget.exerciseIndex,
                             newExercise: ex,
                             newEquipmentId: defaultEquipId,
                           );
-
-                          Get.back(); // Close dialog
+                          Get.back();
                         },
                       );
                     },

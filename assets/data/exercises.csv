@@ -160,7 +160,7 @@ Seated Calf Raise,1,7,null,"5,7"
 Deadlift,1,7,2,"2,7"
 Sumo Deadlift,1,7,null,"2,7"
 Hip Thrust,1,7,null,"1,2,5,7,8"
-Walking Lunge,1,7,null,"1,2,3,8"
+Walking Lunge,3,7,null,"1,2,3,8"
 Step Up,1,7,null,"1,2,3"
 Box Squat,1,7,6,"2,7,8"
 Glute Bridge,1,7,null,"1,2,5,7,8"
@@ -207,8 +207,8 @@ Reverse Nordic Curl,1,7,null,1
 Tibialis Raise,1,7,null,1
 Prone Leg Curl,1,7,null,5
 Wall Sit,1,7,null,1
-Sled Push,1,7,6,5
-Sled Pull,1,2,7,5
+Sled Push,3,7,6,5
+Sled Pull,3,2,7,5
 Belt Squat,1,7,6,"5,7"
 Hatfield Squat,1,7,6,7
 Spanish Squat,1,7,null,1
@@ -220,7 +220,7 @@ Crossover Step Up,1,7,null,"1,2,3"
 Donkey Kick,1,7,null,"1,5,6"
 Fire Hydrant,1,7,null,1
 Clamshell,1,7,null,1
-Squat Walk,1,7,null,1
+Squat Walk,3,7,null,1
 Sumo Romanian Deadlift,1,7,null,"2,3"
 Straight Leg Deadlift,1,7,2,"2,3"
 Block Pull,1,7,2,2
@@ -230,8 +230,8 @@ Close Stance Squat,1,7,6,"2,7,8"
 Cambered Bar Squat,1,7,6,7
 Manta Ray Squat,1,7,6,2
 Zombie Squat,1,7,6,2
-Duck Walk,1,7,null,1
-Monster Walk,1,7,null,1
+Duck Walk,3,7,null,1
+Monster Walk,3,7,null,1
 Adductor Squeeze,1,7,null,1
 Leg Press Hip Abduction,1,7,null,"5,7"
 Single Leg Extension,1,7,null,5
@@ -280,9 +280,9 @@ Copenhagen Plank,1,6,7,1
 Side Lying Hip Raise,1,6,7,1
 Plank Reach,1,6,null,1
 Plank Row,1,6,2,3
-Farmer Walk,1,2,6,"2,3,7"
-Suitcase Carry,1,6,2,3
-Yoke Carry,1,7,2,7
+Farmer Walk,3,2,6,"2,3,7"
+Suitcase Carry,3,6,2,3
+Yoke Carry,3,7,2,7
 Clean And Press,1,5,7,2
 Turkish Get Up,1,5,6,3
 Snatch,1,7,5,2
@@ -290,11 +290,17 @@ Power Snatch,1,7,5,2
 Clean,1,7,5,2
 Push Jerk,1,5,7,2
 Split Jerk,1,5,7,2
-Sandbag Carry,1,7,6,1
+Sandbag Carry,3,7,6,1
 Atlas Stone Lift,1,7,6,1
 Log Press,1,5,4,1
 Axle Bar Press,1,5,4,2
 Axle Bar Deadlift,1,7,2,2
 Keg Toss,1,5,7,1
-Tire Flip,1,7,5,1
-Zercher Carry,1,7,6,2
+Tire Flip,3,7,5,1
+Zercher Carry,3,7,6,2
+Running,2,null,null,
+Cycling,2,null,null,
+Rowing,2,null,null,
+Elliptical Trainer,2,null,null,
+Ski Erg,2,null,null,
+Stair Climber,2,null,null,

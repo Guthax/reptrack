@@ -4,6 +4,7 @@ import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/main.dart';
 import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/widgets/add_workout_exercise_dialog.dart';
 import 'package:reptrack/widgets/exercise_workout_card.dart';
 
 /// Page that drives an active workout session.
@@ -42,6 +43,11 @@ class TrackWorkoutPage extends StatelessWidget {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Add exercise',
+              onPressed: () => Get.dialog(const AddWorkoutExerciseDialog()),
+            ),
             IconButton(
               icon: const Icon(Icons.settings_outlined),
               tooltip: 'Settings',

@@ -26,8 +26,8 @@ class TrackingController extends GetxController {
   /// The exercise the user has tapped to inspect, or `null` in search mode.
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
 
-  /// All historical [WorkoutSet]s for [selectedExercise], in chronological order.
-  final RxList<WorkoutSet> exerciseSets = <WorkoutSet>[].obs;
+  /// All historical [WorkoutStrengthSet]s for [selectedExercise], in chronological order.
+  final RxList<WorkoutStrengthSet> exerciseSets = <WorkoutStrengthSet>[].obs;
 
   /// Map from equipment ID to [Equipment] for every set in [exerciseSets].
   final RxMap<String, Equipment> setEquipment = <String, Equipment>{}.obs;
@@ -77,13 +77,13 @@ class TrackingController extends GetxController {
   /// definition, deduplicated, and sorted by name.
   Future<void> selectExercise(Exercise exercise) async {
     selectedExercise.value = exercise;
-    final sets = await db.getSetsForExercise(exercise.id);
+    final sets = await db.getStrengthSetsForExercise(exercise.id);
     exerciseSets.assignAll(sets.reversed.toList());
 
     setEquipment.clear();
     final equipmentIds = <String>{};
     for (final set in exerciseSets) {
-      equipmentIds.add(set.equipmentId);
+      if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
     }
 
     final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);

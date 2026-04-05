@@ -17,7 +17,7 @@ const _uuid = Uuid();
 /// - Exercises from `assets/data/exercises.csv`
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
-    final exerciseTypes = {'1': 'Strength', '2': 'Cardio'};
+    final exerciseTypes = {'1': 'Strength', '2': 'Cardio', '3': 'Hybrid'};
     for (var entry in exerciseTypes.entries) {
       await db
           .into(db.exerciseTypes)
@@ -50,6 +50,7 @@ Future<void> seedDatabase(AppDatabase db) async {
     }
 
     final equipmentNames = {
+      '0': 'No equipment',
       '1': 'Bodyweight',
       '2': 'Barbell',
       '3': 'Dumbbells',
@@ -100,7 +101,8 @@ Future<void> seedDatabase(AppDatabase db) async {
 
         try {
           final exerciseTypeId = int.tryParse(columns[1].trim())?.toString();
-          final primaryId = columns[2].trim();
+          final primaryIdRaw = columns[2].trim();
+          final primaryId = primaryIdRaw == 'null' ? null : primaryIdRaw;
           final secondaryIdRaw = columns[3].trim();
           final secondaryId = secondaryIdRaw == 'null' ? null : secondaryIdRaw;
 
@@ -123,15 +125,17 @@ Future<void> seedDatabase(AppDatabase db) async {
                 ),
               );
 
-          await db
-              .into(db.exerciseMuscleGroup)
-              .insert(
-                ExerciseMuscleGroupCompanion.insert(
-                  exerciseId: exerciseId,
-                  muscleGroupId: primaryId,
-                  focus: 'primary',
-                ),
-              );
+          if (primaryId != null) {
+            await db
+                .into(db.exerciseMuscleGroup)
+                .insert(
+                  ExerciseMuscleGroupCompanion.insert(
+                    exerciseId: exerciseId,
+                    muscleGroupId: primaryId,
+                    focus: 'primary',
+                  ),
+                );
+          }
 
           if (secondaryId != null) {
             await db
@@ -160,6 +164,26 @@ Future<void> seedDatabase(AppDatabase db) async {
         } catch (_) {}
       }
     } catch (_) {}
+
+    const hybridExerciseNames = [
+      'Farmer Walk',
+      'Suitcase Carry',
+      'Yoke Carry',
+      'Sandbag Carry',
+      'Zercher Carry',
+      'Sled Push',
+      'Sled Pull',
+      'Tire Flip',
+      'Walking Lunge',
+      'Duck Walk',
+      'Monster Walk',
+      'Squat Walk',
+    ];
+    for (final name in hybridExerciseNames) {
+      await (db.update(db.exercises)..where((e) => e.name.equals(name))).write(
+        const ExercisesCompanion(exerciseTypeId: Value('3')),
+      );
+    }
   });
 }
 

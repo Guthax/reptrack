@@ -69,39 +69,70 @@ class BuildProgramController extends GetxController {
 
   /// Adds [exercise] to the workout day identified by [dayId].
   ///
-  /// - [equipmentId]: the equipment variant to use for this exercise.
-  /// - [setsReps]: rep count per set, e.g. `[12, 10, 8]`.
-  /// - [restTimer]: optional rest duration in seconds between sets.
+  /// Routes to cardio, hybrid, or strength storage based on [exercise.exerciseTypeId].
+  /// Cardio exercises ('2') use [durationSeconds]. Hybrid exercises ('3') use
+  /// [setsDistances], [distanceUnit], [equipmentId], and [restTimer]. Strength
+  /// exercises use [setsReps], [equipmentId], and [restTimer].
   Future<void> addExerciseToDay(
     String dayId,
     Exercise exercise,
-    String equipmentId,
+    String? equipmentId,
     List<int> setsReps,
-    int? restTimer,
-  ) async {
-    await db.addExerciseToDay(
-      workoutDayId: dayId,
-      exerciseId: exercise.id,
-      equipmentId: equipmentId,
-      setsReps: setsReps,
-      restTimer: restTimer,
-      weight: 0.0,
-    );
+    int? restTimer, {
+    int? durationSeconds,
+    double? distancePlannedCardio,
+    String distancePlannedCardioUnit = 'km',
+    List<double> setsDistances = const [100.0],
+    String distanceUnit = 'm',
+  }) async {
+    final isHybrid = exercise.exerciseTypeId == '3';
+    final isCardio = exercise.exerciseTypeId == '2';
+
+    if (isCardio) {
+      await db.addCardioExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exercise.id,
+        seconds: durationSeconds,
+        distancePlanned: distancePlannedCardio,
+        distancePlannedUnit: distancePlannedCardioUnit,
+      );
+    } else if (isHybrid) {
+      await db.addHybridExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exercise.id,
+        equipmentId: equipmentId,
+        setsDistances: setsDistances,
+        distanceUnit: distanceUnit,
+        restTimer: restTimer,
+      );
+    } else {
+      await db.addStrengthExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exercise.id,
+        equipmentId: equipmentId,
+        setsReps: setsReps,
+        restTimer: restTimer,
+        weight: 0.0,
+      );
+    }
   }
 
-  /// Removes the exercise entry identified by [volumeId] from its workout day.
-  ///
-  /// Deletes by the [ProgramExercise] primary key so that duplicate exercise
-  /// entries on the same day can be removed independently.
-  Future<void> removeExerciseFromDay(String volumeId) async {
-    await db.deleteProgramExercise(volumeId);
+  /// Removes the exercise entry identified by [volume] from its workout day.
+  Future<void> removeExerciseFromDay(ProgramExerciseVolume volume) async {
+    if (volume.isCardio) {
+      await db.deleteProgramCardioExercise(volume.id);
+    } else if (volume.isHybrid) {
+      await db.deleteProgramHybridExercise(volume.id);
+    } else {
+      await db.deleteProgramStrengthExercise(volume.id);
+    }
   }
 
   /// Persists the display order of [exercises] within their workout day.
   ///
   /// Order is determined by list index (index 0 = first).
   Future<void> reorderExercisesInDay(List<ExerciseWithVolume> exercises) async {
-    await db.reorderExercisesInDay(exercises.map((e) => e.volume.id).toList());
+    await db.reorderExercisesInDay(exercises.map((e) => e.volume).toList());
   }
 
   /// Persists the display order of workout [days] within the program.
@@ -111,27 +142,55 @@ class BuildProgramController extends GetxController {
     await db.reorderDays(days.map((d) => d.workoutDay.id).toList());
   }
 
-  /// Updates the exercise entry identified by [volumeId] with new details.
+  /// Updates the exercise entry identified by [volume] with new details.
   ///
-  /// - [exercise]: the (possibly changed) exercise definition.
-  /// - [equipmentId]: the new equipment variant.
-  /// - [setsReps]: new rep scheme per set.
-  /// - [restTimer]: optional rest duration in seconds.
+  /// For cardio: updates [exerciseId] and planned [durationSeconds].
+  /// For hybrid: updates [exerciseId], [equipmentId], [setsDistances],
+  /// [distanceUnit], and [restTimer].
+  /// For strength: updates [exerciseId], [equipmentId], [setsReps], and [restTimer].
   Future<void> updateExerciseInDay(
-    String volumeId,
+    ProgramExerciseVolume volume,
     Exercise exercise,
-    String equipmentId,
+    String? equipmentId,
     List<int> setsReps,
-    int? restTimer,
-  ) async {
-    await db.updateProgramExercise(
-      ProgramExerciseCompanion(
-        exerciseId: drift.Value(exercise.id),
-        equipmentId: drift.Value(equipmentId),
-        setsReps: drift.Value(jsonEncode(setsReps)),
-        restTimer: drift.Value(restTimer),
-      ),
-      volumeId,
-    );
+    int? restTimer, {
+    int? durationSeconds,
+    double? distancePlannedCardio,
+    String distancePlannedCardioUnit = 'km',
+    List<double> setsDistances = const [100.0],
+    String distanceUnit = 'm',
+  }) async {
+    if (volume.isCardio) {
+      await db.updateProgramCardioExercise(
+        ProgramCardioExercisesCompanion(
+          exerciseId: drift.Value(exercise.id),
+          seconds: drift.Value(durationSeconds),
+          distancePlanned: drift.Value(distancePlannedCardio),
+          distancePlannedUnit: drift.Value(distancePlannedCardioUnit),
+        ),
+        volume.id,
+      );
+    } else if (volume.isHybrid) {
+      await db.updateProgramHybridExercise(
+        ProgramHybridExercisesCompanion(
+          exerciseId: drift.Value(exercise.id),
+          equipmentId: drift.Value(equipmentId),
+          setsDistances: drift.Value(jsonEncode(setsDistances)),
+          distanceUnit: drift.Value(distanceUnit),
+          restTimer: drift.Value(restTimer),
+        ),
+        volume.id,
+      );
+    } else {
+      await db.updateProgramStrengthExercise(
+        ProgramStrengthExercisesCompanion(
+          exerciseId: drift.Value(exercise.id),
+          equipmentId: drift.Value(equipmentId),
+          setsReps: drift.Value(jsonEncode(setsReps)),
+          restTimer: drift.Value(restTimer),
+        ),
+        volume.id,
+      );
+    }
   }
 }
