@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/main.dart';
-import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/add_workout_exercise_dialog.dart';
 import 'package:reptrack/widgets/exercise_workout_card.dart';
@@ -48,11 +47,7 @@ class TrackWorkoutPage extends StatelessWidget {
               tooltip: 'Add exercise',
               onPressed: () => Get.dialog(const AddWorkoutExerciseDialog()),
             ),
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: 'Settings',
-              onPressed: () => Get.to(() => const SettingsPage()),
-            ),
+
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 8.0,

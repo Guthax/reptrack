@@ -3,7 +3,19 @@ import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 
 /// Which metric to plot on the exercise progress chart.
-enum ChartType { maxWeight, totalVolume }
+enum ChartType {
+  // Strength
+  maxWeight,
+  totalVolume,
+  // Cardio
+  duration,
+  distance,
+  pace,
+  // Hybrid
+  hybridMaxWeight,
+  hybridTotalDistance,
+  hybridVolume,
+}
 
 /// Controller for the Tracking screen.
 ///
@@ -28,6 +40,15 @@ class TrackingController extends GetxController {
 
   /// All historical [WorkoutStrengthSet]s for [selectedExercise], in chronological order.
   final RxList<WorkoutStrengthSet> exerciseSets = <WorkoutStrengthSet>[].obs;
+
+  /// All historical [WorkoutCardioSet]s for the selected cardio exercise.
+  final RxList<WorkoutCardioSet> cardioSets = <WorkoutCardioSet>[].obs;
+
+  /// All historical [WorkoutHybridSet]s for the selected hybrid exercise.
+  final RxList<WorkoutHybridSet> hybridSets = <WorkoutHybridSet>[].obs;
+
+  /// The exerciseTypeId of the currently selected exercise ('1'=strength, '2'=cardio, '3'=hybrid).
+  final RxString selectedExerciseTypeId = '1'.obs;
 
   /// Map from equipment ID to [Equipment] for every set in [exerciseSets].
   final RxMap<String, Equipment> setEquipment = <String, Equipment>{}.obs;
@@ -77,47 +98,96 @@ class TrackingController extends GetxController {
   /// definition, deduplicated, and sorted by name.
   Future<void> selectExercise(Exercise exercise) async {
     selectedExercise.value = exercise;
-    final sets = await db.getStrengthSetsForExercise(exercise.id);
-    exerciseSets.assignAll(sets.reversed.toList());
+    final typeId = exercise.exerciseTypeId ?? '1';
+    selectedExerciseTypeId.value = typeId;
 
+    exerciseSets.clear();
+    cardioSets.clear();
+    hybridSets.clear();
+    availableEquipment.clear();
     setEquipment.clear();
-    final equipmentIds = <String>{};
-    for (final set in exerciseSets) {
-      if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
-    }
+    selectedEquipment.value = null;
 
-    final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
-    for (final equip in exerciseEquipment) {
-      equipmentIds.add(equip.id);
-    }
+    if (typeId == '2') {
+      // Cardio
+      final sets = await db.getCardioSetsForExercise(exercise.id);
+      cardioSets.assignAll(sets.reversed.toList());
+      selectedChartType.value = ChartType.duration;
+    } else if (typeId == '3') {
+      // Hybrid
+      final sets = await db.getHybridSetsForExercise(exercise.id);
+      hybridSets.assignAll(sets.reversed.toList());
+      selectedChartType.value = ChartType.hybridMaxWeight;
 
-    final equipmentList = <Equipment>[];
-    for (final id in equipmentIds) {
-      final equipment = await db.getEquipmentById(id);
-      if (equipment != null &&
-          !equipmentList.any((e) => e.id == equipment.id)) {
-        setEquipment[id] = equipment;
-        equipmentList.add(equipment);
+      final equipmentIds = <String>{};
+      for (final set in hybridSets) {
+        if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
       }
-    }
-    equipmentList.sort((a, b) => a.name.compareTo(b.name));
-    availableEquipment.assignAll(equipmentList);
+      final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
+      for (final equip in exerciseEquipment) {
+        equipmentIds.add(equip.id);
+      }
+      final equipmentList = <Equipment>[];
+      for (final id in equipmentIds) {
+        final equipment = await db.getEquipmentById(id);
+        if (equipment != null &&
+            !equipmentList.any((e) => e.id == equipment.id)) {
+          setEquipment[id] = equipment;
+          equipmentList.add(equipment);
+        }
+      }
+      equipmentList.sort((a, b) => a.name.compareTo(b.name));
+      availableEquipment.assignAll(equipmentList);
+      final lastSet = hybridSets.isNotEmpty
+          ? hybridSets.reduce(
+              (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
+            )
+          : null;
+      selectedEquipment.value =
+          equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
+          equipmentList.firstOrNull;
+    } else {
+      // Strength
+      final sets = await db.getStrengthSetsForExercise(exercise.id);
+      exerciseSets.assignAll(sets.reversed.toList());
+      selectedChartType.value = ChartType.maxWeight;
 
-    final lastSet = exerciseSets.isNotEmpty
-        ? exerciseSets.reduce(
-            (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
-          )
-        : null;
-    selectedEquipment.value = equipmentList.isEmpty
-        ? null
-        : equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
-              equipmentList.first;
+      final equipmentIds = <String>{};
+      for (final set in exerciseSets) {
+        if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
+      }
+      final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
+      for (final equip in exerciseEquipment) {
+        equipmentIds.add(equip.id);
+      }
+      final equipmentList = <Equipment>[];
+      for (final id in equipmentIds) {
+        final equipment = await db.getEquipmentById(id);
+        if (equipment != null &&
+            !equipmentList.any((e) => e.id == equipment.id)) {
+          setEquipment[id] = equipment;
+          equipmentList.add(equipment);
+        }
+      }
+      equipmentList.sort((a, b) => a.name.compareTo(b.name));
+      availableEquipment.assignAll(equipmentList);
+      final lastSet = exerciseSets.isNotEmpty
+          ? exerciseSets.reduce(
+              (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
+            )
+          : null;
+      selectedEquipment.value =
+          equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
+          equipmentList.firstOrNull;
+    }
   }
 
   /// Resets the exercise selection and clears all related state.
   void clearSelection() {
     selectedExercise.value = null;
     exerciseSets.clear();
+    cardioSets.clear();
+    hybridSets.clear();
     availableEquipment.clear();
     selectedEquipment.value = null;
     setEquipment.clear();
@@ -193,6 +263,128 @@ class TrackingController extends GetxController {
             .toList()
           ..sort((a, b) => a.key.compareTo(b.key));
     return result;
+  }
+
+  // ── Cardio getters ──────────────────────────────────────────────────────────
+
+  /// Helper: collapses [sets] by calendar day using [value] extractor.
+  List<MapEntry<DateTime, double>> _groupCardioByDay(
+    List<WorkoutCardioSet> sets,
+    double Function(List<WorkoutCardioSet>) aggregate,
+  ) {
+    final Map<String, List<WorkoutCardioSet>> byDay = {};
+    final Map<String, DateTime> dateByKey = {};
+    for (final s in sets) {
+      final d = s.dateLogged;
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      dateByKey[key] = DateTime(d.year, d.month, d.day);
+      byDay.putIfAbsent(key, () => []).add(s);
+    }
+    return byDay.entries
+        .map((e) => MapEntry(dateByKey[e.key]!, aggregate(e.value)))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  /// Total duration per session in minutes.
+  List<MapEntry<DateTime, double>> get cardioDurationData =>
+      _groupCardioByDay(cardioSets, (sets) {
+        final totalSec = sets.fold<int>(0, (s, e) => s + e.durationSeconds);
+        return totalSec / 60.0;
+      });
+
+  /// Total distance per session in km (only sessions with distance data).
+  List<MapEntry<DateTime, double>> get cardioDistanceData {
+    final withDist = cardioSets.where((s) => s.distanceMeters != null).toList();
+    return _groupCardioByDay(withDist, (sets) {
+      final totalM = sets.fold<double>(0, (s, e) => s + e.distanceMeters!);
+      return totalM / 1000.0;
+    });
+  }
+
+  /// Average pace per session in min/km (only sessions with distance data).
+  List<MapEntry<DateTime, double>> get cardioPaceData {
+    final withDist = cardioSets.where((s) => s.distanceMeters != null).toList();
+    return _groupCardioByDay(withDist, (sets) {
+      final totalSec = sets.fold<int>(0, (s, e) => s + e.durationSeconds);
+      final totalKm =
+          sets.fold<double>(0, (s, e) => s + e.distanceMeters!) / 1000.0;
+      if (totalKm == 0) return 0;
+      return (totalSec / 60.0) / totalKm;
+    })..removeWhere((e) => e.value == 0);
+  }
+
+  // ── Hybrid getters ───────────────────────────────────────────────────────
+
+  String _dayKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Max weight per session (in kg), filtered by [selectedEquipment].
+  List<MapEntry<DateTime, double>> get hybridMaxWeightData {
+    final Map<String, double> maxByDay = {};
+    final Map<String, DateTime> dateByKey = {};
+    final selectedEquip = selectedEquipment.value;
+    for (final s in hybridSets) {
+      if (selectedEquip != null && s.equipmentId != selectedEquip.id) continue;
+      final key = _dayKey(s.dateLogged);
+      dateByKey[key] = DateTime(
+        s.dateLogged.year,
+        s.dateLogged.month,
+        s.dateLogged.day,
+      );
+      if (!maxByDay.containsKey(key) || s.weight > maxByDay[key]!) {
+        maxByDay[key] = s.weight;
+      }
+    }
+    return maxByDay.entries
+        .map((e) => MapEntry(dateByKey[e.key]!, e.value))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  /// Total distance per session in metres (normalised), filtered by [selectedEquipment].
+  List<MapEntry<DateTime, double>> get hybridTotalDistanceData {
+    final Map<String, double> distByDay = {};
+    final Map<String, DateTime> dateByKey = {};
+    final selectedEquip = selectedEquipment.value;
+    for (final s in hybridSets) {
+      if (selectedEquip != null && s.equipmentId != selectedEquip.id) continue;
+      final meters = s.distanceMeters ?? 0;
+      final key = _dayKey(s.dateLogged);
+      dateByKey[key] = DateTime(
+        s.dateLogged.year,
+        s.dateLogged.month,
+        s.dateLogged.day,
+      );
+      distByDay[key] = (distByDay[key] ?? 0) + meters;
+    }
+    return distByDay.entries
+        .map((e) => MapEntry(dateByKey[e.key]!, e.value))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  /// Total volume (weight × distanceMeters) per session, filtered by [selectedEquipment].
+  List<MapEntry<DateTime, double>> get hybridVolumeData {
+    final Map<String, double> volByDay = {};
+    final Map<String, DateTime> dateByKey = {};
+    final selectedEquip = selectedEquipment.value;
+    for (final s in hybridSets) {
+      if (selectedEquip != null && s.equipmentId != selectedEquip.id) continue;
+      final meters = s.distanceMeters ?? 0;
+      final key = _dayKey(s.dateLogged);
+      dateByKey[key] = DateTime(
+        s.dateLogged.year,
+        s.dateLogged.month,
+        s.dateLogged.day,
+      );
+      volByDay[key] = (volByDay[key] ?? 0) + s.weight * meters;
+    }
+    return volByDay.entries
+        .map((e) => MapEntry(dateByKey[e.key]!, e.value))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
   }
 
   /// Returns the active chart data based on [selectedChartType].

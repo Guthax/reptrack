@@ -149,6 +149,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                         exerciseId: item.exercise.id,
                         exerciseName: item.exercise.name,
                         isCardio: item.isCardio,
+                        isHybrid: item.isHybrid,
                       ),
                     ),
                   ),
@@ -643,7 +644,8 @@ class _HybridLogSectionState extends State<HybridLogSection> {
   void initState() {
     super.initState();
     final lastSet = Get.find<ActiveWorkoutController>()
-        .lastHybridSets[widget.item.exercise.id];
+        .lastHybridSets[widget.item.exercise.id]
+        ?.firstOrNull;
     distanceUnit.value =
         lastSet?.distanceUnit ?? widget.item.volume.distanceUnit;
   }
@@ -974,6 +976,8 @@ class SetLogRow extends StatefulWidget {
 class _SetLogRowState extends State<SetLogRow> {
   late TextEditingController repsController;
   late TextEditingController weightController;
+  double _currentKg = 0;
+  late Worker _unitWorker;
 
   @override
   void initState() {
@@ -1001,18 +1005,33 @@ class _SetLogRowState extends State<SetLogRow> {
       initialWeightKg = pastWorkoutSet.weight;
     }
 
+    _currentKg = initialWeightKg;
     final settings = Get.find<SettingsController>();
-    final displayWeight = settings.displayWeight(initialWeightKg);
+    final displayWeight = settings.displayWeight(_currentKg);
     final initialWeight = displayWeight == displayWeight.truncateToDouble()
         ? displayWeight.toInt().toString()
         : displayWeight.toStringAsFixed(1);
 
     repsController = TextEditingController(text: initialReps);
     weightController = TextEditingController(text: initialWeight);
+
+    _unitWorker = ever(settings.useImperial, (bool nowImperial) {
+      // useImperial already flipped; text still shows the OLD unit.
+      final parsed = double.tryParse(weightController.text);
+      if (parsed != null) {
+        // Convert text (old unit) → kg.
+        _currentKg = nowImperial ? parsed : parsed / 2.20462;
+      }
+      final d = settings.displayWeight(_currentKg);
+      weightController.text = d == d.truncateToDouble()
+          ? d.toInt().toString()
+          : d.toStringAsFixed(1);
+    });
   }
 
   @override
   void dispose() {
+    _unitWorker.dispose();
     repsController.dispose();
     weightController.dispose();
     super.dispose();
@@ -1021,11 +1040,13 @@ class _SetLogRowState extends State<SetLogRow> {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ActiveWorkoutController>();
+    final settings = Get.find<SettingsController>();
 
     return Obx(() {
       final bool isSaved = controller.completedSets.contains(
         "${widget.exerciseIndex}-${widget.equipmentId}-${widget.setNum}",
       );
+      final unitLabel = settings.useImperial.value ? 'LBS' : 'KG';
 
       return AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -1067,8 +1088,7 @@ class _SetLogRowState extends State<SetLogRow> {
                   MaxValueInputFormatter(100000),
                 ],
                 decoration: InputDecoration(
-                  labelText: Get.find<SettingsController>().unitLabel
-                      .toUpperCase(),
+                  labelText: unitLabel,
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   isDense: true,
                 ),
@@ -1186,6 +1206,8 @@ class HybridSetRow extends StatefulWidget {
 class _HybridSetRowState extends State<HybridSetRow> {
   late TextEditingController weightController;
   late TextEditingController distanceController;
+  double _currentKg = 0;
+  late Worker _unitWorker;
 
   @override
   void initState() {
@@ -1198,8 +1220,8 @@ class _HybridSetRowState extends State<HybridSetRow> {
     );
 
     final settings = Get.find<SettingsController>();
-    final rawWeight = past?.weight ?? widget.plannedWeight;
-    final displayWeight = settings.displayWeight(rawWeight);
+    _currentKg = past?.weight ?? widget.plannedWeight;
+    final displayWeight = settings.displayWeight(_currentKg);
     final initialWeight = displayWeight == displayWeight.truncateToDouble()
         ? displayWeight.toInt().toString()
         : displayWeight.toStringAsFixed(1);
@@ -1217,10 +1239,23 @@ class _HybridSetRowState extends State<HybridSetRow> {
 
     weightController = TextEditingController(text: initialWeight);
     distanceController = TextEditingController(text: initialDist);
+
+    _unitWorker = ever(settings.useImperial, (bool nowImperial) {
+      // useImperial already flipped; text still shows the OLD unit.
+      final parsed = double.tryParse(weightController.text);
+      if (parsed != null) {
+        _currentKg = nowImperial ? parsed : parsed / 2.20462;
+      }
+      final d = settings.displayWeight(_currentKg);
+      weightController.text = d == d.truncateToDouble()
+          ? d.toInt().toString()
+          : d.toStringAsFixed(1);
+    });
   }
 
   @override
   void dispose() {
+    _unitWorker.dispose();
     weightController.dispose();
     distanceController.dispose();
     super.dispose();
@@ -1229,11 +1264,13 @@ class _HybridSetRowState extends State<HybridSetRow> {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ActiveWorkoutController>();
+    final settings = Get.find<SettingsController>();
 
     return Obx(() {
       final bool isSaved = controller.completedSets.contains(
         "${widget.exerciseIndex}-${widget.equipmentId}-${widget.setNum}",
       );
+      final unitLabel = settings.useImperial.value ? 'LBS' : 'KG';
 
       return AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -1275,8 +1312,7 @@ class _HybridSetRowState extends State<HybridSetRow> {
                   MaxValueInputFormatter(100000),
                 ],
                 decoration: InputDecoration(
-                  labelText: Get.find<SettingsController>().unitLabel
-                      .toUpperCase(),
+                  labelText: unitLabel,
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   isDense: true,
                 ),

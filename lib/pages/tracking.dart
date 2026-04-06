@@ -118,8 +118,8 @@ class _ExerciseTile extends StatelessWidget {
   }
 }
 
-/// Shows the weight-progress chart and equipment filter chips for the
-/// currently selected exercise.
+/// Shows the progress chart and filter chips for the currently selected exercise.
+/// Adapts chart types based on exercise type (strength / cardio / hybrid).
 class _ExerciseProgressView extends StatelessWidget {
   final TrackingController controller;
 
@@ -129,8 +129,11 @@ class _ExerciseProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final exercise = controller.selectedExercise.value!;
+      final typeId = controller.selectedExerciseTypeId.value;
       final chartType = controller.selectedChartType.value;
-      final data = controller.activeChartData;
+
+      // Resolve chart data + display config based on current type and selection.
+      final _ChartConfig cfg = _resolveConfig(typeId, chartType, controller);
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +192,7 @@ class _ExerciseProgressView extends StatelessWidget {
                 ],
               ),
             ),
-          if (data.isEmpty)
+          if (cfg.data.isEmpty)
             const Expanded(
               child: Center(
                 child: Text('No workout data for this exercise yet.'),
@@ -201,35 +204,32 @@ class _ExerciseProgressView extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 8, 24, 64),
-                    child: _WeightChart(data: data),
+                    child: _WeightChart(
+                      data: cfg.data,
+                      convertWeight: cfg.convertWeight,
+                      yUnit: cfg.yUnit,
+                      tooltipFormatter: cfg.tooltipFormatter,
+                    ),
                   ),
                   Positioned(
                     left: 16,
                     bottom: 16,
-                    child: SegmentedButton<ChartType>(
-                      style: ButtonStyle(
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        padding: const WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 10),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SegmentedButton<ChartType>(
+                        style: ButtonStyle(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          padding: const WidgetStatePropertyAll(
+                            EdgeInsets.symmetric(horizontal: 10),
+                          ),
                         ),
+                        segments: _segmentsFor(typeId),
+                        selected: {chartType},
+                        onSelectionChanged: (s) =>
+                            controller.selectedChartType.value = s.first,
+                        showSelectedIcon: false,
                       ),
-                      segments: const [
-                        ButtonSegment(
-                          value: ChartType.maxWeight,
-                          icon: Icon(Icons.trending_up, size: 16),
-                          label: Text('Max Weight'),
-                        ),
-                        ButtonSegment(
-                          value: ChartType.totalVolume,
-                          icon: Icon(Icons.bar_chart, size: 16),
-                          label: Text('Volume over time'),
-                        ),
-                      ],
-                      selected: {chartType},
-                      onSelectionChanged: (s) =>
-                          controller.selectedChartType.value = s.first,
-                      showSelectedIcon: false,
                     ),
                   ),
                 ],
@@ -239,6 +239,152 @@ class _ExerciseProgressView extends StatelessWidget {
       );
     });
   }
+
+  List<ButtonSegment<ChartType>> _segmentsFor(String typeId) {
+    if (typeId == '2') {
+      return const [
+        ButtonSegment(
+          value: ChartType.duration,
+          icon: Icon(Icons.timer_outlined, size: 16),
+          label: Text('Duration'),
+        ),
+        ButtonSegment(
+          value: ChartType.distance,
+          icon: Icon(Icons.straighten, size: 16),
+          label: Text('Distance'),
+        ),
+        ButtonSegment(
+          value: ChartType.pace,
+          icon: Icon(Icons.speed, size: 16),
+          label: Text('Pace'),
+        ),
+      ];
+    }
+    if (typeId == '3') {
+      return const [
+        ButtonSegment(
+          value: ChartType.hybridMaxWeight,
+          icon: Icon(Icons.trending_up, size: 16),
+          label: Text('Max Weight'),
+        ),
+        ButtonSegment(
+          value: ChartType.hybridTotalDistance,
+          icon: Icon(Icons.straighten, size: 16),
+          label: Text('Distance'),
+        ),
+        ButtonSegment(
+          value: ChartType.hybridVolume,
+          icon: Icon(Icons.bar_chart, size: 16),
+          label: Text('Volume'),
+        ),
+      ];
+    }
+    // Strength
+    return const [
+      ButtonSegment(
+        value: ChartType.maxWeight,
+        icon: Icon(Icons.trending_up, size: 16),
+        label: Text('Max Weight'),
+      ),
+      ButtonSegment(
+        value: ChartType.totalVolume,
+        icon: Icon(Icons.bar_chart, size: 16),
+        label: Text('Volume'),
+      ),
+    ];
+  }
+
+  _ChartConfig _resolveConfig(
+    String typeId,
+    ChartType chartType,
+    TrackingController c,
+  ) {
+    if (typeId == '2') {
+      switch (chartType) {
+        case ChartType.distance:
+          return _ChartConfig(
+            data: c.cardioDistanceData,
+            convertWeight: false,
+            yUnit: 'km',
+            tooltipFormatter: (y, u) => '${y.toStringAsFixed(2)} $u',
+          );
+        case ChartType.pace:
+          return _ChartConfig(
+            data: c.cardioPaceData,
+            convertWeight: false,
+            yUnit: 'min/km',
+            tooltipFormatter: (y, _) {
+              final mins = y.floor();
+              final secs = ((y - mins) * 60).round();
+              return '${mins}:${secs.toString().padLeft(2, '0')} min/km';
+            },
+          );
+        default:
+          return _ChartConfig(
+            data: c.cardioDurationData,
+            convertWeight: false,
+            yUnit: 'min',
+            tooltipFormatter: (y, _) {
+              final h = (y ~/ 60);
+              final m = (y % 60).floor();
+              final s = ((y % 1) * 60).round();
+              if (h > 0) return '${h}h ${m}m';
+              if (s > 0) return '${m}m ${s}s';
+              return '${m}m';
+            },
+          );
+      }
+    }
+    if (typeId == '3') {
+      switch (chartType) {
+        case ChartType.hybridTotalDistance:
+          return _ChartConfig(
+            data: c.hybridTotalDistanceData,
+            convertWeight: false,
+            yUnit: 'm',
+            tooltipFormatter: (y, _) {
+              if (y >= 1000) {
+                return '${(y / 1000).toStringAsFixed(2)} km';
+              }
+              return '${y.toStringAsFixed(0)} m';
+            },
+          );
+        case ChartType.hybridVolume:
+          return _ChartConfig(
+            data: c.hybridVolumeData,
+            convertWeight: false,
+            yUnit: 'kg·m',
+            tooltipFormatter: (y, u) => '${y.toStringAsFixed(0)} $u',
+          );
+        default:
+          return _ChartConfig(
+            data: c.hybridMaxWeightData,
+            convertWeight: true,
+            yUnit: '',
+          );
+      }
+    }
+    // Strength
+    final data = chartType == ChartType.totalVolume
+        ? c.volumeProgressData
+        : c.weightProgressData;
+    return _ChartConfig(data: data, convertWeight: true, yUnit: '');
+  }
+}
+
+/// Resolved chart configuration for the current exercise type + chart type.
+class _ChartConfig {
+  final List<MapEntry<DateTime, double>> data;
+  final bool convertWeight;
+  final String yUnit;
+  final String Function(double, String)? tooltipFormatter;
+
+  const _ChartConfig({
+    required this.data,
+    required this.convertWeight,
+    required this.yUnit,
+    this.tooltipFormatter,
+  });
 }
 
 /// Bodyweight tab: a line chart of logged bodyweight entries plus a log button.
@@ -398,16 +544,33 @@ class _BodyweightView extends StatelessWidget {
   }
 }
 
-/// Renders a [LineChart] of max weight lifted per session.
+/// Renders a generic [LineChart] over time.
 ///
-/// [data] contains `(date, weightKg)` entries in chronological order.
-/// Values are converted to the active display unit via [SettingsController].
-/// [onTapIndex] is called with the tapped spot index when provided.
+/// When [convertWeight] is true, values are treated as kg and converted via
+/// [SettingsController] to the active display unit. Otherwise [yUnit] is shown
+/// as-is. [onTapIndex] is called with the tapped spot index when provided.
 class _WeightChart extends StatelessWidget {
   final List<MapEntry<DateTime, double>> data;
   final void Function(int index)? onTapIndex;
 
-  const _WeightChart({required this.data, this.onTapIndex});
+  /// If true (default), values are weight in kg and are converted/labelled
+  /// using [SettingsController]. If false, [yUnit] is used directly.
+  final bool convertWeight;
+
+  /// Unit label shown on the y-axis when [convertWeight] is false.
+  final String yUnit;
+
+  /// Optional custom tooltip formatter. Receives the raw [y] value and the
+  /// [yUnit] string; returns the label string.
+  final String Function(double y, String unit)? tooltipFormatter;
+
+  const _WeightChart({
+    required this.data,
+    this.onTapIndex,
+    this.convertWeight = true,
+    this.yUnit = '',
+    this.tooltipFormatter,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -420,10 +583,22 @@ class _WeightChart extends StatelessWidget {
     );
 
     return Obx(() {
-      final displayValues = data
-          .map((e) => settings.displayWeight(e.value))
-          .toList();
-      final unit = settings.unitLabel;
+      // Always read useImperial so Obx has a reactive dependency even when
+      // convertWeight is false (otherwise GetX throws an improper-use error).
+      final isImperial = settings.useImperial.value;
+
+      // Resolve display values and unit label.
+      final List<double> displayValues;
+      final String unit;
+      if (convertWeight) {
+        displayValues = data
+            .map((e) => isImperial ? e.value * 2.20462 : e.value)
+            .toList();
+        unit = isImperial ? 'lbs' : 'kg';
+      } else {
+        displayValues = data.map((e) => e.value).toList();
+        unit = yUnit;
+      }
 
       final spots = data
           .asMap()
@@ -434,6 +609,9 @@ class _WeightChart extends StatelessWidget {
       final maxY = displayValues.reduce((a, b) => a > b ? a : b);
       final minY = displayValues.reduce((a, b) => a < b ? a : b);
       final yPad = ((maxY - minY) * 0.2).clamp(2.0, double.infinity);
+
+      String defaultTooltip(double y, String u) => '${y.toStringAsFixed(2)} $u';
+      final fmtTooltip = tooltipFormatter ?? defaultTooltip;
 
       return LineChart(
         LineChartData(
@@ -455,7 +633,7 @@ class _WeightChart extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Text(
-                      '${val.toStringAsFixed(2)} $unit',
+                      '${val.toStringAsFixed(convertWeight ? 2 : 1)} $unit',
                       style: const TextStyle(fontSize: 10),
                     ),
                   ),
@@ -537,7 +715,7 @@ class _WeightChart extends StatelessWidget {
                 final idx = s.x.toInt();
                 if (idx < 0 || idx >= data.length) return null;
                 return LineTooltipItem(
-                  '${dateFormat.format(data[idx].key)}\n${s.y.toStringAsFixed(2)} $unit',
+                  '${dateFormat.format(data[idx].key)}\n${fmtTooltip(s.y, unit)}',
                   const TextStyle(
                     color: Colors.white,
                     fontSize: 12,

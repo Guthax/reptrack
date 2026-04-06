@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "flutter-docs": {
-      "command": "npx",
-      "args": ["flutter-mcp"]
-    }
-  }
-}

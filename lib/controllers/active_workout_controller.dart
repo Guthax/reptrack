@@ -63,8 +63,9 @@ class ActiveWorkoutController extends GetxController {
   /// Most recent cardio set for each cardio exercise, keyed by exercise ID.
   final lastCardioSets = RxMap<String, WorkoutCardioSet>({});
 
-  /// Most recent hybrid set for each hybrid exercise, keyed by exercise ID.
-  final lastHybridSets = RxMap<String, WorkoutHybridSet>({});
+  /// All past hybrid sets for each hybrid exercise, keyed by exercise ID,
+  /// ordered newest first (mirrors [lastWorkoutSets] for strength).
+  final lastHybridSets = RxMap<String, List<WorkoutHybridSet>>({});
 
   /// Keys of the form `"exerciseId-equipmentId-setNum"` for every set that
   /// has been logged during this session.
@@ -222,8 +223,8 @@ class ActiveWorkoutController extends GetxController {
           final last = await db.getLastCardioSetForExercise(item.exercise.id);
           if (last != null) lastCardioSets[item.exercise.id] = last;
         } else if (item.isHybrid) {
-          final last = await db.getLastHybridSetForExercise(item.exercise.id);
-          if (last != null) lastHybridSets[item.exercise.id] = last;
+          final sets = await db.getHybridSetsForExercise(item.exercise.id);
+          if (sets.isNotEmpty) lastHybridSets[item.exercise.id] = sets;
         } else {
           final sets = await db.getStrengthSetsForExercise(item.exercise.id);
           if (sets.isNotEmpty) lastWorkoutSets[item.exercise.id] = sets;
@@ -503,12 +504,11 @@ class ActiveWorkoutController extends GetxController {
     int setNum,
     String? equipmentId,
   ) {
-    final last = lastHybridSets[exerciseId];
-    if (last == null) return null;
-    if (last.setNumber == setNum && last.equipmentId == equipmentId) {
-      return last;
-    }
-    return null;
+    final sets = lastHybridSets[exerciseId];
+    if (sets == null) return null;
+    return sets.firstWhereOrNull(
+      (s) => s.setNumber == setNum && s.equipmentId == equipmentId,
+    );
   }
 
   /// Replaces the exercise at the position of [oldExerciseId] with
@@ -555,8 +555,9 @@ class ActiveWorkoutController extends GetxController {
           ),
         );
       } else if (isNewHybrid) {
-        final lastHybrid = await db.getLastHybridSetForExercise(newExercise.id);
-        if (lastHybrid != null) lastHybridSets[newExercise.id] = lastHybrid;
+        final hybridSets = await db.getHybridSetsForExercise(newExercise.id);
+        if (hybridSets.isNotEmpty) lastHybridSets[newExercise.id] = hybridSets;
+        final lastHybrid = hybridSets.isNotEmpty ? hybridSets.first : null;
         newVolume = ProgramExerciseVolume.hybrid(
           ProgramHybridExercise(
             id: originalItem.volume.id,
@@ -673,8 +674,9 @@ class ActiveWorkoutController extends GetxController {
         ),
       );
     } else if (isHybrid) {
-      final last = await db.getLastHybridSetForExercise(exercise.id);
-      if (last != null) lastHybridSets[exercise.id] = last;
+      final hybridSets = await db.getHybridSetsForExercise(exercise.id);
+      if (hybridSets.isNotEmpty) lastHybridSets[exercise.id] = hybridSets;
+      final last = hybridSets.isNotEmpty ? hybridSets.first : null;
       final lastWeight = last?.weight ?? 0.0;
       volume = ProgramExerciseVolume.hybrid(
         ProgramHybridExercise(

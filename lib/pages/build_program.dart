@@ -279,6 +279,10 @@ class BuildProgramPage extends StatelessWidget {
                               ),
                               subtitle: ex.isCardio
                                   ? Text('Cardio • ${ex.volume.durationLabel}')
+                                  : ex.isHybrid
+                                  ? Text(
+                                      '${ex.equipment != null ? '${ex.equipment!.name} • ' : ''}${ex.volume.setsDistancesLabel}',
+                                    )
                                   : Text(
                                       '${ex.primaryMuscleGroup != null ? '${ex.primaryMuscleGroup} • ' : ''}${ex.equipment!.name} • ${ex.volume.setsRepsLabel}',
                                     ),

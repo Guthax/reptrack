@@ -23,6 +23,9 @@ class WorkoutSelectionController extends GetxController {
   /// The currently selected workout day, or `null` if none is chosen.
   var selectedDay = Rxn<WorkoutDay>();
 
+  /// True when [selectedDay] is set but contains no exercises.
+  var workoutDayHasNoExercises = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -41,6 +44,33 @@ class WorkoutSelectionController extends GetxController {
         selectedDay.value = null;
       }
     });
+    ever(selectedDay, (_) => _checkDayExercises());
+  }
+
+  Future<void> _checkDayExercises() async {
+    final day = selectedDay.value;
+    if (day == null) {
+      workoutDayHasNoExercises.value = false;
+      return;
+    }
+    final strength = await (db.select(
+      db.programStrengthExercises,
+    )..where((t) => t.workoutDayId.equals(day.id))).get();
+    if (strength.isNotEmpty) {
+      workoutDayHasNoExercises.value = false;
+      return;
+    }
+    final cardio = await (db.select(
+      db.programCardioExercises,
+    )..where((t) => t.workoutDayId.equals(day.id))).get();
+    if (cardio.isNotEmpty) {
+      workoutDayHasNoExercises.value = false;
+      return;
+    }
+    final hybrid = await (db.select(
+      db.programHybridExercises,
+    )..where((t) => t.workoutDayId.equals(day.id))).get();
+    workoutDayHasNoExercises.value = hybrid.isEmpty;
   }
 
   /// Called when the user selects a different [program] from the dropdown.

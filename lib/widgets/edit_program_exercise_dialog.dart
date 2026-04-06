@@ -49,6 +49,8 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
   late final RxString hybridDistanceUnit;
 
   List<Exercise> allExercises = [];
+  late final String _originalTypeId;
+
   bool get _isHybrid => selectedExercise.value?.exerciseTypeId == '3';
 
   bool get _isCardio => selectedExercise.value?.exerciseTypeId == '2';
@@ -61,6 +63,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
   void initState() {
     super.initState();
     final vol = widget.exerciseWithVolume;
+    _originalTypeId = vol.exercise.exerciseTypeId ?? '1';
     selectedExercise = Rx<Exercise?>(vol.exercise);
     selectedEquipmentId = Rx<String?>(vol.volume.equipmentId);
     hybridDistanceUnit = vol.volume.distanceUnit.obs;
@@ -110,11 +113,14 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
     _loadInitialData();
   }
 
+  List<Exercise> get _sameTypeExercises =>
+      allExercises.where((e) => e.exerciseTypeId == _originalTypeId).toList();
+
   Future<void> _loadInitialData() async {
     final db = Get.find<AppDatabase>();
     allExercises = await Get.find<BuildProgramController>()
         .getAvailableExercises();
-    filteredExercises.assignAll(allExercises);
+    filteredExercises.assignAll(_sameTypeExercises);
 
     if (widget.exerciseWithVolume.isHybrid ||
         !widget.exerciseWithVolume.isCardio) {
@@ -183,7 +189,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     (e) => e.id == updated.id,
                   );
                   if (idx != -1) allExercises[idx] = updated;
-                  filteredExercises.assignAll(allExercises);
+                  filteredExercises.assignAll(_sameTypeExercises);
                 }
               },
             );
@@ -278,7 +284,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
           ),
           onChanged: (val) {
             filteredExercises.assignAll(
-              fuzzyFilter(allExercises, val, (e) => e.name),
+              fuzzyFilter(_sameTypeExercises, val, (e) => e.name),
             );
           },
         ),
@@ -359,7 +365,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   onDeleted: () {
                     selectedExercise.value = null;
                     searchController.clear();
-                    filteredExercises.assignAll(allExercises);
+                    filteredExercises.assignAll(_sameTypeExercises);
                   },
                   deleteIcon: const Icon(Icons.close),
                 ),
@@ -475,7 +481,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     selectedExercise.value = null;
                     selectedEquipmentId.value = null;
                     searchController.clear();
-                    filteredExercises.assignAll(allExercises);
+                    filteredExercises.assignAll(_sameTypeExercises);
                   },
                   deleteIcon: const Icon(Icons.close),
                 ),
@@ -643,7 +649,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     selectedExercise.value = null;
                     selectedEquipmentId.value = null;
                     searchController.clear();
-                    filteredExercises.assignAll(allExercises);
+                    filteredExercises.assignAll(_sameTypeExercises);
                   },
                   deleteIcon: const Icon(Icons.close),
                 ),

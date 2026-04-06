@@ -91,6 +91,18 @@ class ProgramExerciseVolume {
         .join(', ');
   }
 
+  /// Human-readable planned distances summary, e.g. "3 × 100 m" or "100 m, 200 m, 400 m".
+  String get setsDistancesLabel {
+    final list = setsDistancesList;
+    final unit = distanceUnit;
+    if (list.isEmpty) return '';
+    final allEqual = list.every((d) => d == list.first);
+    String fmt(double d) =>
+        d == d.truncateToDouble() ? d.toInt().toString() : d.toStringAsFixed(1);
+    if (allEqual) return '${list.length} × ${fmt(list.first)} $unit';
+    return list.map((d) => '${fmt(d)} $unit').join(', ');
+  }
+
   /// Human-readable planned duration, e.g. "1h 30m" or "45m", or null if not set.
   String? get durationLabel {
     final s = seconds;
