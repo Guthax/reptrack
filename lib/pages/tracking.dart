@@ -192,16 +192,12 @@ class _ExerciseProgressView extends StatelessWidget {
                 ],
               ),
             ),
-          if (cfg.data.isEmpty)
-            const Expanded(
-              child: Center(
-                child: Text('No workout data for this exercise yet.'),
-              ),
-            )
-          else
-            Expanded(
-              child: Stack(
-                children: [
+          Expanded(
+            child: Stack(
+              children: [
+                if (cfg.data.isEmpty)
+                  const Center(child: Text('No data for this graph.'))
+                else
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 8, 24, 64),
                     child: _WeightChart(
@@ -211,30 +207,30 @@ class _ExerciseProgressView extends StatelessWidget {
                       tooltipFormatter: cfg.tooltipFormatter,
                     ),
                   ),
-                  Positioned(
-                    left: 16,
-                    bottom: 16,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SegmentedButton<ChartType>(
-                        style: ButtonStyle(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          padding: const WidgetStatePropertyAll(
-                            EdgeInsets.symmetric(horizontal: 10),
-                          ),
+                Positioned(
+                  left: 16,
+                  bottom: 16,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<ChartType>(
+                      style: const ButtonStyle(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        padding: WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 10),
                         ),
-                        segments: _segmentsFor(typeId),
-                        selected: {chartType},
-                        onSelectionChanged: (s) =>
-                            controller.selectedChartType.value = s.first,
-                        showSelectedIcon: false,
                       ),
+                      segments: _segmentsFor(typeId),
+                      selected: {chartType},
+                      onSelectionChanged: (s) =>
+                          controller.selectedChartType.value = s.first,
+                      showSelectedIcon: false,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
         ],
       );
     });

@@ -45,9 +45,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     TextEditingController(text: "12"),
   ];
   final List<TextEditingController> distanceControllers = [
-    TextEditingController(text: "100"),
-    TextEditingController(text: "100"),
-    TextEditingController(text: "100"),
+    TextEditingController(text: "25"),
+    TextEditingController(text: "25"),
+    TextEditingController(text: "25"),
   ];
   final TextEditingController hybridTimerController = TextEditingController(
     text: "60",

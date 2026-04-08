@@ -257,18 +257,11 @@ class WorkoutHybridSets extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  @override
-  int get schemaVersion => 2;
+  /// Opens an in-memory database. Use this in tests only.
+  AppDatabase.forTesting(super.executor);
 
   @override
-  MigrationStrategy get migration => MigrationStrategy(
-    onUpgrade: (migrator, from, to) async {
-      if (from < 2) {
-        await migrator.createTable(programHybridExercises);
-        await migrator.createTable(workoutHybridSets);
-      }
-    },
-  );
+  int get schemaVersion => 1;
 
   // ── Programs ──────────────────────────────────────────────────────────────
 

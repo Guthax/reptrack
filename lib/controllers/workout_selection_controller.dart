@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:reptrack/pages/track_workout.dart';
+import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
 
 /// Controller for the Workout selection screen.
@@ -26,6 +29,9 @@ class WorkoutSelectionController extends GetxController {
   /// True when [selectedDay] is set but contains no exercises.
   var workoutDayHasNoExercises = false.obs;
 
+  List<WorkoutDayWithExercises> _cachedDaysWithExercises = [];
+  StreamSubscription<List<WorkoutDayWithExercises>>? _exercisesSubscription;
+
   @override
   void onInit() {
     super.onInit();
@@ -44,33 +50,26 @@ class WorkoutSelectionController extends GetxController {
         selectedDay.value = null;
       }
     });
-    ever(selectedDay, (_) => _checkDayExercises());
+    ever(selectedDay, (_) => _updateNoExercisesFlag());
   }
 
-  Future<void> _checkDayExercises() async {
+  @override
+  void onClose() {
+    _exercisesSubscription?.cancel();
+    super.onClose();
+  }
+
+  void _updateNoExercisesFlag() {
     final day = selectedDay.value;
     if (day == null) {
       workoutDayHasNoExercises.value = false;
       return;
     }
-    final strength = await (db.select(
-      db.programStrengthExercises,
-    )..where((t) => t.workoutDayId.equals(day.id))).get();
-    if (strength.isNotEmpty) {
-      workoutDayHasNoExercises.value = false;
-      return;
-    }
-    final cardio = await (db.select(
-      db.programCardioExercises,
-    )..where((t) => t.workoutDayId.equals(day.id))).get();
-    if (cardio.isNotEmpty) {
-      workoutDayHasNoExercises.value = false;
-      return;
-    }
-    final hybrid = await (db.select(
-      db.programHybridExercises,
-    )..where((t) => t.workoutDayId.equals(day.id))).get();
-    workoutDayHasNoExercises.value = hybrid.isEmpty;
+    final match = _cachedDaysWithExercises.where(
+      (d) => d.workoutDay.id == day.id,
+    );
+    workoutDayHasNoExercises.value =
+        match.isEmpty || match.first.exercises.isEmpty;
   }
 
   /// Called when the user selects a different [program] from the dropdown.
@@ -80,11 +79,20 @@ class WorkoutSelectionController extends GetxController {
   void onProgramChanged(Program? program) {
     selectedProgram.value = program;
     selectedDay.value = null;
+    _exercisesSubscription?.cancel();
 
     if (program != null) {
-      workoutDays.bindStream(db.watchWorkoutDaysForProgram(program.id));
+      final stream = db.watchWorkoutDaysWithExercises(program.id);
+      workoutDays.bindStream(
+        stream.map((list) => list.map((e) => e.workoutDay).toList()),
+      );
+      _exercisesSubscription = stream.listen((daysWithExercises) {
+        _cachedDaysWithExercises = daysWithExercises;
+        _updateNoExercisesFlag();
+      });
     } else {
       workoutDays.clear();
+      _cachedDaysWithExercises = [];
     }
   }
 
