@@ -169,9 +169,9 @@ void main() {
         exerciseId: exId,
         setsReps: [12, 10, 8],
       );
-      final rows = await (db.select(db.programStrengthExercises)
-            ..where((r) => r.workoutDayId.equals(dayId)))
-          .get();
+      final rows = await (db.select(
+        db.programStrengthExercises,
+      )..where((r) => r.workoutDayId.equals(dayId))).get();
       expect(rows, hasLength(1));
       expect(rows.first.setsReps, '[12,10,8]');
     });
@@ -188,10 +188,11 @@ void main() {
         exerciseId: exId2,
         setsReps: [8],
       );
-      final rows = await (db.select(db.programStrengthExercises)
-            ..where((r) => r.workoutDayId.equals(dayId))
-            ..orderBy([(r) => OrderingTerm(expression: r.orderInProgram)]))
-          .get();
+      final rows =
+          await (db.select(db.programStrengthExercises)
+                ..where((r) => r.workoutDayId.equals(dayId))
+                ..orderBy([(r) => OrderingTerm(expression: r.orderInProgram)]))
+              .get();
       expect(rows[0].orderInProgram, 0);
       expect(rows[1].orderInProgram, 1);
     });
@@ -215,9 +216,9 @@ void main() {
         distancePlanned: 5.0,
         distancePlannedUnit: 'km',
       );
-      final rows = await (db.select(db.programCardioExercises)
-            ..where((r) => r.workoutDayId.equals(dayId)))
-          .get();
+      final rows = await (db.select(
+        db.programCardioExercises,
+      )..where((r) => r.workoutDayId.equals(dayId))).get();
       expect(rows, hasLength(1));
       expect(rows.first.seconds, 1800);
       expect(rows.first.distancePlanned, 5.0);
@@ -242,9 +243,9 @@ void main() {
         distanceUnit: 'm',
         weight: 50.0,
       );
-      final rows = await (db.select(db.programHybridExercises)
-            ..where((r) => r.workoutDayId.equals(dayId)))
-          .get();
+      final rows = await (db.select(
+        db.programHybridExercises,
+      )..where((r) => r.workoutDayId.equals(dayId))).get();
       expect(rows, hasLength(1));
       expect(rows.first.setsDistances, '[100.0,200.0]');
       expect(rows.first.weight, 50.0);
@@ -271,50 +272,58 @@ void main() {
     });
 
     test('getStrengthSetsForExercise returns completed sets', () async {
-      await db.into(db.workoutStrengthSets).insert(
-        WorkoutStrengthSetsCompanion.insert(
-          workoutId: workoutId,
-          exerciseId: exId,
-          reps: 10,
-          weight: 100.0,
-          setNumber: 1,
-        ),
-      );
+      await db
+          .into(db.workoutStrengthSets)
+          .insert(
+            WorkoutStrengthSetsCompanion.insert(
+              workoutId: workoutId,
+              exerciseId: exId,
+              reps: 10,
+              weight: 100.0,
+              setNumber: 1,
+            ),
+          );
       final sets = await db.getStrengthSetsForExercise(exId);
       expect(sets, hasLength(1));
       expect(sets.first.reps, 10);
     });
 
-    test('getLastStrengthSetForExercise returns null when no sets exist',
-        () async {
-      final result = await db.getLastStrengthSetForExercise(exId);
-      expect(result, isNull);
-    });
+    test(
+      'getLastStrengthSetForExercise returns null when no sets exist',
+      () async {
+        final result = await db.getLastStrengthSetForExercise(exId);
+        expect(result, isNull);
+      },
+    );
 
     test('getLastStrengthSetForExercise returns most recent set', () async {
       final earlier = DateTime(2024, 1, 1);
       final later = DateTime(2024, 1, 2);
 
-      await db.into(db.workoutStrengthSets).insert(
-        WorkoutStrengthSetsCompanion(
-          workoutId: Value(workoutId),
-          exerciseId: Value(exId),
-          reps: const Value(8),
-          weight: const Value(80.0),
-          setNumber: const Value(1),
-          dateLogged: Value(earlier),
-        ),
-      );
-      await db.into(db.workoutStrengthSets).insert(
-        WorkoutStrengthSetsCompanion(
-          workoutId: Value(workoutId),
-          exerciseId: Value(exId),
-          reps: const Value(10),
-          weight: const Value(100.0),
-          setNumber: const Value(2),
-          dateLogged: Value(later),
-        ),
-      );
+      await db
+          .into(db.workoutStrengthSets)
+          .insert(
+            WorkoutStrengthSetsCompanion(
+              workoutId: Value(workoutId),
+              exerciseId: Value(exId),
+              reps: const Value(8),
+              weight: const Value(80.0),
+              setNumber: const Value(1),
+              dateLogged: Value(earlier),
+            ),
+          );
+      await db
+          .into(db.workoutStrengthSets)
+          .insert(
+            WorkoutStrengthSetsCompanion(
+              workoutId: Value(workoutId),
+              exerciseId: Value(exId),
+              reps: const Value(10),
+              weight: const Value(100.0),
+              setNumber: const Value(2),
+              dateLogged: Value(later),
+            ),
+          );
 
       final result = await db.getLastStrengthSetForExercise(exId);
       expect(result, isNotNull);
@@ -340,13 +349,15 @@ void main() {
     });
 
     test('getCardioSetsForExercise returns completed sets', () async {
-      await db.into(db.workoutCardioSets).insert(
-        WorkoutCardioSetsCompanion.insert(
-          workoutId: workoutId,
-          exerciseId: exId,
-          durationSeconds: 1800,
-        ),
-      );
+      await db
+          .into(db.workoutCardioSets)
+          .insert(
+            WorkoutCardioSetsCompanion.insert(
+              workoutId: workoutId,
+              exerciseId: exId,
+              durationSeconds: 1800,
+            ),
+          );
       final sets = await db.getCardioSetsForExercise(exId);
       expect(sets, hasLength(1));
       expect(sets.first.durationSeconds, 1800);
@@ -376,15 +387,17 @@ void main() {
     });
 
     test('getHybridSetsForExercise returns completed sets', () async {
-      await db.into(db.workoutHybridSets).insert(
-        WorkoutHybridSetsCompanion.insert(
-          workoutId: workoutId,
-          exerciseId: exId,
-          setNumber: 1,
-          weight: 40.0,
-          distance: 100.0,
-        ),
-      );
+      await db
+          .into(db.workoutHybridSets)
+          .insert(
+            WorkoutHybridSetsCompanion.insert(
+              workoutId: workoutId,
+              exerciseId: exId,
+              setNumber: 1,
+              weight: 40.0,
+              distance: 100.0,
+            ),
+          );
       final sets = await db.getHybridSetsForExercise(exId);
       expect(sets, hasLength(1));
       expect(sets.first.weight, 40.0);
@@ -399,18 +412,20 @@ void main() {
   // ── Bodyweight ─────────────────────────────────────────────────────────────
 
   group('BodyweightEntries', () {
-    test('watchBodyweightEntries emits inserted entries in date order',
-        () async {
-      final later = DateTime(2024, 3, 1);
-      final earlier = DateTime(2024, 1, 1);
-      await db.addBodyweightEntry(later, 85.0);
-      await db.addBodyweightEntry(earlier, 82.0);
+    test(
+      'watchBodyweightEntries emits inserted entries in date order',
+      () async {
+        final later = DateTime(2024, 3, 1);
+        final earlier = DateTime(2024, 1, 1);
+        await db.addBodyweightEntry(later, 85.0);
+        await db.addBodyweightEntry(earlier, 82.0);
 
-      final entries = await db.watchBodyweightEntries().first;
-      expect(entries, hasLength(2));
-      expect(entries[0].date, earlier);
-      expect(entries[1].date, later);
-    });
+        final entries = await db.watchBodyweightEntries().first;
+        expect(entries, hasLength(2));
+        expect(entries[0].date, earlier);
+        expect(entries[1].date, later);
+      },
+    );
 
     test('deleteBodyweightEntry removes the entry', () async {
       await db.addBodyweightEntry(DateTime(2024, 1, 1), 80.0);

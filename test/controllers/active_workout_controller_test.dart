@@ -9,7 +9,6 @@ import '../test_helpers.dart';
 /// without standing up a full workout session.
 class _TestableController extends ActiveWorkoutController {
   _TestableController() : super('test-day-id');
-
 }
 
 void main() {

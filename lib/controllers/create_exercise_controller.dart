@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/error_handler.dart';
 
 /// Controller for the Create Exercise dialog.
 ///
@@ -19,7 +20,7 @@ class CreateExerciseController extends GetxController {
   final RxList<Equipment> availableEquipment = <Equipment>[].obs;
 
   final RxList<ExerciseType> exerciseTypes = <ExerciseType>[].obs;
-  
+
   /// The set of equipment IDs the user has toggled on.
   final RxSet<String> selectedEquipmentIds = <String>{}.obs;
 
@@ -32,19 +33,22 @@ class CreateExerciseController extends GetxController {
   }
 
   /// Fetches muscle groups and equipment from the database.
-Future<void> _loadData() async {
-    final groups = await db.select(db.muscleGroups).get();
-    muscleGroups.assignAll(groups.map((g) => g.name).toList());
+  Future<void> _loadData() async {
+    try {
+      final groups = await db.select(db.muscleGroups).get();
+      muscleGroups.assignAll(groups.map((g) => g.name).toList());
 
-    final equips = await db.select(db.equipments).get();
-    availableEquipment.assignAll(equips);
+      final equips = await db.select(db.equipments).get();
+      availableEquipment.assignAll(equips);
 
-
-    final types = await db.select(db.exerciseTypes).get(); 
-    exerciseTypes.assignAll(types);
+      final types = await db.select(db.exerciseTypes).get();
+      exerciseTypes.assignAll(types);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
-void exerciseTypeSelected(String id) {
+  void exerciseTypeSelected(String id) {
     // If you want single-selection (common for Exercise Type):
     if (selectedExerciseType.contains(id)) {
       selectedExerciseType.remove(id);
@@ -52,9 +56,10 @@ void exerciseTypeSelected(String id) {
       selectedExerciseType.clear(); // Clear others if only one type is allowed
       selectedExerciseType.add(id);
     }
-    
+
     // If you want multi-selection, just remove the .clear() line.
   }
+
   /// Toggles the selection state of the equipment identified by [equipmentId].
   ///
   /// If [equipmentId] is already in [selectedEquipmentIds] it is removed;
@@ -67,12 +72,15 @@ void exerciseTypeSelected(String id) {
     }
   }
 
+  /// Whether the currently selected exercise type is cardio (id == '2').
+  bool get isCardioSelected => selectedExerciseType.contains('2');
+
   /// Validates input and creates a new exercise in the database.
   ///
   /// - [name]: required, must be non-empty and unique.
   /// - [muscleGroup]: optional primary muscle group label.
   /// - [note]: optional free-text note.
-  /// - [equipmentIds]: must contain at least one entry.
+  /// - [equipmentIds]: must contain at least one entry (ignored for cardio).
   ///
   /// Returns the newly created [Exercise] on success, or `null` if
   /// validation fails. Error messages are shown via [AppSnackbar].
@@ -83,40 +91,55 @@ void exerciseTypeSelected(String id) {
     required Set<String> equipmentIds,
   }) async {
     final trimmedName = name.trim();
+    final typeId = selectedExerciseType.firstOrNull;
+    final isCardio = typeId == '2';
 
     if (trimmedName.isEmpty) {
       AppSnackbar.error('Exercise name is required');
       return null;
     }
 
-    if (equipmentIds.isEmpty) {
+    if (!isCardio && equipmentIds.isEmpty) {
       AppSnackbar.error('Please select at least one equipment type');
       return null;
     }
 
-    final existing = await db.getExerciseByName(trimmedName);
-    if (existing != null) {
-      AppSnackbar.error('"$trimmedName" already exists');
+    try {
+      final existing = await db.getExerciseByName(trimmedName);
+      if (existing != null) {
+        AppSnackbar.error('"$trimmedName" already exists');
+        return null;
+      }
+
+      final id = await db.addExercise(
+        trimmedName,
+        muscleGroupName: muscleGroupName?.trim(),
+        comment: note?.trim(),
+        exerciseTypeId: typeId,
+      );
+
+      if (!isCardio) {
+        for (final equipmentId in equipmentIds) {
+          await db
+              .into(db.exerciseEquipment)
+              .insert(
+                ExerciseEquipmentCompanion(
+                  exerciseId: drift.Value(id),
+                  equipmentId: drift.Value(equipmentId),
+                ),
+              );
+        }
+      }
+
+      return Exercise(
+        id: id,
+        name: trimmedName,
+        note: note?.trim(),
+        exerciseTypeId: typeId,
+      );
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
       return null;
     }
-
-    final id = await db.addExercise(
-      trimmedName,
-      muscleGroupName: muscleGroupName?.trim(),
-      comment: note?.trim(),
-    );
-
-    for (final equipmentId in equipmentIds) {
-      await db
-          .into(db.exerciseEquipment)
-          .insert(
-            ExerciseEquipmentCompanion(
-              exerciseId: drift.Value(id),
-              equipmentId: drift.Value(equipmentId),
-            ),
-          );
-    }
-
-    return Exercise(id: id, name: trimmedName, note: note?.trim());
   }
 }

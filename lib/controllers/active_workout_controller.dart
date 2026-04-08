@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as d;
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:flutter/services.dart';
+import 'package:reptrack/utils/error_handler.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -232,8 +233,8 @@ class ActiveWorkoutController extends GetxController {
       }
 
       exercisesWithVolume.assignAll(items);
-    } catch (e) {
-      Get.snackbar("Error", "Failed to load workout: $e");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     } finally {
       isLoading.value = false;
     }
@@ -320,29 +321,32 @@ class ActiveWorkoutController extends GetxController {
     int? restSeconds,
   }) async {
     if (currentWorkoutId == null) return;
+    try {
+      final entry = WorkoutStrengthSetsCompanion.insert(
+        workoutId: currentWorkoutId!,
+        exerciseId: exerciseId,
+        equipmentId: d.Value(equipmentId),
+        reps: reps,
+        weight: weight,
+        setNumber: setNum,
+        isCompleted: const d.Value(true),
+      );
 
-    final entry = WorkoutStrengthSetsCompanion.insert(
-      workoutId: currentWorkoutId!,
-      exerciseId: exerciseId,
-      equipmentId: d.Value(equipmentId),
-      reps: reps,
-      weight: weight,
-      setNumber: setNum,
-      isCompleted: const d.Value(true),
-    );
+      await db.into(db.workoutStrengthSets).insert(entry);
 
-    await db.into(db.workoutStrengthSets).insert(entry);
+      if (!sessionLoggedSets.containsKey(exerciseIndex)) {
+        sessionLoggedSets[exerciseIndex] = [];
+      }
+      sessionLoggedSets[exerciseIndex]!.add(entry);
+      sessionLoggedSets.refresh();
 
-    if (!sessionLoggedSets.containsKey(exerciseIndex)) {
-      sessionLoggedSets[exerciseIndex] = [];
-    }
-    sessionLoggedSets[exerciseIndex]!.add(entry);
-    sessionLoggedSets.refresh();
+      completedSets.add("$exerciseIndex-$equipmentId-$setNum");
 
-    completedSets.add("$exerciseIndex-$equipmentId-$setNum");
-
-    if (restSeconds != null) {
-      startRestTimer(restSeconds);
+      if (restSeconds != null) {
+        startRestTimer(restSeconds);
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -357,20 +361,23 @@ class ActiveWorkoutController extends GetxController {
     String distanceUnit = 'km',
   }) async {
     if (currentWorkoutId == null) return;
+    try {
+      await db
+          .into(db.workoutCardioSets)
+          .insert(
+            WorkoutCardioSetsCompanion.insert(
+              workoutId: currentWorkoutId!,
+              exerciseId: exerciseId,
+              durationSeconds: durationSeconds,
+              distanceMeters: d.Value(distanceMeters),
+              distanceUnit: d.Value(distanceUnit),
+            ),
+          );
 
-    await db
-        .into(db.workoutCardioSets)
-        .insert(
-          WorkoutCardioSetsCompanion.insert(
-            workoutId: currentWorkoutId!,
-            exerciseId: exerciseId,
-            durationSeconds: durationSeconds,
-            distanceMeters: d.Value(distanceMeters),
-            distanceUnit: d.Value(distanceUnit),
-          ),
-        );
-
-    completedSets.add("$exerciseIndex-cardio-1");
+      completedSets.add("$exerciseIndex-cardio-1");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Logs a hybrid set into [workoutHybridSets] with weight and distance.
@@ -387,28 +394,31 @@ class ActiveWorkoutController extends GetxController {
     int? restSeconds,
   }) async {
     if (currentWorkoutId == null) return;
+    try {
+      final distanceMeters = _unitToMeters(distance, distanceUnit);
+      await db
+          .into(db.workoutHybridSets)
+          .insert(
+            WorkoutHybridSetsCompanion.insert(
+              workoutId: currentWorkoutId!,
+              exerciseId: exerciseId,
+              equipmentId: d.Value(equipmentId),
+              setNumber: setNum,
+              weight: weight,
+              distance: distance,
+              distanceUnit: d.Value(distanceUnit),
+              distanceMeters: d.Value(distanceMeters),
+              isCompleted: const d.Value(true),
+            ),
+          );
 
-    final distanceMeters = _unitToMeters(distance, distanceUnit);
-    await db
-        .into(db.workoutHybridSets)
-        .insert(
-          WorkoutHybridSetsCompanion.insert(
-            workoutId: currentWorkoutId!,
-            exerciseId: exerciseId,
-            equipmentId: d.Value(equipmentId),
-            setNumber: setNum,
-            weight: weight,
-            distance: distance,
-            distanceUnit: d.Value(distanceUnit),
-            distanceMeters: d.Value(distanceMeters),
-            isCompleted: const d.Value(true),
-          ),
-        );
+      completedSets.add("$exerciseIndex-$equipmentId-$setNum");
 
-    completedSets.add("$exerciseIndex-$equipmentId-$setNum");
-
-    if (restSeconds != null) {
-      startRestTimer(restSeconds);
+      if (restSeconds != null) {
+        startRestTimer(restSeconds);
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -422,13 +432,17 @@ class ActiveWorkoutController extends GetxController {
     required String exerciseId,
   }) async {
     if (currentWorkoutId == null) return;
-    await (db.update(db.workoutCardioSets)..where(
-          (tbl) =>
-              tbl.workoutId.equals(currentWorkoutId!) &
-              tbl.exerciseId.equals(exerciseId),
-        ))
-        .write(const WorkoutCardioSetsCompanion(isCompleted: d.Value(false)));
-    completedSets.remove("$exerciseIndex-cardio-1");
+    try {
+      await (db.update(db.workoutCardioSets)..where(
+            (tbl) =>
+                tbl.workoutId.equals(currentWorkoutId!) &
+                tbl.exerciseId.equals(exerciseId),
+          ))
+          .write(const WorkoutCardioSetsCompanion(isCompleted: d.Value(false)));
+      completedSets.remove("$exerciseIndex-cardio-1");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Returns whether the set [setNum] for the exercise at [exerciseIndex]
@@ -446,19 +460,25 @@ class ActiveWorkoutController extends GetxController {
     required int setNum,
   }) async {
     if (currentWorkoutId == null) return;
-    await (db.update(db.workoutStrengthSets)..where(
-          (tbl) =>
-              tbl.workoutId.equals(currentWorkoutId!) &
-              tbl.exerciseId.equals(exerciseId) &
-              tbl.equipmentId.equals(equipmentId) &
-              tbl.setNumber.equals(setNum),
-        ))
-        .write(const WorkoutStrengthSetsCompanion(isCompleted: d.Value(false)));
-    completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
-    final list = sessionLoggedSets[exerciseIndex];
-    if (list != null) {
-      list.removeWhere((s) => s.setNumber.value == setNum);
-      sessionLoggedSets.refresh();
+    try {
+      await (db.update(db.workoutStrengthSets)..where(
+            (tbl) =>
+                tbl.workoutId.equals(currentWorkoutId!) &
+                tbl.exerciseId.equals(exerciseId) &
+                tbl.equipmentId.equals(equipmentId) &
+                tbl.setNumber.equals(setNum),
+          ))
+          .write(
+            const WorkoutStrengthSetsCompanion(isCompleted: d.Value(false)),
+          );
+      completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+      final list = sessionLoggedSets[exerciseIndex];
+      if (list != null) {
+        list.removeWhere((s) => s.setNumber.value == setNum);
+        sessionLoggedSets.refresh();
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -472,15 +492,19 @@ class ActiveWorkoutController extends GetxController {
     required int setNum,
   }) async {
     if (currentWorkoutId == null) return;
-    await (db.update(db.workoutHybridSets)..where(
-          (tbl) =>
-              tbl.workoutId.equals(currentWorkoutId!) &
-              tbl.exerciseId.equals(exerciseId) &
-              tbl.equipmentId.equals(equipmentId) &
-              tbl.setNumber.equals(setNum),
-        ))
-        .write(const WorkoutHybridSetsCompanion(isCompleted: d.Value(false)));
-    completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+    try {
+      await (db.update(db.workoutHybridSets)..where(
+            (tbl) =>
+                tbl.workoutId.equals(currentWorkoutId!) &
+                tbl.exerciseId.equals(exerciseId) &
+                tbl.equipmentId.equals(equipmentId) &
+                tbl.setNumber.equals(setNum),
+          ))
+          .write(const WorkoutHybridSetsCompanion(isCompleted: d.Value(false)));
+      completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Returns the historical [WorkoutStrengthSet] for [exerciseId] / [setNum] /
@@ -597,8 +621,8 @@ class ActiveWorkoutController extends GetxController {
 
       completedSets.removeWhere((key) => key.startsWith("$exerciseIndex-"));
       exercisesWithVolume.refresh();
-    } catch (e) {
-      Get.snackbar("Swap Error", "Could not swap exercise: $e");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -642,100 +666,104 @@ class ActiveWorkoutController extends GetxController {
     required Exercise exercise,
     String? equipmentId,
   }) async {
-    final isCardio = exercise.exerciseTypeId == '2';
-    final isHybrid = exercise.exerciseTypeId == '3';
+    try {
+      final isCardio = exercise.exerciseTypeId == '2';
+      final isHybrid = exercise.exerciseTypeId == '3';
 
-    Equipment? equipment;
-    if (!isCardio && !isHybrid && equipmentId != null) {
-      equipment = await db.getEquipmentById(equipmentId);
-    } else if (isHybrid && equipmentId != null) {
-      equipment = await db.getEquipmentById(equipmentId);
-    }
-
-    final primaryMuscleGroup = await db.getPrimaryMuscleGroupForExercise(
-      exercise.id,
-    );
-
-    final newIndex = exercisesWithVolume.length;
-    ProgramExerciseVolume volume;
-
-    if (isCardio) {
-      final last = await db.getLastCardioSetForExercise(exercise.id);
-      if (last != null) lastCardioSets[exercise.id] = last;
-      volume = ProgramExerciseVolume.cardio(
-        ProgramCardioExercise(
-          id: _uuid.v4(),
-          workoutDayId: workoutDayId,
-          exerciseId: exercise.id,
-          orderInProgram: newIndex,
-          seconds: null,
-          distancePlanned: null,
-          distancePlannedUnit: 'km',
-        ),
-      );
-    } else if (isHybrid) {
-      final hybridSets = await db.getHybridSetsForExercise(exercise.id);
-      if (hybridSets.isNotEmpty) lastHybridSets[exercise.id] = hybridSets;
-      final last = hybridSets.isNotEmpty ? hybridSets.first : null;
-      final lastWeight = last?.weight ?? 0.0;
-      volume = ProgramExerciseVolume.hybrid(
-        ProgramHybridExercise(
-          id: _uuid.v4(),
-          workoutDayId: workoutDayId,
-          exerciseId: exercise.id,
-          equipmentId: equipmentId,
-          orderInProgram: newIndex,
-          setsDistances: jsonEncode([100.0, 100.0, 100.0]),
-          distanceUnit: last?.distanceUnit ?? 'm',
-          restTimer: null,
-          weight: lastWeight,
-        ),
-      );
-    } else {
-      List<int> setsReps = [12, 12, 12];
-      double weight = 0.0;
-      final sets = await db.getStrengthSetsForExercise(exercise.id);
-      if (sets.isNotEmpty) {
-        final lastWorkoutId = sets.first.workoutId;
-        final lastSession =
-            sets.where((s) => s.workoutId == lastWorkoutId).toList()
-              ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
-        setsReps = lastSession.map((s) => s.reps).toList();
-        weight = lastSession.first.weight;
-        lastWorkoutSets[exercise.id] = sets;
+      Equipment? equipment;
+      if (!isCardio && !isHybrid && equipmentId != null) {
+        equipment = await db.getEquipmentById(equipmentId);
+      } else if (isHybrid && equipmentId != null) {
+        equipment = await db.getEquipmentById(equipmentId);
       }
-      volume = ProgramExerciseVolume.strength(
-        ProgramStrengthExercise(
-          id: _uuid.v4(),
-          workoutDayId: workoutDayId,
-          exerciseId: exercise.id,
-          equipmentId: equipmentId,
-          orderInProgram: newIndex,
-          setsReps: jsonEncode(setsReps),
-          restTimer: null,
-          weight: weight,
+
+      final primaryMuscleGroup = await db.getPrimaryMuscleGroupForExercise(
+        exercise.id,
+      );
+
+      final newIndex = exercisesWithVolume.length;
+      ProgramExerciseVolume volume;
+
+      if (isCardio) {
+        final last = await db.getLastCardioSetForExercise(exercise.id);
+        if (last != null) lastCardioSets[exercise.id] = last;
+        volume = ProgramExerciseVolume.cardio(
+          ProgramCardioExercise(
+            id: _uuid.v4(),
+            workoutDayId: workoutDayId,
+            exerciseId: exercise.id,
+            orderInProgram: newIndex,
+            seconds: null,
+            distancePlanned: null,
+            distancePlannedUnit: 'km',
+          ),
+        );
+      } else if (isHybrid) {
+        final hybridSets = await db.getHybridSetsForExercise(exercise.id);
+        if (hybridSets.isNotEmpty) lastHybridSets[exercise.id] = hybridSets;
+        final last = hybridSets.isNotEmpty ? hybridSets.first : null;
+        final lastWeight = last?.weight ?? 0.0;
+        volume = ProgramExerciseVolume.hybrid(
+          ProgramHybridExercise(
+            id: _uuid.v4(),
+            workoutDayId: workoutDayId,
+            exerciseId: exercise.id,
+            equipmentId: equipmentId,
+            orderInProgram: newIndex,
+            setsDistances: jsonEncode([100.0, 100.0, 100.0]),
+            distanceUnit: last?.distanceUnit ?? 'm',
+            restTimer: null,
+            weight: lastWeight,
+          ),
+        );
+      } else {
+        List<int> setsReps = [12, 12, 12];
+        double weight = 0.0;
+        final sets = await db.getStrengthSetsForExercise(exercise.id);
+        if (sets.isNotEmpty) {
+          final lastWorkoutId = sets.first.workoutId;
+          final lastSession =
+              sets.where((s) => s.workoutId == lastWorkoutId).toList()
+                ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+          setsReps = lastSession.map((s) => s.reps).toList();
+          weight = lastSession.first.weight;
+          lastWorkoutSets[exercise.id] = sets;
+        }
+        volume = ProgramExerciseVolume.strength(
+          ProgramStrengthExercise(
+            id: _uuid.v4(),
+            workoutDayId: workoutDayId,
+            exerciseId: exercise.id,
+            equipmentId: equipmentId,
+            orderInProgram: newIndex,
+            setsReps: jsonEncode(setsReps),
+            restTimer: null,
+            weight: weight,
+          ),
+        );
+      }
+
+      if (equipment != null) selectedEquipments[newIndex] = equipment.id;
+
+      exercisesWithVolume.add(
+        ExerciseWithVolume(
+          exercise: exercise,
+          volume: volume,
+          equipment: equipment,
+          primaryMuscleGroup: primaryMuscleGroup,
         ),
       );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        pageController.animateToPage(
+          newIndex,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      });
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
-
-    if (equipment != null) selectedEquipments[newIndex] = equipment.id;
-
-    exercisesWithVolume.add(
-      ExerciseWithVolume(
-        exercise: exercise,
-        volume: volume,
-        equipment: equipment,
-        primaryMuscleGroup: primaryMuscleGroup,
-      ),
-    );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      pageController.animateToPage(
-        newIndex,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    });
   }
 
   @override

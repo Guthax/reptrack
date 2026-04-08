@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 import 'package:uuid/uuid.dart';
 
 part 'database.g.dart';
@@ -15,6 +16,10 @@ const _uuid = Uuid();
 /// Opens the app's SQLite database file, creating it on first launch.
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
+    // On Android < 10 the system may dlopen the wrong libsqlite.so instead of
+    // the one bundled by sqlite3_flutter_libs, causing writes to silently fail.
+    await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
+
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'reptrack.sqlite'));
     return NativeDatabase(file);
@@ -520,6 +525,7 @@ class AppDatabase extends _$AppDatabase {
     String name, {
     String? muscleGroupName,
     String? comment,
+    String? exerciseTypeId,
   }) async {
     final id = _uuid.v4();
     await into(exercises).insert(
@@ -527,6 +533,7 @@ class AppDatabase extends _$AppDatabase {
         id: Value(id),
         name: Value(name),
         note: Value(comment),
+        exerciseTypeId: Value(exerciseTypeId),
       ),
     );
     if (muscleGroupName != null && muscleGroupName.isNotEmpty) {

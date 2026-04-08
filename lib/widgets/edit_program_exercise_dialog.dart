@@ -629,15 +629,22 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
               Expanded(
                 child: Chip(
                   avatar: widget.exerciseWithVolume.equipment != null
-                      ? SvgPicture.asset(
-                          'assets/icons/equipments/${widget.exerciseWithVolume.equipment!.iconName}.svg',
-                          width: 20,
-                          height: 20,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.secondary,
-                            BlendMode.srcIn,
-                          ),
-                        )
+                      ? (widget.exerciseWithVolume.equipment!.iconName ==
+                                'no_equipment'
+                            ? const Icon(
+                                Icons.accessibility_new,
+                                size: 20,
+                                color: AppColors.secondary,
+                              )
+                            : SvgPicture.asset(
+                                'assets/icons/equipments/${widget.exerciseWithVolume.equipment!.iconName}.svg',
+                                width: 20,
+                                height: 20,
+                                colorFilter: const ColorFilter.mode(
+                                  AppColors.secondary,
+                                  BlendMode.srcIn,
+                                ),
+                              ))
                       : null,
                   label: Obx(
                     () => Text(

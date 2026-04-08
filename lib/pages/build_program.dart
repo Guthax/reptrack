@@ -264,15 +264,21 @@ class BuildProgramPage extends StatelessWidget {
                                       size: 36,
                                       color: AppColors.secondary,
                                     )
-                                  : SvgPicture.asset(
-                                      'assets/icons/equipments/${ex.equipment!.iconName}.svg',
-                                      width: 36,
-                                      height: 36,
-                                      colorFilter: const ColorFilter.mode(
-                                        AppColors.secondary,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
+                                  : (ex.equipment!.iconName == 'no_equipment'
+                                        ? const Icon(
+                                            Icons.accessibility_new,
+                                            size: 36,
+                                            color: AppColors.secondary,
+                                          )
+                                        : SvgPicture.asset(
+                                            'assets/icons/equipments/${ex.equipment!.iconName}.svg',
+                                            width: 36,
+                                            height: 36,
+                                            colorFilter: const ColorFilter.mode(
+                                              AppColors.secondary,
+                                              BlendMode.srcIn,
+                                            ),
+                                          )),
                               title: Text(
                                 ex.exercise.name,
                                 overflow: TextOverflow.ellipsis,

@@ -9,6 +9,7 @@ import 'package:reptrack/pages/workout.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/seed_data.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/error_handler.dart';
 import 'controllers/navigation_controller.dart';
 
 /// Controller for the post-workout confetti celebration overlay.
@@ -40,8 +41,20 @@ void main() async {
   Get.put(CelebrationController(), permanent: true);
   final settings = Get.put(SettingsController(), permanent: true);
   await settings.load();
-  await seedDatabase(db);
+  Object? seedError;
+  StackTrace? seedSt;
+  try {
+    await seedDatabase(db);
+  } catch (e, st) {
+    seedError = e;
+    seedSt = st;
+  }
   runApp(const MainApp());
+  if (seedError != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppErrorHandler.showSystemError(seedError!, seedSt);
+    });
+  }
 }
 
 /// Root widget; configures [GetMaterialApp] with the app theme.

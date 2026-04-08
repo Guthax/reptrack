@@ -173,8 +173,8 @@ class ProgramsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              nameController.dispose();
               Get.back();
+              nameController.dispose();
             },
             child: const Text("CANCEL"),
           ),
@@ -184,8 +184,8 @@ class ProgramsPage extends StatelessWidget {
                 final newProgram = await controller.addProgram(
                   nameController.text.trim(),
                 );
-                nameController.dispose();
                 Get.back();
+                nameController.dispose();
                 if (newProgram != null) {
                   Get.to(() => BuildProgramPage(program: newProgram));
                 }

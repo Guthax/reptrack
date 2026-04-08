@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/utils/error_handler.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
 
 /// Which metric to plot on the exercise progress chart.
@@ -78,9 +79,13 @@ class TrackingController extends GetxController {
   /// Fetches all exercises from the database and initialises both
   /// [allExercises] and [filteredExercises].
   Future<void> _loadExercises() async {
-    final all = await db.getAllExercises();
-    allExercises.assignAll(all);
-    filteredExercises.assignAll(all);
+    try {
+      final all = await db.getAllExercises();
+      allExercises.assignAll(all);
+      filteredExercises.assignAll(all);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Filters [allExercises] by [query] using fuzzy matching and updates
@@ -97,88 +102,96 @@ class TrackingController extends GetxController {
   /// collected from both past sets and the exercise's own equipment
   /// definition, deduplicated, and sorted by name.
   Future<void> selectExercise(Exercise exercise) async {
-    selectedExercise.value = exercise;
-    final typeId = exercise.exerciseTypeId ?? '1';
-    selectedExerciseTypeId.value = typeId;
+    try {
+      selectedExercise.value = exercise;
+      final typeId = exercise.exerciseTypeId ?? '1';
+      selectedExerciseTypeId.value = typeId;
 
-    exerciseSets.clear();
-    cardioSets.clear();
-    hybridSets.clear();
-    availableEquipment.clear();
-    setEquipment.clear();
-    selectedEquipment.value = null;
+      exerciseSets.clear();
+      cardioSets.clear();
+      hybridSets.clear();
+      availableEquipment.clear();
+      setEquipment.clear();
+      selectedEquipment.value = null;
 
-    if (typeId == '2') {
-      // Cardio
-      final sets = await db.getCardioSetsForExercise(exercise.id);
-      cardioSets.assignAll(sets.reversed.toList());
-      selectedChartType.value = ChartType.duration;
-    } else if (typeId == '3') {
-      // Hybrid
-      final sets = await db.getHybridSetsForExercise(exercise.id);
-      hybridSets.assignAll(sets.reversed.toList());
-      selectedChartType.value = ChartType.hybridMaxWeight;
+      if (typeId == '2') {
+        // Cardio
+        final sets = await db.getCardioSetsForExercise(exercise.id);
+        cardioSets.assignAll(sets.reversed.toList());
+        selectedChartType.value = ChartType.duration;
+      } else if (typeId == '3') {
+        // Hybrid
+        final sets = await db.getHybridSetsForExercise(exercise.id);
+        hybridSets.assignAll(sets.reversed.toList());
+        selectedChartType.value = ChartType.hybridMaxWeight;
 
-      final equipmentIds = <String>{};
-      for (final set in hybridSets) {
-        if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
-      }
-      final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
-      for (final equip in exerciseEquipment) {
-        equipmentIds.add(equip.id);
-      }
-      final equipmentList = <Equipment>[];
-      for (final id in equipmentIds) {
-        final equipment = await db.getEquipmentById(id);
-        if (equipment != null &&
-            !equipmentList.any((e) => e.id == equipment.id)) {
-          setEquipment[id] = equipment;
-          equipmentList.add(equipment);
+        final equipmentIds = <String>{};
+        for (final set in hybridSets) {
+          if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
         }
-      }
-      equipmentList.sort((a, b) => a.name.compareTo(b.name));
-      availableEquipment.assignAll(equipmentList);
-      final lastSet = hybridSets.isNotEmpty
-          ? hybridSets.reduce(
-              (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
-            )
-          : null;
-      selectedEquipment.value =
-          equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
-          equipmentList.firstOrNull;
-    } else {
-      // Strength
-      final sets = await db.getStrengthSetsForExercise(exercise.id);
-      exerciseSets.assignAll(sets.reversed.toList());
-      selectedChartType.value = ChartType.maxWeight;
-
-      final equipmentIds = <String>{};
-      for (final set in exerciseSets) {
-        if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
-      }
-      final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
-      for (final equip in exerciseEquipment) {
-        equipmentIds.add(equip.id);
-      }
-      final equipmentList = <Equipment>[];
-      for (final id in equipmentIds) {
-        final equipment = await db.getEquipmentById(id);
-        if (equipment != null &&
-            !equipmentList.any((e) => e.id == equipment.id)) {
-          setEquipment[id] = equipment;
-          equipmentList.add(equipment);
+        final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
+        for (final equip in exerciseEquipment) {
+          equipmentIds.add(equip.id);
         }
+        final equipmentList = <Equipment>[];
+        for (final id in equipmentIds) {
+          final equipment = await db.getEquipmentById(id);
+          if (equipment != null &&
+              !equipmentList.any((e) => e.id == equipment.id)) {
+            setEquipment[id] = equipment;
+            equipmentList.add(equipment);
+          }
+        }
+        equipmentList.sort((a, b) => a.name.compareTo(b.name));
+        availableEquipment.assignAll(equipmentList);
+        final lastSet = hybridSets.isNotEmpty
+            ? hybridSets.reduce(
+                (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
+              )
+            : null;
+        selectedEquipment.value =
+            equipmentList.firstWhereOrNull(
+              (e) => e.id == lastSet?.equipmentId,
+            ) ??
+            equipmentList.firstOrNull;
+      } else {
+        // Strength
+        final sets = await db.getStrengthSetsForExercise(exercise.id);
+        exerciseSets.assignAll(sets.reversed.toList());
+        selectedChartType.value = ChartType.maxWeight;
+
+        final equipmentIds = <String>{};
+        for (final set in exerciseSets) {
+          if (set.equipmentId != null) equipmentIds.add(set.equipmentId!);
+        }
+        final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
+        for (final equip in exerciseEquipment) {
+          equipmentIds.add(equip.id);
+        }
+        final equipmentList = <Equipment>[];
+        for (final id in equipmentIds) {
+          final equipment = await db.getEquipmentById(id);
+          if (equipment != null &&
+              !equipmentList.any((e) => e.id == equipment.id)) {
+            setEquipment[id] = equipment;
+            equipmentList.add(equipment);
+          }
+        }
+        equipmentList.sort((a, b) => a.name.compareTo(b.name));
+        availableEquipment.assignAll(equipmentList);
+        final lastSet = exerciseSets.isNotEmpty
+            ? exerciseSets.reduce(
+                (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
+              )
+            : null;
+        selectedEquipment.value =
+            equipmentList.firstWhereOrNull(
+              (e) => e.id == lastSet?.equipmentId,
+            ) ??
+            equipmentList.firstOrNull;
       }
-      equipmentList.sort((a, b) => a.name.compareTo(b.name));
-      availableEquipment.assignAll(equipmentList);
-      final lastSet = exerciseSets.isNotEmpty
-          ? exerciseSets.reduce(
-              (a, b) => a.dateLogged.isAfter(b.dateLogged) ? a : b,
-            )
-          : null;
-      selectedEquipment.value =
-          equipmentList.firstWhereOrNull((e) => e.id == lastSet?.equipmentId) ??
-          equipmentList.firstOrNull;
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -194,13 +207,21 @@ class TrackingController extends GetxController {
   }
 
   /// Logs a bodyweight entry for [date] (defaults to today) with [weight] in kg.
-  Future<void> logBodyweight(double weight, {DateTime? date}) {
-    return db.addBodyweightEntry(date ?? DateTime.now(), weight);
+  Future<void> logBodyweight(double weight, {DateTime? date}) async {
+    try {
+      await db.addBodyweightEntry(date ?? DateTime.now(), weight);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Deletes the bodyweight entry with the given [id].
-  Future<void> deleteBodyweight(String id) {
-    return db.deleteBodyweightEntry(id);
+  Future<void> deleteBodyweight(String id) async {
+    try {
+      await db.deleteBodyweightEntry(id);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Returns `(date, maxWeight)` pairs grouped by calendar day, sorted

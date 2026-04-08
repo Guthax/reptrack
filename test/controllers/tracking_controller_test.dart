@@ -88,9 +88,27 @@ void main() {
 
     test('returns max weight per calendar day', () {
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 80, reps: 10, date: day1),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 100, reps: 8, date: day1),
-        _strengthSet(id: 's3', exerciseId: 'ex1', weight: 90, reps: 8, date: day1),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 80,
+          reps: 10,
+          date: day1,
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 8,
+          date: day1,
+        ),
+        _strengthSet(
+          id: 's3',
+          exerciseId: 'ex1',
+          weight: 90,
+          reps: 8,
+          date: day1,
+        ),
       ]);
 
       final data = controller.weightProgressData;
@@ -100,8 +118,20 @@ void main() {
 
     test('groups by calendar day and sorts chronologically', () {
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 90, reps: 8, date: day2),
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 80, reps: 10, date: day1),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 90,
+          reps: 8,
+          date: day2,
+        ),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 80,
+          reps: 10,
+          date: day1,
+        ),
       ]);
 
       final data = controller.weightProgressData;
@@ -114,8 +144,22 @@ void main() {
       final eq = Equipment(id: 'eq1', name: 'Barbell', iconName: 'barbell');
       controller.selectedEquipment.value = eq;
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 8, date: day1, equipmentId: 'eq1'),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 120, reps: 8, date: day1, equipmentId: 'eq2'),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 8,
+          date: day1,
+          equipmentId: 'eq1',
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 120,
+          reps: 8,
+          date: day1,
+          equipmentId: 'eq2',
+        ),
       ]);
 
       final data = controller.weightProgressData;
@@ -126,8 +170,22 @@ void main() {
     test('includes all sets when selectedEquipment is null', () {
       controller.selectedEquipment.value = null;
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 8, date: day1, equipmentId: 'eq1'),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 120, reps: 8, date: day1, equipmentId: 'eq2'),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 8,
+          date: day1,
+          equipmentId: 'eq1',
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 120,
+          reps: 8,
+          date: day1,
+          equipmentId: 'eq2',
+        ),
       ]);
 
       final data = controller.weightProgressData;
@@ -145,8 +203,20 @@ void main() {
 
     test('sums weight × reps across all sets in a day', () {
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 5, date: day1),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 100, reps: 5, date: day1),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+        ),
       ]);
 
       final data = controller.volumeProgressData;
@@ -156,22 +226,48 @@ void main() {
 
     test('groups across multiple days', () {
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 5, date: day1),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 80, reps: 10, date: day2),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 80,
+          reps: 10,
+          date: day2,
+        ),
       ]);
 
       final data = controller.volumeProgressData;
       expect(data, hasLength(2));
-      expect(data[0].value, 500.0);  // day1: 100×5
-      expect(data[1].value, 800.0);  // day2: 80×10
+      expect(data[0].value, 500.0); // day1: 100×5
+      expect(data[1].value, 800.0); // day2: 80×10
     });
 
     test('respects selectedEquipment filter', () {
       final eq = Equipment(id: 'eq1', name: 'Barbell', iconName: 'barbell');
       controller.selectedEquipment.value = eq;
       controller.exerciseSets.assignAll([
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 5, date: day1, equipmentId: 'eq1'),
-        _strengthSet(id: 's2', exerciseId: 'ex1', weight: 100, reps: 5, date: day1, equipmentId: 'eq2'),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+          equipmentId: 'eq1',
+        ),
+        _strengthSet(
+          id: 's2',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+          equipmentId: 'eq2',
+        ),
       ]);
 
       final data = controller.volumeProgressData;
@@ -188,8 +284,18 @@ void main() {
 
     test('converts total seconds to minutes per day', () {
       controller.cardioSets.assignAll([
-        _cardioSet(id: 'c1', exerciseId: 'ex2', durationSeconds: 1800, date: day1),
-        _cardioSet(id: 'c2', exerciseId: 'ex2', durationSeconds: 1800, date: day1),
+        _cardioSet(
+          id: 'c1',
+          exerciseId: 'ex2',
+          durationSeconds: 1800,
+          date: day1,
+        ),
+        _cardioSet(
+          id: 'c2',
+          exerciseId: 'ex2',
+          durationSeconds: 1800,
+          date: day1,
+        ),
       ]);
 
       final data = controller.cardioDurationData;
@@ -199,8 +305,18 @@ void main() {
 
     test('produces one entry per day', () {
       controller.cardioSets.assignAll([
-        _cardioSet(id: 'c1', exerciseId: 'ex2', durationSeconds: 600, date: day1),
-        _cardioSet(id: 'c2', exerciseId: 'ex2', durationSeconds: 600, date: day2),
+        _cardioSet(
+          id: 'c1',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          date: day1,
+        ),
+        _cardioSet(
+          id: 'c2',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          date: day2,
+        ),
       ]);
 
       final data = controller.cardioDurationData;
@@ -215,15 +331,32 @@ void main() {
   group('cardioDistanceData', () {
     test('excludes sessions without distance data', () {
       controller.cardioSets.assignAll([
-        _cardioSet(id: 'c1', exerciseId: 'ex2', durationSeconds: 600, date: day1),
+        _cardioSet(
+          id: 'c1',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          date: day1,
+        ),
       ]);
       expect(controller.cardioDistanceData, isEmpty);
     });
 
     test('sums distance in km per day', () {
       controller.cardioSets.assignAll([
-        _cardioSet(id: 'c1', exerciseId: 'ex2', durationSeconds: 600, distanceMeters: 2500, date: day1),
-        _cardioSet(id: 'c2', exerciseId: 'ex2', durationSeconds: 600, distanceMeters: 2500, date: day1),
+        _cardioSet(
+          id: 'c1',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          distanceMeters: 2500,
+          date: day1,
+        ),
+        _cardioSet(
+          id: 'c2',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          distanceMeters: 2500,
+          date: day1,
+        ),
       ]);
 
       final data = controller.cardioDistanceData;
@@ -237,7 +370,12 @@ void main() {
   group('cardioPaceData', () {
     test('returns empty when no sets with distance', () {
       controller.cardioSets.assignAll([
-        _cardioSet(id: 'c1', exerciseId: 'ex2', durationSeconds: 600, date: day1),
+        _cardioSet(
+          id: 'c1',
+          exerciseId: 'ex2',
+          durationSeconds: 600,
+          date: day1,
+        ),
       ]);
       expect(controller.cardioPaceData, isEmpty);
     });
@@ -269,8 +407,20 @@ void main() {
 
     test('returns max weight per day', () {
       controller.hybridSets.assignAll([
-        _hybridSet(id: 'h1', exerciseId: 'ex3', weight: 20, distanceMeters: 100, date: day1),
-        _hybridSet(id: 'h2', exerciseId: 'ex3', weight: 30, distanceMeters: 100, date: day1),
+        _hybridSet(
+          id: 'h1',
+          exerciseId: 'ex3',
+          weight: 20,
+          distanceMeters: 100,
+          date: day1,
+        ),
+        _hybridSet(
+          id: 'h2',
+          exerciseId: 'ex3',
+          weight: 30,
+          distanceMeters: 100,
+          date: day1,
+        ),
       ]);
 
       final data = controller.hybridMaxWeightData;
@@ -282,8 +432,22 @@ void main() {
       final eq = Equipment(id: 'eq1', name: 'Barbell', iconName: 'barbell');
       controller.selectedEquipment.value = eq;
       controller.hybridSets.assignAll([
-        _hybridSet(id: 'h1', exerciseId: 'ex3', weight: 20, distanceMeters: 100, date: day1, equipmentId: 'eq1'),
-        _hybridSet(id: 'h2', exerciseId: 'ex3', weight: 50, distanceMeters: 100, date: day1, equipmentId: 'eq2'),
+        _hybridSet(
+          id: 'h1',
+          exerciseId: 'ex3',
+          weight: 20,
+          distanceMeters: 100,
+          date: day1,
+          equipmentId: 'eq1',
+        ),
+        _hybridSet(
+          id: 'h2',
+          exerciseId: 'ex3',
+          weight: 50,
+          distanceMeters: 100,
+          date: day1,
+          equipmentId: 'eq2',
+        ),
       ]);
 
       final data = controller.hybridMaxWeightData;
@@ -296,8 +460,20 @@ void main() {
   group('hybridTotalDistanceData', () {
     test('sums distanceMeters per day', () {
       controller.hybridSets.assignAll([
-        _hybridSet(id: 'h1', exerciseId: 'ex3', weight: 20, distanceMeters: 200, date: day1),
-        _hybridSet(id: 'h2', exerciseId: 'ex3', weight: 20, distanceMeters: 300, date: day1),
+        _hybridSet(
+          id: 'h1',
+          exerciseId: 'ex3',
+          weight: 20,
+          distanceMeters: 200,
+          date: day1,
+        ),
+        _hybridSet(
+          id: 'h2',
+          exerciseId: 'ex3',
+          weight: 20,
+          distanceMeters: 300,
+          date: day1,
+        ),
       ]);
 
       final data = controller.hybridTotalDistanceData;
@@ -311,8 +487,20 @@ void main() {
   group('hybridVolumeData', () {
     test('sums weight × distanceMeters per day', () {
       controller.hybridSets.assignAll([
-        _hybridSet(id: 'h1', exerciseId: 'ex3', weight: 20, distanceMeters: 100, date: day1),
-        _hybridSet(id: 'h2', exerciseId: 'ex3', weight: 30, distanceMeters: 200, date: day1),
+        _hybridSet(
+          id: 'h1',
+          exerciseId: 'ex3',
+          weight: 20,
+          distanceMeters: 100,
+          date: day1,
+        ),
+        _hybridSet(
+          id: 'h2',
+          exerciseId: 'ex3',
+          weight: 30,
+          distanceMeters: 200,
+          date: day1,
+        ),
       ]);
 
       final data = controller.hybridVolumeData;
@@ -354,10 +542,19 @@ void main() {
 
   group('clearSelection', () {
     test('resets all exercise-related state', () {
-      controller.selectedExercise.value =
-          Exercise(id: 'ex1', name: 'Bench', exerciseTypeId: '1');
+      controller.selectedExercise.value = Exercise(
+        id: 'ex1',
+        name: 'Bench',
+        exerciseTypeId: '1',
+      );
       controller.exerciseSets.add(
-        _strengthSet(id: 's1', exerciseId: 'ex1', weight: 100, reps: 5, date: day1),
+        _strengthSet(
+          id: 's1',
+          exerciseId: 'ex1',
+          weight: 100,
+          reps: 5,
+          date: day1,
+        ),
       );
 
       controller.clearSelection();

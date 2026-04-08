@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
+import 'package:reptrack/utils/error_handler.dart';
 
 /// Controller for the Build Program screen.
 ///
@@ -38,20 +39,33 @@ class BuildProgramController extends GetxController {
   }
 
   /// Returns all exercises available in the database for the exercise picker.
-  Future<List<Exercise>> getAvailableExercises() => db.getAllExercises();
+  Future<List<Exercise>> getAvailableExercises() async {
+    try {
+      return await db.getAllExercises();
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+      return [];
+    }
+  }
 
   /// Renames the current program to [name].
   Future<void> renameProgram(String name) async {
-    if (name.trim().isNotEmpty) {
+    if (name.trim().isEmpty) return;
+    try {
       await db.renameProgram(programId, name.trim());
       programName.value = name.trim();
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
   /// Renames the workout day identified by [dayId] to [name].
   Future<void> renameDay(String dayId, String name) async {
-    if (name.trim().isNotEmpty) {
+    if (name.trim().isEmpty) return;
+    try {
       await db.renameWorkoutDay(dayId, name.trim());
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -59,13 +73,22 @@ class BuildProgramController extends GetxController {
   ///
   /// The name is trimmed before saving; empty names are silently ignored.
   Future<void> addDay(String name) async {
-    if (name.trim().isNotEmpty) {
+    if (name.trim().isEmpty) return;
+    try {
       await db.addWorkoutDay(programId, name.trim());
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
   /// Permanently deletes the workout day with [dayId] and all its exercises.
-  Future<void> deleteDay(String dayId) => db.deleteWorkoutDay(dayId);
+  Future<void> deleteDay(String dayId) async {
+    try {
+      await db.deleteWorkoutDay(dayId);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
+  }
 
   /// Adds [exercise] to the workout day identified by [dayId].
   ///
@@ -85,46 +108,54 @@ class BuildProgramController extends GetxController {
     List<double> setsDistances = const [100.0],
     String distanceUnit = 'm',
   }) async {
-    final isHybrid = exercise.exerciseTypeId == '3';
-    final isCardio = exercise.exerciseTypeId == '2';
+    try {
+      final isHybrid = exercise.exerciseTypeId == '3';
+      final isCardio = exercise.exerciseTypeId == '2';
 
-    if (isCardio) {
-      await db.addCardioExerciseToDay(
-        workoutDayId: dayId,
-        exerciseId: exercise.id,
-        seconds: durationSeconds,
-        distancePlanned: distancePlannedCardio,
-        distancePlannedUnit: distancePlannedCardioUnit,
-      );
-    } else if (isHybrid) {
-      await db.addHybridExerciseToDay(
-        workoutDayId: dayId,
-        exerciseId: exercise.id,
-        equipmentId: equipmentId,
-        setsDistances: setsDistances,
-        distanceUnit: distanceUnit,
-        restTimer: restTimer,
-      );
-    } else {
-      await db.addStrengthExerciseToDay(
-        workoutDayId: dayId,
-        exerciseId: exercise.id,
-        equipmentId: equipmentId,
-        setsReps: setsReps,
-        restTimer: restTimer,
-        weight: 0.0,
-      );
+      if (isCardio) {
+        await db.addCardioExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: exercise.id,
+          seconds: durationSeconds,
+          distancePlanned: distancePlannedCardio,
+          distancePlannedUnit: distancePlannedCardioUnit,
+        );
+      } else if (isHybrid) {
+        await db.addHybridExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: exercise.id,
+          equipmentId: equipmentId,
+          setsDistances: setsDistances,
+          distanceUnit: distanceUnit,
+          restTimer: restTimer,
+        );
+      } else {
+        await db.addStrengthExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: exercise.id,
+          equipmentId: equipmentId,
+          setsReps: setsReps,
+          restTimer: restTimer,
+          weight: 0.0,
+        );
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
   /// Removes the exercise entry identified by [volume] from its workout day.
   Future<void> removeExerciseFromDay(ProgramExerciseVolume volume) async {
-    if (volume.isCardio) {
-      await db.deleteProgramCardioExercise(volume.id);
-    } else if (volume.isHybrid) {
-      await db.deleteProgramHybridExercise(volume.id);
-    } else {
-      await db.deleteProgramStrengthExercise(volume.id);
+    try {
+      if (volume.isCardio) {
+        await db.deleteProgramCardioExercise(volume.id);
+      } else if (volume.isHybrid) {
+        await db.deleteProgramHybridExercise(volume.id);
+      } else {
+        await db.deleteProgramStrengthExercise(volume.id);
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 
@@ -132,14 +163,22 @@ class BuildProgramController extends GetxController {
   ///
   /// Order is determined by list index (index 0 = first).
   Future<void> reorderExercisesInDay(List<ExerciseWithVolume> exercises) async {
-    await db.reorderExercisesInDay(exercises.map((e) => e.volume).toList());
+    try {
+      await db.reorderExercisesInDay(exercises.map((e) => e.volume).toList());
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Persists the display order of workout [days] within the program.
   ///
   /// Order is determined by list index (index 0 = first).
   Future<void> reorderDays(List<WorkoutDayWithExercises> days) async {
-    await db.reorderDays(days.map((d) => d.workoutDay.id).toList());
+    try {
+      await db.reorderDays(days.map((d) => d.workoutDay.id).toList());
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
   }
 
   /// Updates the exercise entry identified by [volume] with new details.
@@ -160,37 +199,41 @@ class BuildProgramController extends GetxController {
     List<double> setsDistances = const [100.0],
     String distanceUnit = 'm',
   }) async {
-    if (volume.isCardio) {
-      await db.updateProgramCardioExercise(
-        ProgramCardioExercisesCompanion(
-          exerciseId: drift.Value(exercise.id),
-          seconds: drift.Value(durationSeconds),
-          distancePlanned: drift.Value(distancePlannedCardio),
-          distancePlannedUnit: drift.Value(distancePlannedCardioUnit),
-        ),
-        volume.id,
-      );
-    } else if (volume.isHybrid) {
-      await db.updateProgramHybridExercise(
-        ProgramHybridExercisesCompanion(
-          exerciseId: drift.Value(exercise.id),
-          equipmentId: drift.Value(equipmentId),
-          setsDistances: drift.Value(jsonEncode(setsDistances)),
-          distanceUnit: drift.Value(distanceUnit),
-          restTimer: drift.Value(restTimer),
-        ),
-        volume.id,
-      );
-    } else {
-      await db.updateProgramStrengthExercise(
-        ProgramStrengthExercisesCompanion(
-          exerciseId: drift.Value(exercise.id),
-          equipmentId: drift.Value(equipmentId),
-          setsReps: drift.Value(jsonEncode(setsReps)),
-          restTimer: drift.Value(restTimer),
-        ),
-        volume.id,
-      );
+    try {
+      if (volume.isCardio) {
+        await db.updateProgramCardioExercise(
+          ProgramCardioExercisesCompanion(
+            exerciseId: drift.Value(exercise.id),
+            seconds: drift.Value(durationSeconds),
+            distancePlanned: drift.Value(distancePlannedCardio),
+            distancePlannedUnit: drift.Value(distancePlannedCardioUnit),
+          ),
+          volume.id,
+        );
+      } else if (volume.isHybrid) {
+        await db.updateProgramHybridExercise(
+          ProgramHybridExercisesCompanion(
+            exerciseId: drift.Value(exercise.id),
+            equipmentId: drift.Value(equipmentId),
+            setsDistances: drift.Value(jsonEncode(setsDistances)),
+            distanceUnit: drift.Value(distanceUnit),
+            restTimer: drift.Value(restTimer),
+          ),
+          volume.id,
+        );
+      } else {
+        await db.updateProgramStrengthExercise(
+          ProgramStrengthExercisesCompanion(
+            exerciseId: drift.Value(exercise.id),
+            equipmentId: drift.Value(equipmentId),
+            setsReps: drift.Value(jsonEncode(setsReps)),
+            restTimer: drift.Value(restTimer),
+          ),
+          volume.id,
+        );
+      }
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 }

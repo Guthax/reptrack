@@ -63,27 +63,46 @@ void main() {
 
     test('isCardio is false', () => expect(vol.isCardio, isFalse));
     test('isHybrid is false', () => expect(vol.isHybrid, isFalse));
-    test('strength accessor returns the row', () => expect(vol.strength, isNotNull));
+    test(
+      'strength accessor returns the row',
+      () => expect(vol.strength, isNotNull),
+    );
     test('cardio accessor is null', () => expect(vol.cardio, isNull));
     test('hybrid accessor is null', () => expect(vol.hybrid, isNull));
     test('id returns strength id', () => expect(vol.id, 'se1'));
-    test('workoutDayId returns correct value', () => expect(vol.workoutDayId, 'day1'));
-    test('exerciseId returns correct value', () => expect(vol.exerciseId, 'ex1'));
-    test('orderInProgram returns correct value', () => expect(vol.orderInProgram, 0));
+    test(
+      'workoutDayId returns correct value',
+      () => expect(vol.workoutDayId, 'day1'),
+    );
+    test(
+      'exerciseId returns correct value',
+      () => expect(vol.exerciseId, 'ex1'),
+    );
+    test(
+      'orderInProgram returns correct value',
+      () => expect(vol.orderInProgram, 0),
+    );
     test('weight returns correct value', () => expect(vol.weight, 100.0));
 
     test('restTimer returns strength restTimer', () {
-      final withTimer = ProgramExerciseVolume.strength(_strength(restTimer: 90));
+      final withTimer = ProgramExerciseVolume.strength(
+        _strength(restTimer: 90),
+      );
       expect(withTimer.restTimer, 90);
     });
 
     test('equipmentId returns strength equipmentId', () {
-      final withEquip = ProgramExerciseVolume.strength(_strength(equipmentId: 'eq1'));
+      final withEquip = ProgramExerciseVolume.strength(
+        _strength(equipmentId: 'eq1'),
+      );
       expect(withEquip.equipmentId, 'eq1');
     });
 
     test('seconds is null for strength', () => expect(vol.seconds, isNull));
-    test('distancePlanned is null for strength', () => expect(vol.distancePlanned, isNull));
+    test(
+      'distancePlanned is null for strength',
+      () => expect(vol.distancePlanned, isNull),
+    );
   });
 
   group('ProgramExerciseVolume – cardio variant', () {
@@ -97,15 +116,27 @@ void main() {
 
     test('isCardio is true', () => expect(vol.isCardio, isTrue));
     test('isHybrid is false', () => expect(vol.isHybrid, isFalse));
-    test('cardio accessor returns the row', () => expect(vol.cardio, isNotNull));
+    test(
+      'cardio accessor returns the row',
+      () => expect(vol.cardio, isNotNull),
+    );
     test('strength accessor is null', () => expect(vol.strength, isNull));
     test('hybrid accessor is null', () => expect(vol.hybrid, isNull));
     test('id returns cardio id', () => expect(vol.id, 'ce1'));
     test('seconds returns planned duration', () => expect(vol.seconds, 1800));
-    test('distancePlanned returns value', () => expect(vol.distancePlanned, 5.0));
-    test('distancePlannedUnit returns value', () => expect(vol.distancePlannedUnit, 'km'));
+    test(
+      'distancePlanned returns value',
+      () => expect(vol.distancePlanned, 5.0),
+    );
+    test(
+      'distancePlannedUnit returns value',
+      () => expect(vol.distancePlannedUnit, 'km'),
+    );
     test('weight defaults to 0 for cardio', () => expect(vol.weight, 0.0));
-    test('equipmentId is null for cardio', () => expect(vol.equipmentId, isNull));
+    test(
+      'equipmentId is null for cardio',
+      () => expect(vol.equipmentId, isNull),
+    );
     test('restTimer is null for cardio', () => expect(vol.restTimer, isNull));
   });
 
@@ -120,18 +151,29 @@ void main() {
 
     test('isCardio is false', () => expect(vol.isCardio, isFalse));
     test('isHybrid is true', () => expect(vol.isHybrid, isTrue));
-    test('hybrid accessor returns the row', () => expect(vol.hybrid, isNotNull));
+    test(
+      'hybrid accessor returns the row',
+      () => expect(vol.hybrid, isNotNull),
+    );
     test('strength accessor is null', () => expect(vol.strength, isNull));
     test('cardio accessor is null', () => expect(vol.cardio, isNull));
     test('weight returns hybrid weight', () => expect(vol.weight, 20.0));
-    test('equipmentId returns hybrid equipmentId', () => expect(vol.equipmentId, 'eq1'));
+    test(
+      'equipmentId returns hybrid equipmentId',
+      () => expect(vol.equipmentId, 'eq1'),
+    );
     test('restTimer returns hybrid restTimer', () => expect(vol.restTimer, 60));
-    test('distanceUnit returns hybrid distanceUnit', () => expect(vol.distanceUnit, 'm'));
+    test(
+      'distanceUnit returns hybrid distanceUnit',
+      () => expect(vol.distanceUnit, 'm'),
+    );
   });
 
   group('setsRepsList', () {
     test('parses valid JSON array of ints', () {
-      final vol = ProgramExerciseVolume.strength(_strength(setsReps: '[12,10,8]'));
+      final vol = ProgramExerciseVolume.strength(
+        _strength(setsReps: '[12,10,8]'),
+      );
       expect(vol.setsRepsList, [12, 10, 8]);
     });
 
@@ -141,7 +183,9 @@ void main() {
     });
 
     test('falls back to [12] on invalid JSON', () {
-      final vol = ProgramExerciseVolume.strength(_strength(setsReps: 'not-json'));
+      final vol = ProgramExerciseVolume.strength(
+        _strength(setsReps: 'not-json'),
+      );
       expect(vol.setsRepsList, [12]);
     });
 
@@ -151,19 +195,25 @@ void main() {
     });
 
     test('parses floats by truncating to int', () {
-      final vol = ProgramExerciseVolume.strength(_strength(setsReps: '[10.0,8.0]'));
+      final vol = ProgramExerciseVolume.strength(
+        _strength(setsReps: '[10.0,8.0]'),
+      );
       expect(vol.setsRepsList, [10, 8]);
     });
   });
 
   group('setsRepsLabel', () {
     test('uniform sets produce compact N × R format', () {
-      final vol = ProgramExerciseVolume.strength(_strength(setsReps: '[12,12,12]'));
+      final vol = ProgramExerciseVolume.strength(
+        _strength(setsReps: '[12,12,12]'),
+      );
       expect(vol.setsRepsLabel, '3 × 12');
     });
 
     test('mixed reps produce per-set format', () {
-      final vol = ProgramExerciseVolume.strength(_strength(setsReps: '[12,10,8]'));
+      final vol = ProgramExerciseVolume.strength(
+        _strength(setsReps: '[12,10,8]'),
+      );
       expect(vol.setsRepsLabel, 'Set 1: 12, Set 2: 10, Set 3: 8');
     });
 
@@ -181,7 +231,9 @@ void main() {
 
   group('setsDistancesList', () {
     test('parses valid JSON array of doubles', () {
-      final vol = ProgramExerciseVolume.hybrid(_hybrid(setsDistances: '[100.0,200.0,400.0]'));
+      final vol = ProgramExerciseVolume.hybrid(
+        _hybrid(setsDistances: '[100.0,200.0,400.0]'),
+      );
       expect(vol.setsDistancesList, [100.0, 200.0, 400.0]);
     });
 

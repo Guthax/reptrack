@@ -104,7 +104,8 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               Obx(
                 () => Column(
                   children: controller.exerciseTypes.map((type) {
-                    final bool isSelected = controller.selectedExerciseType.contains(type.id);
+                    final bool isSelected = controller.selectedExerciseType
+                        .contains(type.id);
                     final String subtitle = _getExerciseSubtitle(type.name);
 
                     return Padding(
@@ -116,11 +117,13 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.surfaceVariant,
                               width: isSelected ? 2 : 1,
                             ),
-                            color: isSelected 
-                                ? AppColors.primary.withOpacity(0.05) 
+                            color: isSelected
+                                ? AppColors.primary.withOpacity(0.05)
                                 : Colors.transparent,
                           ),
                           child: ListTile(
@@ -128,21 +131,31 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                             title: Text(
                               type.name,
                               style: TextStyle(
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                                 color: isSelected ? AppColors.primary : null,
                               ),
                             ),
-                            subtitle: subtitle.isNotEmpty 
+                            subtitle: subtitle.isNotEmpty
                                 ? Text(
                                     subtitle,
                                     style: TextStyle(
-                                      color: isSelected ? AppColors.primary.withOpacity(0.8) : AppColors.textSecondary,
+                                      color: isSelected
+                                          ? AppColors.primary.withOpacity(0.8)
+                                          : AppColors.textSecondary,
                                     ),
-                                  ) 
+                                  )
                                 : null,
-                            trailing: isSelected 
-                                ? const Icon(Icons.check_circle, color: AppColors.primary) 
-                                : const Icon(Icons.circle_outlined, color: AppColors.surfaceVariant),
+                            trailing: isSelected
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.primary,
+                                  )
+                                : const Icon(
+                                    Icons.circle_outlined,
+                                    color: AppColors.surfaceVariant,
+                                  ),
                           ),
                         ),
                       ),
@@ -206,52 +219,60 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Equipment Types (Required)
-              const Text(
-                'Compatible Equipment',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
+              // Equipment Types (hidden for cardio)
               Obx(
-                () => Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: controller.availableEquipment.map((equipment) {
-                    return FilterChip(
-                      label: Text(equipment.name),
-                      selected: controller.selectedEquipmentIds.contains(
-                        equipment.id,
+                () => controller.isCardioSelected
+                    ? const SizedBox.shrink()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Compatible Equipment',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Obx(
+                            () => Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: controller.availableEquipment.map((
+                                equipment,
+                              ) {
+                                return FilterChip(
+                                  label: Text(equipment.name),
+                                  selected: controller.selectedEquipmentIds
+                                      .contains(equipment.id),
+                                  showCheckmark: false,
+                                  onSelected: (_) {
+                                    controller.toggleEquipment(equipment.id);
+                                  },
+                                  backgroundColor: AppColors.surfaceVariant,
+                                  selectedColor: AppColors.primary,
+                                  labelStyle: TextStyle(
+                                    color:
+                                        controller.selectedEquipmentIds
+                                            .contains(equipment.id)
+                                        ? Colors.black
+                                        : null,
+                                    fontWeight:
+                                        controller.selectedEquipmentIds
+                                            .contains(equipment.id)
+                                        ? FontWeight.w600
+                                        : null,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                       ),
-                      showCheckmark: false,
-                      onSelected: (_) {
-                        controller.toggleEquipment(equipment.id);
-                      },
-                      backgroundColor: AppColors.surfaceVariant,
-                      selectedColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color:
-                            controller.selectedEquipmentIds.contains(
-                              equipment.id,
-                            )
-                            ? Colors.black
-                            : null,
-                        fontWeight:
-                            controller.selectedEquipmentIds.contains(
-                              equipment.id,
-                            )
-                            ? FontWeight.w600
-                            : null,
-                      ),
-                    );
-                  }).toList(),
-                ),
               ),
-              const SizedBox(height: 20),
 
               // Note (Optional)
               const Text(

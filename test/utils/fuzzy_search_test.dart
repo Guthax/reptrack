@@ -127,11 +127,7 @@ void main() {
         {'name': 'Bench Press'},
         {'name': 'Squat'},
       ];
-      final result = fuzzyFilter(
-        items,
-        'squat',
-        (e) => e['name'] as String,
-      );
+      final result = fuzzyFilter(items, 'squat', (e) => e['name'] as String);
       expect(result.first['name'], 'Squat');
     });
 

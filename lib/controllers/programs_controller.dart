@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../persistance/database.dart';
+import '../utils/error_handler.dart';
 
 /// Controller for the Programs screen.
 ///
@@ -26,6 +27,8 @@ class ProgramsController extends GetxController {
       isLoading(true);
       final data = await Get.find<AppDatabase>().getAllPrograms();
       programs.assignAll(data);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     } finally {
       isLoading(false);
     }
@@ -41,21 +44,21 @@ class ProgramsController extends GetxController {
       final id = await database.addProgram(name);
       await loadPrograms();
       return programs.firstWhere((p) => p.id == id);
-    } catch (e) {
-      Get.snackbar("Error", "Could not save: $e");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
       return null;
     }
   }
 
   /// Deletes [program] from the database and refreshes the list.
   ///
-  /// Shows an error snackbar if the deletion fails.
+  /// Shows an error dialog if the deletion fails.
   Future<void> deleteProgram(Program program) async {
     try {
       await Get.find<AppDatabase>().deleteProgram(program.id);
       await loadPrograms();
-    } catch (e) {
-      Get.snackbar("Error", "Could not delete: $e");
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
     }
   }
 }
