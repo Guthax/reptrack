@@ -12,6 +12,59 @@ import 'package:reptrack/utils/app_theme.dart';
 /// Primary muscles are derived from each exercise's [Exercise.muscleGroup].
 /// Secondary muscles are fetched from the database via
 /// [AppDatabase.getSecondaryMuscleGroupsForExercises].
+/// Returns the setup time constant C (in seconds) for a given equipment ID.
+///
+/// - Dumbbells (3): 10 s (find plates, adjust collar)
+/// - Barbell (2), EZ-Bar (4), Plate Loaded (7), Smith Machine (8): 60 s (load plates)
+/// - Everything else (machine, cable, bodyweight, none): 0 s
+int _equipmentC(String? equipmentId) {
+  switch (equipmentId) {
+    case '3':
+      return 10;
+    case '2':
+    case '4':
+    case '7':
+    case '8':
+      return 60;
+    default:
+      return 0;
+  }
+}
+
+/// Estimates the total workout duration in seconds for all [exercises].
+///
+/// Per strength/hybrid exercise:
+///   `(sets × restTimer) + (sets × 60) + C`
+///
+/// Per cardio exercise: uses the planned duration (`seconds`) directly.
+int _estimatedDurationSeconds(List<ExerciseWithVolume> exercises) {
+  var total = 0;
+  for (final ex in exercises) {
+    final vol = ex.volume;
+    if (vol.isCardio) {
+      total += vol.seconds ?? 0;
+    } else if (vol.isHybrid) {
+      final sets = vol.setsDistancesList.length;
+      final c = _equipmentC(vol.equipmentId);
+      total += (sets * 60) + c;
+    } else {
+      final sets = vol.setsRepsList.length;
+      final rest = vol.restTimer ?? 0;
+      final c = _equipmentC(vol.equipmentId);
+      total += (sets * rest) + (sets * 60) + c;
+    }
+  }
+  return total;
+}
+
+String _formatDuration(int totalSeconds) {
+  final h = totalSeconds ~/ 3600;
+  final m = (totalSeconds % 3600) ~/ 60;
+  if (h > 0) return '${h}h ${m}m';
+  if (m > 0) return '${m}m';
+  return '<1m';
+}
+
 class WorkoutInformationDialog extends StatelessWidget {
   /// The workout day (with its exercises) to summarise.
   final WorkoutDayWithExercises dayWithExercises;
@@ -54,6 +107,25 @@ class WorkoutInformationDialog extends StatelessWidget {
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.timer_outlined,
+                      size: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '~${_formatDuration(_estimatedDurationSeconds(dayWithExercises.exercises))}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 SizedBox(

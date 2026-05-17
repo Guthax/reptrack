@@ -129,17 +129,20 @@ class WorkoutPage extends StatelessWidget {
 
                       if (controller.workoutDayHasNoExercises.value) ...[
                         const SizedBox(height: 12),
-                        Row(
-                          children: const [
+                        const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Icon(
                               Icons.warning_amber_rounded,
                               size: 16,
                               color: Colors.orange,
                             ),
                             SizedBox(width: 6),
-                            Text(
-                              'This day has no exercises yet. Add exercises to this day in the Programs section.',
-                              style: TextStyle(color: Colors.orange),
+                            Flexible(
+                              child: Text(
+                                'This day has no exercises yet. Add exercises to this day in the Programs section.',
+                                style: TextStyle(color: Colors.orange),
+                              ),
                             ),
                           ],
                         ),

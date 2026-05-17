@@ -150,64 +150,69 @@ class BuildProgramPage extends StatelessWidget {
               ),
             GestureDetector(
               onLongPress: () => Get.bottomSheet(
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(Get.context!).colorScheme.surface,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
+                Builder(
+                  builder: (context) => Container(
+                    padding: EdgeInsets.only(
+                      top: 8,
+                      bottom: MediaQuery.viewPaddingOf(context).bottom + 8,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.primary,
-                        ),
-                        title: const Text('Rename'),
-                        onTap: () {
-                          Get.back();
-                          _showRenameDayDialog(day.id, day.dayName);
-                        },
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
                       ),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.primary,
+                          ),
+                          title: const Text('Rename'),
+                          onTap: () {
+                            Get.back();
+                            _showRenameDayDialog(day.id, day.dayName);
+                          },
                         ),
-                        title: const Text('Delete'),
-                        onTap: () {
-                          Get.back();
-                          Get.dialog(
-                            AlertDialog(
-                              title: const Text('Delete Day?'),
-                              content: Text(
-                                'Delete "${day.dayName}" and all its exercises?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: Get.back,
-                                  child: const Text('CANCEL'),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
+                          title: const Text('Delete'),
+                          onTap: () {
+                            Get.back();
+                            Get.dialog(
+                              AlertDialog(
+                                title: const Text('Delete Day?'),
+                                content: Text(
+                                  'Delete "${day.dayName}" and all its exercises?',
                                 ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.error,
-                                    foregroundColor: Colors.white,
+                                actions: [
+                                  TextButton(
+                                    onPressed: Get.back,
+                                    child: const Text('CANCEL'),
                                   ),
-                                  onPressed: () {
-                                    controller.deleteDay(day.id);
-                                    Get.back();
-                                  },
-                                  child: const Text('DELETE'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.error,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      controller.deleteDay(day.id);
+                                      Get.back();
+                                    },
+                                    child: const Text('DELETE'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -305,80 +310,87 @@ class BuildProgramPage extends StatelessWidget {
                                 ),
                               ),
                               onLongPress: () => Get.bottomSheet(
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      Get.context!,
-                                    ).colorScheme.surface,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(16),
+                                Builder(
+                                  builder: (context) => Container(
+                                    padding: EdgeInsets.only(
+                                      top: 8,
+                                      bottom:
+                                          MediaQuery.viewPaddingOf(
+                                            context,
+                                          ).bottom +
+                                          8,
                                     ),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.edit_outlined,
-                                          color: AppColors.primary,
-                                        ),
-                                        title: const Text('Edit'),
-                                        onTap: () {
-                                          Get.back();
-                                          Get.dialog(
-                                            EditProgramExerciseDialog(
-                                              exerciseWithVolume: ex,
-                                            ),
-                                          );
-                                        },
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(16),
                                       ),
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.delete_outline,
-                                          color: AppColors.error,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.edit_outlined,
+                                            color: AppColors.primary,
+                                          ),
+                                          title: const Text('Edit'),
+                                          onTap: () {
+                                            Get.back();
+                                            Get.dialog(
+                                              EditProgramExerciseDialog(
+                                                exerciseWithVolume: ex,
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        title: const Text('Remove'),
-                                        onTap: () {
-                                          Get.back();
-                                          Get.dialog(
-                                            AlertDialog(
-                                              title: const Text(
-                                                'Remove Exercise?',
-                                              ),
-                                              content: Text(
-                                                'Remove "${ex.exercise.name}" from this day?',
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: Get.back,
-                                                  child: const Text('CANCEL'),
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.delete_outline,
+                                            color: AppColors.error,
+                                          ),
+                                          title: const Text('Remove'),
+                                          onTap: () {
+                                            Get.back();
+                                            Get.dialog(
+                                              AlertDialog(
+                                                title: const Text(
+                                                  'Remove Exercise?',
                                                 ),
-                                                ElevatedButton(
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            AppColors.error,
-                                                        foregroundColor:
-                                                            Colors.white,
-                                                      ),
-                                                  onPressed: () {
-                                                    controller
-                                                        .removeExerciseFromDay(
-                                                          ex.volume,
-                                                        );
-                                                    Get.back();
-                                                  },
-                                                  child: const Text('REMOVE'),
+                                                content: Text(
+                                                  'Remove "${ex.exercise.name}" from this day?',
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: Get.back,
+                                                    child: const Text('CANCEL'),
+                                                  ),
+                                                  ElevatedButton(
+                                                    style:
+                                                        ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              AppColors.error,
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                        ),
+                                                    onPressed: () {
+                                                      controller
+                                                          .removeExerciseFromDay(
+                                                            ex.volume,
+                                                          );
+                                                      Get.back();
+                                                    },
+                                                    child: const Text('REMOVE'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

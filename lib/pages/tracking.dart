@@ -209,23 +209,34 @@ class _ExerciseProgressView extends StatelessWidget {
                   ),
                 Positioned(
                   left: 16,
+                  right: 16,
                   bottom: 16,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SegmentedButton<ChartType>(
-                      style: const ButtonStyle(
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        padding: WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 10),
-                        ),
-                      ),
-                      segments: _segmentsFor(typeId),
-                      selected: {chartType},
-                      onSelectionChanged: (s) =>
-                          controller.selectedChartType.value = s.first,
-                      showSelectedIcon: false,
-                    ),
+                  child: DropdownButton<ChartType>(
+                    value: chartType,
+                    isDense: true,
+                    isExpanded: true,
+                    items: _segmentsFor(typeId)
+                        .map(
+                          (seg) => DropdownMenuItem<ChartType>(
+                            value: seg.value,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (seg.icon != null) ...[
+                                  seg.icon!,
+                                  const SizedBox(width: 6),
+                                ],
+                                seg.label!,
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        controller.selectedChartType.value = v;
+                      }
+                    },
                   ),
                 ),
               ],
