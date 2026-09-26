@@ -84,7 +84,7 @@ Scott Curl,1,3,null,"2,3,4"
 Pinwheel Curl,1,3,null,3
 Incline Hammer Curl,1,3,null,3
 21s Curl,1,3,null,"2,3,4"
-Isometric Curl Hold,1,3,null,"2,3,4"
+Isometric Curl Hold,4,3,null,"2,3,4"
 Single Arm Preacher Curl,1,3,null,"3,5,6"
 Partial Curl,1,3,null,"2,3,4"
 Chin-Up Curl,1,3,2,1
@@ -206,7 +206,7 @@ Cossack Squat,1,7,null,"1,3"
 Reverse Nordic Curl,1,7,null,1
 Tibialis Raise,1,7,null,1
 Prone Leg Curl,1,7,null,5
-Wall Sit,1,7,null,1
+Wall Sit,4,7,null,1
 Sled Push,3,7,6,5
 Sled Pull,3,2,7,5
 Belt Squat,1,7,6,"5,7"
@@ -236,7 +236,7 @@ Adductor Squeeze,1,7,null,1
 Leg Press Hip Abduction,1,7,null,"5,7"
 Single Leg Extension,1,7,null,5
 Single Leg Curl,1,7,null,5
-Plank,1,6,null,1
+Plank,4,6,null,1
 Hanging Leg Raise,1,6,3,1
 Crunch,1,6,null,"1,5,6"
 Bicycle Crunch,1,6,null,1
@@ -245,14 +245,14 @@ Leg Raise,1,6,null,1
 Mountain Climber,1,6,7,1
 V Up,1,6,null,1
 Dead Bug,1,6,null,1
-Side Plank,1,6,null,1
+Side Plank,4,6,null,1
 Woodchopper,1,6,5,"6,7"
 Ab Wheel Rollout,1,6,2,"1,5"
 Toes To Bar,1,6,3,1
 Dragon Flag,1,6,null,1
 Pallof Press,1,6,5,6
 Decline Crunch,1,6,null,"1,7"
-Hollow Body Hold,1,6,null,1
+Hollow Body Hold,4,6,null,1
 Landmine Rotation,1,6,5,2
 Reverse Crunch,1,6,null,1
 Flutter Kick,1,6,null,1
@@ -262,7 +262,7 @@ Seated Leg Tuck,1,6,null,1
 Hanging Knee Raise,1,6,3,1
 Jackknife,1,6,7,1
 Windshield Wiper,1,6,null,1
-L-Sit,1,6,null,1
+L-Sit,4,6,null,1
 Plank Hip Dip,1,6,null,1
 Side Crunch,1,6,null,1
 Side Bend,1,6,5,"3,6"
@@ -276,7 +276,7 @@ Decline Russian Twist,1,6,5,"1,3,7"
 Single Leg V Up,1,6,null,1
 Tuck Crunch,1,6,null,1
 Toe Tap,1,6,null,1
-Copenhagen Plank,1,6,7,1
+Copenhagen Plank,4,6,7,1
 Side Lying Hip Raise,1,6,7,1
 Plank Reach,1,6,null,1
 Plank Row,1,6,2,3

@@ -269,6 +269,12 @@ class BuildProgramPage extends StatelessWidget {
                                       size: 36,
                                       color: AppColors.secondary,
                                     )
+                                  : ex.isTimed && ex.equipment == null
+                                  ? const Icon(
+                                      Icons.timer_outlined,
+                                      size: 36,
+                                      color: AppColors.secondary,
+                                    )
                                   : (ex.equipment!.iconName == 'no_equipment'
                                         ? const Icon(
                                             Icons.accessibility_new,
@@ -293,6 +299,10 @@ class BuildProgramPage extends StatelessWidget {
                                   : ex.isHybrid
                                   ? Text(
                                       '${ex.equipment != null ? '${ex.equipment!.name} • ' : ''}${ex.volume.setsDistancesLabel}',
+                                    )
+                                  : ex.isTimed
+                                  ? Text(
+                                      'Timed • ${ex.equipment != null ? '${ex.equipment!.name} • ' : ''}${ex.volume.setsSecondsLabel}',
                                     )
                                   : Text(
                                       '${ex.primaryMuscleGroup != null ? '${ex.primaryMuscleGroup} • ' : ''}${ex.equipment!.name} • ${ex.volume.setsRepsLabel}',

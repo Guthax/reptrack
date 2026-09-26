@@ -8,6 +8,8 @@ import 'package:reptrack/controllers/tracking_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/duration_format.dart';
+import 'package:reptrack/widgets/exercise_history_card_widget.dart';
 
 /// Page for viewing historical weight-progress charts per exercise and
 /// bodyweight over time.
@@ -119,7 +121,8 @@ class _ExerciseTile extends StatelessWidget {
 }
 
 /// Shows the progress chart and filter chips for the currently selected exercise.
-/// Adapts chart types based on exercise type (strength / cardio / hybrid).
+/// Adapts chart types based on exercise type (strength / cardio / hybrid /
+/// timed).
 class _ExerciseProgressView extends StatelessWidget {
   final TrackingController controller;
 
@@ -155,6 +158,12 @@ class _ExerciseProgressView extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (typeId == '4')
+                  IconButton(
+                    icon: const Icon(Icons.history),
+                    tooltip: 'Set history',
+                    onPressed: () => _showTimedHistory(context, exercise.name),
+                  ),
               ],
             ),
           ),
@@ -205,6 +214,7 @@ class _ExerciseProgressView extends StatelessWidget {
                       convertWeight: cfg.convertWeight,
                       yUnit: cfg.yUnit,
                       tooltipFormatter: cfg.tooltipFormatter,
+                      axisLabelFormatter: cfg.axisLabelFormatter,
                     ),
                   ),
                 Positioned(
@@ -247,6 +257,28 @@ class _ExerciseProgressView extends StatelessWidget {
     });
   }
 
+  /// Opens a dialog listing every timed set of the selected exercise, newest
+  /// session first.
+  void _showTimedHistory(BuildContext context, String exerciseName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(exerciseName),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 450,
+          child: TimedHistoryList(sets: controller.timedSets.reversed.toList()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<ButtonSegment<ChartType>> _segmentsFor(String typeId) {
     if (typeId == '2') {
       return const [
@@ -283,6 +315,20 @@ class _ExerciseProgressView extends StatelessWidget {
           value: ChartType.hybridVolume,
           icon: Icon(Icons.bar_chart, size: 16),
           label: Text('Volume'),
+        ),
+      ];
+    }
+    if (typeId == '4') {
+      return const [
+        ButtonSegment(
+          value: ChartType.timedLongestHold,
+          icon: Icon(Icons.timer_outlined, size: 16),
+          label: Text('Longest hold'),
+        ),
+        ButtonSegment(
+          value: ChartType.timedTotalTime,
+          icon: Icon(Icons.bar_chart, size: 16),
+          label: Text('Total time'),
         ),
       ];
     }
@@ -371,6 +417,17 @@ class _ExerciseProgressView extends StatelessWidget {
           );
       }
     }
+    if (typeId == '4') {
+      return _ChartConfig(
+        data: chartType == ChartType.timedTotalTime
+            ? c.timedTotalTimeData
+            : c.timedLongestHoldData,
+        convertWeight: false,
+        yUnit: '',
+        tooltipFormatter: (y, _) => formatDuration(y.round()),
+        axisLabelFormatter: (y) => formatDuration(y.round()),
+      );
+    }
     // Strength
     final data = chartType == ChartType.totalVolume
         ? c.volumeProgressData
@@ -386,11 +443,15 @@ class _ChartConfig {
   final String yUnit;
   final String Function(double, String)? tooltipFormatter;
 
+  /// Optional y-axis label formatter; defaults to the value plus [yUnit].
+  final String Function(double)? axisLabelFormatter;
+
   const _ChartConfig({
     required this.data,
     required this.convertWeight,
     required this.yUnit,
     this.tooltipFormatter,
+    this.axisLabelFormatter,
   });
 }
 
@@ -571,12 +632,17 @@ class _WeightChart extends StatelessWidget {
   /// [yUnit] string; returns the label string.
   final String Function(double y, String unit)? tooltipFormatter;
 
+  /// Optional y-axis label formatter. Receives the raw [y] value; defaults to
+  /// the value followed by the unit.
+  final String Function(double y)? axisLabelFormatter;
+
   const _WeightChart({
     required this.data,
     this.onTapIndex,
     this.convertWeight = true,
     this.yUnit = '',
     this.tooltipFormatter,
+    this.axisLabelFormatter,
   });
 
   @override
@@ -640,7 +706,8 @@ class _WeightChart extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Text(
-                      '${val.toStringAsFixed(convertWeight ? 2 : 1)} $unit',
+                      axisLabelFormatter?.call(val) ??
+                          '${val.toStringAsFixed(convertWeight ? 2 : 1)} $unit',
                       style: const TextStyle(fontSize: 10),
                     ),
                   ),

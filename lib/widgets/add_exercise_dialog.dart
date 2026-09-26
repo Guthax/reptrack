@@ -8,6 +8,7 @@ import 'package:reptrack/utils/fuzzy_search.dart';
 import 'package:reptrack/widgets/create_exercise_dialog.dart';
 import 'package:reptrack/widgets/distance_unit_selector.dart';
 import 'package:reptrack/widgets/edit_exercise_dialog.dart';
+import 'package:reptrack/widgets/timed_sets_editor.dart';
 
 /// Dialog for adding an exercise to a workout day.
 ///
@@ -17,6 +18,7 @@ import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 /// 2. **Configure** — for strength: choose equipment, per-set rep targets, and
 ///    rest timer. For cardio: choose planned hours and minutes. For hybrid:
 ///    choose equipment, per-set distance targets, distance unit, and rest timer.
+///    For timed: choose equipment, per-set target durations, and rest timer.
 ///
 /// On confirmation, delegates to [BuildProgramController.addExerciseToDay].
 class AddExerciseDialog extends StatefulWidget {
@@ -52,6 +54,11 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
   final TextEditingController hybridTimerController = TextEditingController(
     text: "60",
   );
+  final TextEditingController timedTimerController = TextEditingController(
+    text: "60",
+  );
+  late final List<TextEditingController> timedMinuteControllers;
+  late final List<TextEditingController> timedSecondControllers;
 
   final Rx<Exercise?> selectedExercise = Rx<Exercise?>(null);
   final RxList<Exercise> filteredExercises = <Exercise>[].obs;
@@ -68,9 +75,20 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
 
   bool _exerciseIsCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
+  bool get _isTimed => selectedExercise.value?.exerciseTypeId == '4';
+
+  bool _exerciseIsTimed(Exercise ex) => ex.exerciseTypeId == '4';
+
   @override
   void initState() {
     super.initState();
+    final (timedMinutes, timedSeconds) = TimedSetsEditor.controllersFor([
+      60,
+      60,
+      60,
+    ]);
+    timedMinuteControllers = timedMinutes;
+    timedSecondControllers = timedSeconds;
     _loadInitialData();
   }
 
@@ -88,6 +106,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     minutesController.dispose();
     cardioDistanceController.dispose();
     hybridTimerController.dispose();
+    timedTimerController.dispose();
+    for (final c in [...timedMinuteControllers, ...timedSecondControllers]) {
+      c.dispose();
+    }
     for (final c in setControllers) {
       c.dispose();
     }
@@ -168,6 +190,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
           }
           if (_isCardio) return _buildCardioConfig();
           if (_isHybrid) return _buildHybridConfig();
+          if (_isTimed) return _buildTimedConfig();
           return _buildStrengthConfig();
         }),
       ),
@@ -178,8 +201,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               selectedExercise.value != null &&
               (_isCardio ||
                   (_isHybrid && selectedEquipmentId.value != null) ||
+                  (_isTimed && selectedEquipmentId.value != null) ||
                   (!_isCardio &&
                       !_isHybrid &&
+                      !_isTimed &&
                       selectedEquipmentId.value != null));
 
           return ElevatedButton(
@@ -214,6 +239,18 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                             .map((c) => double.tryParse(c.text) ?? 100.0)
                             .toList(),
                         distanceUnit: hybridDistanceUnit.value,
+                      );
+                    } else if (_isTimed) {
+                      controller.addExerciseToDay(
+                        widget.dayId,
+                        selectedExercise.value!,
+                        selectedEquipmentId.value,
+                        [],
+                        int.tryParse(timedTimerController.text),
+                        setsSeconds: TimedSetsEditor.readSeconds(
+                          timedMinuteControllers,
+                          timedSecondControllers,
+                        ),
                       );
                     } else {
                       controller.addExerciseToDay(
@@ -274,12 +311,15 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 final ex = filteredExercises[i];
                 final isCardio = _exerciseIsCardio(ex);
                 final isHybrid = _exerciseIsHybrid(ex);
+                final isTimed = _exerciseIsTimed(ex);
                 return ListTile(
                   leading: Icon(
                     isCardio
                         ? Icons.directions_run
                         : isHybrid
                         ? Icons.merge_type
+                        : isTimed
+                        ? Icons.timer_outlined
                         : Icons.fitness_center,
                     size: 20,
                     color: AppColors.textSecondary,
@@ -289,6 +329,8 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                       ? const Text("Cardio")
                       : isHybrid
                       ? const Text("Hybrid")
+                      : isTimed
+                      ? const Text("Timed")
                       : null,
                   onTap: () async {
                     if (!isCardio) {
@@ -541,6 +583,90 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
           const SizedBox(height: 15),
           TextField(
             controller: hybridTimerController,
+            decoration: const InputDecoration(
+              labelText: "Rest Timer (seconds)",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.timer),
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              MaxValueInputFormatter(100000),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the timed configuration: equipment, per-set target durations and
+  /// rest timer.
+  Widget _buildTimedConfig() {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Chip(
+            label: Text(selectedExercise.value!.name),
+            avatar: const Icon(Icons.timer_outlined, size: 18),
+            onDeleted: () {
+              selectedExercise.value = null;
+              selectedEquipmentId.value = null;
+            },
+            deleteIcon: const Icon(Icons.close),
+          ),
+          const SizedBox(height: 16),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Equipment Type",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Obx(
+            () => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: availableEquipment.map((e) {
+                return ChoiceChip(
+                  label: Text(e.name),
+                  selected: selectedEquipmentId.value == e.id,
+                  showCheckmark: false,
+                  onSelected: (val) =>
+                      selectedEquipmentId.value = val ? e.id : null,
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Target time per set",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TimedSetsEditor(
+            minuteControllers: timedMinuteControllers,
+            secondControllers: timedSecondControllers,
+            onAddSet: () => setState(() {
+              timedMinuteControllers.add(
+                TextEditingController(text: timedMinuteControllers.last.text),
+              );
+              timedSecondControllers.add(
+                TextEditingController(text: timedSecondControllers.last.text),
+              );
+            }),
+            onRemoveSet: (i) => setState(() {
+              timedMinuteControllers.removeAt(i).dispose();
+              timedSecondControllers.removeAt(i).dispose();
+            }),
+          ),
+          const SizedBox(height: 15),
+          TextField(
+            controller: timedTimerController,
             decoration: const InputDecoration(
               labelText: "Rest Timer (seconds)",
               border: OutlineInputBorder(),

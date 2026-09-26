@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/controllers/settings_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
+import 'package:reptrack/utils/duration_format.dart';
 
 class ExerciseHistoryDialog extends StatelessWidget {
   final String exerciseId;
@@ -11,12 +13,16 @@ class ExerciseHistoryDialog extends StatelessWidget {
   final bool isCardio;
   final bool isHybrid;
 
+  /// Whether the exercise is timed; shows durations and optional weights.
+  final bool isTimed;
+
   const ExerciseHistoryDialog({
     super.key,
     required this.exerciseId,
     required this.exerciseName,
     this.isCardio = false,
     this.isHybrid = false,
+    this.isTimed = false,
   });
 
   String _formatDuration(int totalSeconds) {
@@ -58,6 +64,8 @@ class ExerciseHistoryDialog extends StatelessWidget {
               )
             : isHybrid
             ? _HybridHistoryList(exerciseId: exerciseId)
+            : isTimed
+            ? _TimedHistoryLoader(exerciseId: exerciseId)
             : _StrengthHistoryList(exerciseId: exerciseId),
       ),
       actions: [
@@ -557,6 +565,148 @@ class _HybridHistoryList extends StatelessWidget {
                           ],
                         );
                       }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Loads the timed history of [exerciseId] through
+/// [ActiveWorkoutController.loadTimedHistory] and shows it as a
+/// [TimedHistoryList].
+class _TimedHistoryLoader extends StatelessWidget {
+  final String exerciseId;
+
+  const _TimedHistoryLoader({required this.exerciseId});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<ActiveWorkoutController>();
+
+    return FutureBuilder<List<WorkoutTimedSet>>(
+      future: controller.loadTimedHistory(exerciseId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return TimedHistoryList(sets: snapshot.data ?? []);
+      },
+    );
+  }
+}
+
+/// Timed set history grouped per workout session, newest session first.
+///
+/// Each set shows its duration and weight, or "no time recorded" for sets
+/// converted from strength history.
+class TimedHistoryList extends StatelessWidget {
+  /// The completed timed sets to show, newest first.
+  final List<WorkoutTimedSet> sets;
+
+  const TimedHistoryList({super.key, required this.sets});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = Get.find<SettingsController>();
+    final allSets = sets;
+
+    return Builder(
+      builder: (context) {
+        if (allSets.isEmpty) {
+          return const Center(
+            child: Text(
+              "No history recorded yet.",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+
+        final Map<String, List<WorkoutTimedSet>> sessions = {};
+        for (final set in allSets) {
+          sessions.putIfAbsent(set.workoutId, () => []).add(set);
+        }
+        final workoutIds = sessions.keys.toList();
+
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 8),
+          itemCount: workoutIds.length,
+          itemBuilder: (context, index) {
+            final sessionSets = [...sessions[workoutIds[index]]!]
+              ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+            final sessionDate = DateFormat(
+              'EEEE, dd MMM yyyy',
+            ).format(sessionSets.first.dateLogged);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
+                  child: Text(
+                    sessionDate.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.secondary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  color: AppColors.background,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.outline),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Column(
+                      children: [
+                        for (final set in sessionSets)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                Text(
+                                  "SET ${set.setNumber}",
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDisabled,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  formatTimedSet(
+                                    set.durationSeconds,
+                                    weightText: set.weight == null
+                                        ? null
+                                        : '${settings.displayWeight(set.weight!).toStringAsFixed(1)} ${settings.unitLabel}',
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: set.durationSeconds == 0
+                                        ? AppColors.textSecondary
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
