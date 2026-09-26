@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/controllers/active_workout_controller.dart';
+import 'package:reptrack/controllers/create_exercise_controller.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
@@ -909,6 +910,132 @@ void main() {
         expect(added.isTimed, isTrue);
         expect(added.volume.setsSecondsList, [60, 60, 60]);
       });
+
+      /// Builds a strength bench slot with 3 sets and a 90 second rest.
+      ExerciseWithVolume benchSlot() => ExerciseWithVolume(
+        exercise: Exercise(id: 'bench', name: 'Bench', exerciseTypeId: '1'),
+        volume: ProgramExerciseVolume.strength(
+          ProgramStrengthExercise(
+            id: 'se-bench',
+            workoutDayId: dayId,
+            exerciseId: 'bench',
+            orderInProgram: 1,
+            setsReps: '[12,10,8]',
+            restTimer: 90,
+            weight: 80.0,
+          ),
+        ),
+      );
+
+      /// Inserts equipment rows with [ids], since the test database is empty.
+      Future<void> addEquipment(List<String> ids) async {
+        for (final id in ids) {
+          await db
+              .into(db.equipments)
+              .insert(
+                EquipmentsCompanion.insert(
+                  id: d.Value(id),
+                  name: 'Equipment $id',
+                  iconName: 'equipment_$id',
+                ),
+              );
+        }
+      }
+
+      test(
+        'swapping without an equipment id picks the first compatible equipment',
+        () async {
+          timed.exercisesWithVolume.add(benchSlot());
+          await addEquipment(['2', '3']);
+          final rowId = await db.addExercise(
+            'Machine Row',
+            exerciseTypeId: '1',
+          );
+          for (final equipmentId in ['2', '3']) {
+            await db
+                .into(db.exerciseEquipment)
+                .insert(
+                  ExerciseEquipmentCompanion(
+                    exerciseId: d.Value(rowId),
+                    equipmentId: d.Value(equipmentId),
+                  ),
+                );
+          }
+          final machineRow = (await db.getExerciseByName('Machine Row'))!;
+          await timed.swapExercise(exerciseIndex: 1, newExercise: machineRow);
+          final expectedId = (await db.getEquipmentForExercise(rowId)).first.id;
+          expect(timed.selectedEquipments[1], expectedId);
+          expect(timed.exercisesWithVolume[1].equipment?.id, expectedId);
+          expect(timed.exercisesWithVolume[1].exercise.id, rowId);
+          expect(systemErrors, isEmpty);
+        },
+      );
+
+      test(
+        'swapping to a newly created timed exercise uses the existing defaults',
+        () async {
+          timed.exercisesWithVolume.add(benchSlot());
+          await addEquipment(['1']);
+          final creator = Get.put(CreateExerciseController());
+          creator.exerciseTypeSelected('4');
+          final created = await creator.createExercise(
+            name: 'Dead Hang',
+            equipmentIds: {'1'},
+          );
+          expect(created, isNotNull);
+          await timed.swapExercise(exerciseIndex: 1, newExercise: created!);
+          final swapped = timed.exercisesWithVolume[1];
+          expect(swapped.isTimed, isTrue);
+          expect(swapped.exercise.id, created.id);
+          expect(swapped.volume.setsSecondsList, [0, 0, 0]);
+          expect(swapped.volume.restTimer, 90);
+          expect(timed.timedWeightKg[1], isNull);
+          expect(swapped.equipment?.id, '1');
+          expect(snackbarErrors, isEmpty);
+          expect(systemErrors, isEmpty);
+          Get.delete<CreateExerciseController>();
+        },
+      );
+
+      test(
+        'adding without an equipment id picks the first compatible equipment',
+        () async {
+          await addEquipment(['2', '3']);
+          final creator = Get.put(CreateExerciseController());
+          creator.exerciseTypeSelected('1');
+          final created = await creator.createExercise(
+            name: 'Cable Fly',
+            equipmentIds: {'2', '3'},
+          );
+          expect(created, isNotNull);
+          await timed.addExerciseDuringWorkout(exercise: created!);
+          final index = timed.exercisesWithVolume.length - 1;
+          final added = timed.exercisesWithVolume[index];
+          final expectedId = (await db.getEquipmentForExercise(
+            created.id,
+          )).first.id;
+          expect(added.exercise.id, created.id);
+          expect(added.equipment?.id, expectedId);
+          expect(added.volume.equipmentId, expectedId);
+          expect(timed.selectedEquipments[index], expectedId);
+          expect(snackbarErrors, isEmpty);
+          expect(systemErrors, isEmpty);
+          Get.delete<CreateExerciseController>();
+        },
+      );
+    });
+  });
+
+  group('getSwapCandidates', () {
+    test('returns every exercise except the excluded one', () async {
+      final db = Get.find<AppDatabase>();
+      final aId = await db.addExercise('Swap A', exerciseTypeId: '1');
+      final bId = await db.addExercise('Swap B', exerciseTypeId: '1');
+      final candidates = await controller.getSwapCandidates(aId);
+      final ids = candidates.map((e) => e.id).toList();
+      expect(ids, contains(bId));
+      expect(ids, isNot(contains(aId)));
+      expect(candidates.length, (await db.getAllExercises()).length - 1);
     });
   });
 }

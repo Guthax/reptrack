@@ -4,10 +4,20 @@ import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
+import 'package:reptrack/widgets/create_exercise_dialog.dart';
 
+/// Dialog for replacing an exercise in the active workout.
+///
+/// Lists every other exercise with fuzzy search, and offers a "+" button that
+/// creates a new exercise and swaps it in straight away.
 class SwapExerciseDialog extends StatefulWidget {
+  /// Position in the active workout of the exercise being replaced.
   final int exerciseIndex;
+
+  /// ID of the exercise being replaced; it is left out of the list.
   final String exerciseId;
+
+  /// Name of the exercise being replaced, shown in the title.
   final String exerciseName;
 
   const SwapExerciseDialog({
@@ -32,23 +42,56 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
     _loadInitialData();
   }
 
+  /// Loads every exercise except the one being replaced into the list.
   void _loadInitialData() async {
-    allExercises = await Get.find<AppDatabase>().getAllExercises();
-    allExercises.removeWhere((e) => e.id == widget.exerciseId);
+    allExercises = await Get.find<ActiveWorkoutController>().getSwapCandidates(
+      widget.exerciseId,
+    );
     filteredExercises.assignAll(allExercises);
   }
 
+  /// Whether [ex] is a cardio exercise.
   bool _isCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
+  /// Whether [ex] is a timed exercise.
   bool _isTimed(Exercise ex) => ex.exerciseTypeId == '4';
+
+  /// Swaps [exercise] into the workout slot and closes this dialog.
+  Future<void> _swapTo(Exercise exercise) async {
+    await Get.find<ActiveWorkoutController>().swapExercise(
+      exerciseIndex: widget.exerciseIndex,
+      newExercise: exercise,
+    );
+    if (mounted) Get.back();
+  }
+
+  /// Opens the create exercise dialog and swaps in the created exercise.
+  Future<void> _createAndSwap() async {
+    final created = await Get.dialog<Exercise>(const CreateExerciseDialog());
+    if (created == null || !mounted) return;
+    await _swapTo(created);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final activeController = Get.find<ActiveWorkoutController>();
-    final db = Get.find<AppDatabase>();
-
     return AlertDialog(
-      title: Text("Swap ${widget.exerciseName}"),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              "Swap ${widget.exerciseName}",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            color: AppColors.primary,
+            tooltip: 'Create new exercise',
+            onPressed: _createAndSwap,
+          ),
+        ],
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -113,23 +156,7 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                             ? const Text("Timed")
                             : null,
                         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                        onTap: () async {
-                          String defaultEquipId = '';
-                          if (!cardio) {
-                            final equips = await db.getEquipmentForExercise(
-                              ex.id,
-                            );
-                            defaultEquipId = equips.isNotEmpty
-                                ? equips.first.id
-                                : '';
-                          }
-                          activeController.swapExercise(
-                            exerciseIndex: widget.exerciseIndex,
-                            newExercise: ex,
-                            newEquipmentId: defaultEquipId,
-                          );
-                          Get.back();
-                        },
+                        onTap: () => _swapTo(ex),
                       );
                     },
                   ),

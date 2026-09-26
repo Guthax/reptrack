@@ -4,12 +4,16 @@ import 'package:reptrack/controllers/active_workout_controller.dart';
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/fuzzy_search.dart';
+import 'package:reptrack/widgets/create_exercise_dialog.dart';
 
 /// Dialog for adding an exercise to the current active workout session.
 ///
 /// Step 1 — search and select an exercise.
 /// Step 2 — for strength or hybrid exercises with equipment: pick equipment.
 /// On confirm, delegates to [ActiveWorkoutController.addExerciseDuringWorkout].
+///
+/// The "+" button on the search step creates a new exercise and adds it
+/// straight away with its first compatible equipment.
 class AddWorkoutExerciseDialog extends StatefulWidget {
   const AddWorkoutExerciseDialog({super.key});
 
@@ -27,16 +31,22 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
 
   List<Exercise> allExercises = [];
 
+  /// Whether [ex] is a hybrid exercise.
   bool _isHybrid(Exercise? ex) => ex?.exerciseTypeId == '3';
 
+  /// Whether [ex] is a cardio exercise.
   bool _isCardio(Exercise? ex) => ex?.exerciseTypeId == '2';
 
+  /// Whether [ex] is a hybrid exercise.
   bool _exerciseIsHybrid(Exercise ex) => ex.exerciseTypeId == '3';
 
+  /// Whether [ex] is a cardio exercise.
   bool _exerciseIsCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
+  /// Whether [ex] is a timed exercise.
   bool _isTimed(Exercise? ex) => ex?.exerciseTypeId == '4';
 
+  /// Whether [ex] is a timed exercise.
   bool _exerciseIsTimed(Exercise ex) => ex.exerciseTypeId == '4';
 
   @override
@@ -45,6 +55,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
     _loadData();
   }
 
+  /// Loads every exercise into the search list.
   void _loadData() async {
     allExercises = await Get.find<AppDatabase>().getAllExercises();
     filteredExercises.assignAll(allExercises);
@@ -56,14 +67,40 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
     super.dispose();
   }
 
+  /// Opens the create exercise dialog, adds the created exercise to the
+  /// workout and closes this dialog.
+  Future<void> _createAndAdd() async {
+    final created = await Get.dialog<Exercise>(const CreateExerciseDialog());
+    if (created == null || !mounted) return;
+    await Get.find<ActiveWorkoutController>().addExerciseDuringWorkout(
+      exercise: created,
+    );
+    if (mounted) Get.back();
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ActiveWorkoutController>();
 
     return AlertDialog(
       title: Obx(
-        () => Text(
-          selectedExercise.value == null ? 'Add Exercise' : 'Select Equipment',
+        () => Row(
+          children: [
+            Expanded(
+              child: Text(
+                selectedExercise.value == null
+                    ? 'Add Exercise'
+                    : 'Select Equipment',
+              ),
+            ),
+            if (selectedExercise.value == null)
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                color: AppColors.primary,
+                tooltip: 'Create new exercise',
+                onPressed: _createAndAdd,
+              ),
+          ],
         ),
       ),
       contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -110,6 +147,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
     );
   }
 
+  /// Builds the step for searching and picking an exercise.
   Widget _buildSearchStep(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -196,6 +234,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
     );
   }
 
+  /// Builds the step for picking equipment for [ex].
   Widget _buildEquipmentStep(Exercise ex) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -248,6 +287,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
     );
   }
 
+  /// Builds the step confirming [ex] when no equipment choice is needed.
   Widget _buildConfirmStep(Exercise ex) {
     final isCardio = _isCardio(ex);
     final isHybrid = _isHybrid(ex);
