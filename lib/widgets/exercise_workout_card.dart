@@ -1143,27 +1143,15 @@ class _SetLogRowState extends State<SetLogRow> {
                     restSeconds: widget.restSeconds,
                   );
 
-                  final allDone =
-                      List.generate(
-                        widget.totalPlannedSets,
-                        (i) => i + 1,
-                      ).every(
-                        (s) => controller.isSetCompleted(
-                          widget.exerciseIndex,
-                          widget.equipmentId,
-                          s,
-                        ),
-                      );
-
-                  if (allDone) {
-                    final current = controller.currentPageIndex.value;
-                    final total = controller.exercisesWithVolume.length;
-                    if (current < total - 1) {
-                      controller.pageController.nextPage(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                      );
-                    }
+                  if (controller.shouldAutoAdvance(
+                    exerciseIndex: widget.exerciseIndex,
+                    plannedSets: widget.totalPlannedSets,
+                    equipmentId: widget.equipmentId,
+                  )) {
+                    controller.pageController.nextPage(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                    );
                   }
                 },
               ),
@@ -1370,27 +1358,15 @@ class _HybridSetRowState extends State<HybridSetRow> {
                     restSeconds: widget.restSeconds,
                   );
 
-                  final allDone =
-                      List.generate(
-                        widget.totalPlannedSets,
-                        (i) => i + 1,
-                      ).every(
-                        (s) => controller.isSetCompleted(
-                          widget.exerciseIndex,
-                          widget.equipmentId,
-                          s,
-                        ),
-                      );
-
-                  if (allDone) {
-                    final current = controller.currentPageIndex.value;
-                    final total = controller.exercisesWithVolume.length;
-                    if (current < total - 1) {
-                      controller.pageController.nextPage(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                      );
-                    }
+                  if (controller.shouldAutoAdvance(
+                    exerciseIndex: widget.exerciseIndex,
+                    plannedSets: widget.totalPlannedSets,
+                    equipmentId: widget.equipmentId,
+                  )) {
+                    controller.pageController.nextPage(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                    );
                   }
                 },
               ),
