@@ -922,12 +922,27 @@ class ActiveWorkoutController extends GetxController {
     stopwatchElapsedSeconds.value = 0;
   }
 
-  /// Replaces the exercise at the position of [oldExerciseId] with
-  /// [newExercise] using [newEquipmentId].
+  /// Returns every exercise in the library except the one with
+  /// [excludeExerciseId], for the swap dialog's list. Reports errors with
+  /// [AppErrorHandler.showSystemError] and returns an empty list.
+  Future<List<Exercise>> getSwapCandidates(String excludeExerciseId) async {
+    try {
+      return (await db.getAllExercises())
+          .where((e) => e.id != excludeExerciseId)
+          .toList();
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+      return [];
+    }
+  }
+
+  /// Replaces the exercise at [exerciseIndex] with [newExercise]. Uses
+  /// [newEquipmentId] when it is one of the new exercise's compatible
+  /// equipment, and otherwise the first compatible equipment (none for cardio).
   Future<void> swapExercise({
     required int exerciseIndex,
     required Exercise newExercise,
-    required String newEquipmentId,
+    String? newEquipmentId,
   }) async {
     try {
       if (exerciseIndex < 0 || exerciseIndex >= exercisesWithVolume.length) {
@@ -1072,8 +1087,9 @@ class ActiveWorkoutController extends GetxController {
 
   /// Adds [exercise] to the end of the current workout session.
   ///
-  /// Pre-populates volume from the most recent logged session and navigates
-  /// to the new card after adding.
+  /// Uses [equipmentId] when given, and otherwise the exercise's first
+  /// compatible equipment (none for cardio). Pre-populates volume from the
+  /// most recent logged session and navigates to the new card after adding.
   Future<void> addExerciseDuringWorkout({
     required Exercise exercise,
     String? equipmentId,
@@ -1084,8 +1100,10 @@ class ActiveWorkoutController extends GetxController {
       final isTimed = exercise.exerciseTypeId == '4';
 
       Equipment? equipment;
-      if (!isCardio && equipmentId != null) {
-        equipment = await db.getEquipmentById(equipmentId);
+      if (!isCardio) {
+        equipment = equipmentId != null
+            ? await db.getEquipmentById(equipmentId)
+            : (await db.getEquipmentForExercise(exercise.id)).firstOrNull;
       }
 
       final primaryMuscleGroup = await db.getPrimaryMuscleGroupForExercise(
@@ -1119,7 +1137,7 @@ class ActiveWorkoutController extends GetxController {
             id: _uuid.v4(),
             workoutDayId: workoutDayId,
             exerciseId: exercise.id,
-            equipmentId: equipmentId,
+            equipmentId: equipment?.id,
             orderInProgram: newIndex,
             setsDistances: jsonEncode([100.0, 100.0, 100.0]),
             distanceUnit: last?.distanceUnit ?? 'm',
@@ -1136,7 +1154,7 @@ class ActiveWorkoutController extends GetxController {
             id: _uuid.v4(),
             workoutDayId: workoutDayId,
             exerciseId: exercise.id,
-            equipmentId: equipmentId,
+            equipmentId: equipment?.id,
             orderInProgram: newIndex,
             setsSeconds: jsonEncode([60, 60, 60]),
             restTimer: null,
@@ -1160,7 +1178,7 @@ class ActiveWorkoutController extends GetxController {
             id: _uuid.v4(),
             workoutDayId: workoutDayId,
             exerciseId: exercise.id,
-            equipmentId: equipmentId,
+            equipmentId: equipment?.id,
             orderInProgram: newIndex,
             setsReps: jsonEncode(setsReps),
             restTimer: null,
