@@ -416,7 +416,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'PLANNED DURATION (optional)',
             style: TextStyle(
               fontSize: 10,
@@ -434,7 +434,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(23),
+                    const MaxValueInputFormatter(23),
                   ],
                   decoration: const InputDecoration(
                     labelText: 'Hours',
@@ -450,7 +450,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(59),
+                    const MaxValueInputFormatter(59),
                   ],
                   decoration: const InputDecoration(
                     labelText: 'Minutes',
@@ -462,7 +462,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'PLANNED DISTANCE (optional)',
             style: TextStyle(
               fontSize: 10,
@@ -592,7 +592,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     width: 60,
                     child: Text(
                       'Set ${i + 1}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
@@ -608,7 +608,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                         FilteringTextInputFormatter.allow(
                           RegExp(r'^\d*\.?\d*'),
                         ),
-                        MaxValueInputFormatter(100000),
+                        const MaxValueInputFormatter(100000),
                       ],
                       decoration: InputDecoration(
                         labelText: 'Distance',
@@ -620,7 +620,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   ),
                   if (distanceControllers.length > 1)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.remove_circle_outline,
                         color: AppColors.error,
                       ),
@@ -654,7 +654,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],
@@ -751,7 +751,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],
@@ -771,7 +771,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   avatar: widget.exerciseWithVolume.equipment != null
                       ? (widget.exerciseWithVolume.equipment!.iconName ==
                                 'no_equipment'
-                            ? const Icon(
+                            ? Icon(
                                 Icons.accessibility_new,
                                 size: 20,
                                 color: AppColors.secondary,
@@ -780,7 +780,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                                 'assets/icons/equipments/${widget.exerciseWithVolume.equipment!.iconName}.svg',
                                 width: 20,
                                 height: 20,
-                                colorFilter: const ColorFilter.mode(
+                                colorFilter: ColorFilter.mode(
                                   AppColors.secondary,
                                   BlendMode.srcIn,
                                 ),
@@ -839,7 +839,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                     width: 60,
                     child: Text(
                       'Set ${i + 1}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
@@ -851,7 +851,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        MaxValueInputFormatter(100000),
+                        const MaxValueInputFormatter(100000),
                       ],
                       decoration: const InputDecoration(
                         labelText: 'Reps',
@@ -862,7 +862,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
                   ),
                   if (setControllers.length > 1)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.remove_circle_outline,
                         color: AppColors.error,
                       ),
@@ -896,7 +896,7 @@ class _EditProgramExerciseDialogState extends State<EditProgramExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],

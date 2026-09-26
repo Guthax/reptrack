@@ -4,6 +4,7 @@ import 'package:reptrack/controllers/navigation_controller.dart';
 import 'package:reptrack/controllers/workout_selection_controller.dart';
 import 'package:reptrack/pages/settings.dart';
 import 'package:reptrack/persistance/database.dart';
+import 'package:reptrack/utils/app_theme.dart';
 
 /// Page where the user selects a program and workout day before starting.
 ///
@@ -35,10 +36,10 @@ class WorkoutPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.fitness_center,
                     size: 64,
-                    color: Colors.white24,
+                    color: AppColors.textDisabled,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -46,10 +47,10 @@ class WorkoutPage extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Create a program first before starting a workout.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white54),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(

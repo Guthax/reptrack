@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:reptrack/constants.dart';
 import 'package:reptrack/controllers/settings_controller.dart';
+import 'package:reptrack/utils/app_palette.dart';
+import 'package:reptrack/utils/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -138,6 +141,59 @@ void main() {
       // because the 'seen' key is already stored.
       await c.dismissAddDayHint();
       expect(c.showExpandDayHint.value, isFalse);
+    });
+  });
+
+  group('theme', () {
+    tearDown(() => AppColors.palette = appPalettes[AppThemeId.charcoalLime]!);
+
+    test('load without a stored theme uses Charcoal & Lime', () async {
+      final c = make();
+      await c.load();
+      expect(c.themeId.value, AppThemeId.charcoalLime);
+      expect(AppColors.palette, appPalettes[AppThemeId.charcoalLime]);
+    });
+
+    test('load applies a stored theme', () async {
+      SharedPreferences.setMockInitialValues({'theme_id': 'mangoNavy'});
+      final c = make();
+      await c.load();
+      expect(c.themeId.value, AppThemeId.mangoNavy);
+      expect(AppColors.primary, const Color(0xFFFFBB39));
+    });
+
+    test('load falls back to Charcoal & Lime for an unknown theme', () async {
+      SharedPreferences.setMockInitialValues({'theme_id': 'removedTheme'});
+      final c = make();
+      await c.load();
+      expect(c.themeId.value, AppThemeId.charcoalLime);
+      expect(AppColors.palette, appPalettes[AppThemeId.charcoalLime]);
+    });
+
+    test('setTheme updates state, palette and preferences', () async {
+      final c = make();
+      await c.setTheme(AppThemeId.pinkWhite);
+      expect(c.themeId.value, AppThemeId.pinkWhite);
+      expect(c.palette, appPalettes[AppThemeId.pinkWhite]);
+      expect(AppColors.palette, appPalettes[AppThemeId.pinkWhite]);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('theme_id'), 'pinkWhite');
+    });
+
+    test('a new controller restores the chosen theme', () async {
+      await make().setTheme(AppThemeId.charcoalCyan);
+      final c2 = make();
+      await c2.load();
+      expect(c2.themeId.value, AppThemeId.charcoalCyan);
+    });
+
+    test('setTheme leaves the unit preference unchanged', () async {
+      final c = make();
+      await c.setImperial(true);
+      await c.setTheme(AppThemeId.mangoNavy);
+      expect(c.useImperial.value, isTrue);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('use_imperial'), isTrue);
     });
   });
 }

@@ -18,7 +18,7 @@ class _Step {
   });
 }
 
-const _steps = [
+final _steps = [
   _Step(
     icon: Icons.fitness_center,
     iconColor: AppColors.primary,
@@ -109,7 +109,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _finish,
-                child: const Text(
+                child: Text(
                   'Skip',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
@@ -183,7 +183,7 @@ class _StepPage extends StatelessWidget {
           Text(
             step.body,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               height: 1.6,
               color: AppColors.textSecondary,
@@ -231,7 +231,7 @@ class _UnitsStepPage extends StatelessWidget {
           Text(
             step.body,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               height: 1.6,
               color: AppColors.textSecondary,

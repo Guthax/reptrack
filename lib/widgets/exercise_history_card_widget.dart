@@ -41,7 +41,7 @@ class ExerciseHistoryDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(exerciseName),
-          const Text(
+          Text(
             "Workout Sessions",
             style: TextStyle(
               fontSize: 12,
@@ -101,7 +101,7 @@ class _StrengthHistoryList extends StatelessWidget {
         }
 
         if (!snapshot.hasData || (snapshot.data![0] as List).isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               "No history recorded yet.",
               style: TextStyle(color: AppColors.textSecondary),
@@ -137,7 +137,7 @@ class _StrengthHistoryList extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
                   child: Text(
                     sessionDate.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.secondary,
@@ -150,7 +150,7 @@ class _StrengthHistoryList extends StatelessWidget {
                   color: AppColors.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.outline),
+                    side: BorderSide(color: AppColors.outline),
                   ),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
@@ -178,7 +178,7 @@ class _StrengthHistoryList extends StatelessWidget {
                                     children: [
                                       Text(
                                         "SET ${set.setNumber}",
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.textDisabled,
@@ -187,7 +187,7 @@ class _StrengthHistoryList extends StatelessWidget {
                                       ),
                                       Text(
                                         equipName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 9,
                                           color: AppColors.textDisabled,
                                         ),
@@ -217,7 +217,7 @@ class _StrengthHistoryList extends StatelessWidget {
                                           Get.find<SettingsController>();
                                       return Text(
                                         ' ${settings.unitLabel}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.textSecondary,
                                         ),
@@ -232,7 +232,7 @@ class _StrengthHistoryList extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const Text(
+                                  Text(
                                     " reps",
                                     style: TextStyle(
                                       fontSize: 12,
@@ -243,7 +243,7 @@ class _StrengthHistoryList extends StatelessWidget {
                               ),
                             ),
                             if (!isLast)
-                              const Divider(
+                              Divider(
                                 height: 1,
                                 thickness: 1,
                                 color: AppColors.outline,
@@ -284,7 +284,7 @@ class _CardioHistoryList extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               "No history recorded yet.",
               style: TextStyle(color: AppColors.textSecondary),
@@ -310,7 +310,7 @@ class _CardioHistoryList extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
                   child: Text(
                     sessionDate.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.secondary,
@@ -323,7 +323,7 @@ class _CardioHistoryList extends StatelessWidget {
                   color: AppColors.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.outline),
+                    side: BorderSide(color: AppColors.outline),
                   ),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
@@ -333,7 +333,7 @@ class _CardioHistoryList extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
                           size: 16,
                           color: AppColors.textDisabled,
@@ -348,7 +348,7 @@ class _CardioHistoryList extends StatelessWidget {
                         ),
                         if (entry.distanceMeters != null) ...[
                           const SizedBox(width: 24),
-                          const Icon(
+                          Icon(
                             Icons.straighten,
                             size: 16,
                             color: AppColors.textDisabled,
@@ -411,7 +411,7 @@ class _HybridHistoryList extends StatelessWidget {
         }
 
         if (!snapshot.hasData || (snapshot.data![0] as List).isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               "No history recorded yet.",
               style: TextStyle(color: AppColors.textSecondary),
@@ -447,7 +447,7 @@ class _HybridHistoryList extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
                   child: Text(
                     sessionDate.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.secondary,
@@ -460,7 +460,7 @@ class _HybridHistoryList extends StatelessWidget {
                   color: AppColors.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.outline),
+                    side: BorderSide(color: AppColors.outline),
                   ),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
@@ -492,7 +492,7 @@ class _HybridHistoryList extends StatelessWidget {
                                     children: [
                                       Text(
                                         "SET ${set.setNumber}",
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.textDisabled,
@@ -501,7 +501,7 @@ class _HybridHistoryList extends StatelessWidget {
                                       ),
                                       Text(
                                         equipName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 9,
                                           color: AppColors.textDisabled,
                                         ),
@@ -531,7 +531,7 @@ class _HybridHistoryList extends StatelessWidget {
                                           Get.find<SettingsController>();
                                       return Text(
                                         ' ${settings.unitLabel}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.textSecondary,
                                         ),
@@ -548,7 +548,7 @@ class _HybridHistoryList extends StatelessWidget {
                                   ),
                                   Text(
                                     ' ${set.distanceUnit}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textSecondary,
                                     ),
@@ -557,7 +557,7 @@ class _HybridHistoryList extends StatelessWidget {
                               ),
                             ),
                             if (!isLast)
-                              const Divider(
+                              Divider(
                                 height: 1,
                                 thickness: 1,
                                 color: AppColors.outline,
@@ -619,7 +619,7 @@ class TimedHistoryList extends StatelessWidget {
     return Builder(
       builder: (context) {
         if (allSets.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               "No history recorded yet.",
               style: TextStyle(color: AppColors.textSecondary),
@@ -650,7 +650,7 @@ class TimedHistoryList extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
                   child: Text(
                     sessionDate.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.secondary,
@@ -663,7 +663,7 @@ class TimedHistoryList extends StatelessWidget {
                   color: AppColors.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.outline),
+                    side: BorderSide(color: AppColors.outline),
                   ),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
@@ -680,7 +680,7 @@ class TimedHistoryList extends StatelessWidget {
                               children: [
                                 Text(
                                   "SET ${set.setNumber}",
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.textDisabled,

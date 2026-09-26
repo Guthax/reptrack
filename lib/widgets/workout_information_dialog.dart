@@ -111,7 +111,7 @@ class WorkoutInformationDialog extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${dayWithExercises.exercises.length} exercises',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -120,7 +120,7 @@ class WorkoutInformationDialog extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.timer_outlined,
                       size: 13,
                       color: AppColors.textSecondary,
@@ -128,7 +128,7 @@ class WorkoutInformationDialog extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '~${_formatDuration(_estimatedDurationSeconds(dayWithExercises.exercises))}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
@@ -230,7 +230,7 @@ class _BodyView extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 10,
             fontWeight: FontWeight.w600,
@@ -263,7 +263,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.0,
@@ -287,8 +287,8 @@ class _MuscleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = AppColors.primary;
-    const secondaryColor = Color(0xFF8AB800);
+    final primaryColor = AppColors.primary;
+    final secondaryColor = AppColors.accentMuted;
     final color = isPrimary ? primaryColor : secondaryColor;
 
     return Container(
@@ -371,12 +371,12 @@ class BodyDiagramPainter extends CustomPainter {
   Paint _fill(String muscle) {
     if (_isPrimary(muscle)) {
       return Paint()
-        ..color = const Color(0xCCC6FF00)
+        ..color = AppColors.primary.withValues(alpha: 0.8)
         ..style = PaintingStyle.fill;
     }
     if (_isSecondary(muscle)) {
       return Paint()
-        ..color = const Color(0xFF527700)
+        ..color = AppColors.accentMutedFill
         ..style = PaintingStyle.fill;
     }
     return Paint()

@@ -61,7 +61,7 @@ class TimedSetsEditor extends StatelessWidget {
                   width: 60,
                   child: Text(
                     "Set ${i + 1}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
                     ),
@@ -73,7 +73,7 @@ class TimedSetsEditor extends StatelessWidget {
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
-                      MaxValueInputFormatter(999),
+                      const MaxValueInputFormatter(999),
                     ],
                     decoration: const InputDecoration(
                       labelText: 'Min',
@@ -89,7 +89,7 @@ class TimedSetsEditor extends StatelessWidget {
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
-                      MaxValueInputFormatter(59),
+                      const MaxValueInputFormatter(59),
                     ],
                     decoration: const InputDecoration(
                       labelText: 'Sec',
@@ -100,7 +100,7 @@ class TimedSetsEditor extends StatelessWidget {
                 ),
                 if (minuteControllers.length > 1)
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.remove_circle_outline,
                       color: AppColors.error,
                     ),

@@ -166,7 +166,7 @@ class BuildProgramPage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ListTile(
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.edit_outlined,
                             color: AppColors.primary,
                           ),
@@ -177,7 +177,7 @@ class BuildProgramPage extends StatelessWidget {
                           },
                         ),
                         ListTile(
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.delete_outline,
                             color: AppColors.error,
                           ),
@@ -198,7 +198,7 @@ class BuildProgramPage extends StatelessWidget {
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.error,
-                                      foregroundColor: Colors.white,
+                                      foregroundColor: AppColors.onError,
                                     ),
                                     onPressed: () {
                                       controller.deleteDay(day.id);
@@ -234,7 +234,7 @@ class BuildProgramPage extends StatelessWidget {
                         onTap: () => Get.dialog(
                           WorkoutInformationDialog(dayWithExercises: entry),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.info_outline,
                           size: 16,
                           color: AppColors.textSecondary,
@@ -264,19 +264,19 @@ class BuildProgramPage extends StatelessWidget {
                             (ex) => ListTile(
                               key: ValueKey(ex.volume.id),
                               leading: ex.isCardio
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.directions_run,
                                       size: 36,
                                       color: AppColors.secondary,
                                     )
                                   : ex.isTimed && ex.equipment == null
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.timer_outlined,
                                       size: 36,
                                       color: AppColors.secondary,
                                     )
                                   : (ex.equipment!.iconName == 'no_equipment'
-                                        ? const Icon(
+                                        ? Icon(
                                             Icons.accessibility_new,
                                             size: 36,
                                             color: AppColors.secondary,
@@ -285,7 +285,7 @@ class BuildProgramPage extends StatelessWidget {
                                             'assets/icons/equipments/${ex.equipment!.iconName}.svg',
                                             width: 36,
                                             height: 36,
-                                            colorFilter: const ColorFilter.mode(
+                                            colorFilter: ColorFilter.mode(
                                               AppColors.secondary,
                                               BlendMode.srcIn,
                                             ),
@@ -309,7 +309,7 @@ class BuildProgramPage extends StatelessWidget {
                                     ),
                               trailing: ReorderableDragStartListener(
                                 index: exercises.indexOf(ex),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.drag_handle,
                                   color: AppColors.textSecondary,
                                 ),
@@ -342,7 +342,7 @@ class BuildProgramPage extends StatelessWidget {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         ListTile(
-                                          leading: const Icon(
+                                          leading: Icon(
                                             Icons.edit_outlined,
                                             color: AppColors.primary,
                                           ),
@@ -357,7 +357,7 @@ class BuildProgramPage extends StatelessWidget {
                                           },
                                         ),
                                         ListTile(
-                                          leading: const Icon(
+                                          leading: Icon(
                                             Icons.delete_outline,
                                             color: AppColors.error,
                                           ),
@@ -383,7 +383,7 @@ class BuildProgramPage extends StatelessWidget {
                                                           backgroundColor:
                                                               AppColors.error,
                                                           foregroundColor:
-                                                              Colors.white,
+                                                              AppColors.onError,
                                                         ),
                                                     onPressed: () {
                                                       controller

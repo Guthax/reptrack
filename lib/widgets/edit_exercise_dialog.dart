@@ -82,7 +82,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Exercise Name *',
                       style: TextStyle(
                         fontSize: 12,
@@ -108,7 +108,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Muscle Group',
                       style: TextStyle(
                         fontSize: 12,
@@ -160,7 +160,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                             },
                           ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Equipment Types *',
                       style: TextStyle(
                         fontSize: 12,
@@ -191,14 +191,14 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
                           backgroundColor: AppColors.surfaceVariant,
                           selectedColor: AppColors.primary,
                           labelStyle: TextStyle(
-                            color: selected ? Colors.black : null,
+                            color: selected ? AppColors.onPrimary : null,
                             fontWeight: selected ? FontWeight.w600 : null,
                           ),
                         );
                       }).toList(),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Note',
                       style: TextStyle(
                         fontSize: 12,
@@ -233,19 +233,12 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 16,
-                ),
+                Icon(Icons.error_outline, color: AppColors.error, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     _error!,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.error, fontSize: 13),
                   ),
                 ),
               ],
@@ -255,7 +248,7 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: Colors.black,
+            foregroundColor: AppColors.onPrimary,
           ),
           onPressed: !_loaded
               ? null
