@@ -58,19 +58,27 @@ void main() async {
 }
 
 /// Root widget; configures [GetMaterialApp] with the app theme.
+///
+/// The theme is also applied through a non-animated [Theme] in `builder`, so a
+/// theme switch takes effect in the same frame as the app-wide rebuild instead
+/// of leaving widgets built with a half-animated theme.
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = Get.find<SettingsController>();
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: settings.isFirstLaunch.value
-          ? const OnboardingPage()
-          : const HomePage(),
-    );
+    return Obx(() {
+      final theme = AppTheme.from(settings.palette);
+      return GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: theme,
+        builder: (context, child) => Theme(data: theme, child: child!),
+        home: settings.isFirstLaunch.value
+            ? const OnboardingPage()
+            : const HomePage(),
+      );
+    });
   }
 }
 
@@ -85,11 +93,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final NavigationController navRepo = Get.put(NavigationController());
 
-    final List<Widget> pages = const [
-      ProgramsPage(),
-      WorkoutPage(),
-      TrackingPage(),
-    ];
+    const List<Widget> pages = [ProgramsPage(), WorkoutPage(), TrackingPage()];
 
     final celebration = Get.find<CelebrationController>();
 
@@ -104,11 +108,11 @@ class HomePage extends StatelessWidget {
               blastDirectionality: BlastDirectionality.explosive,
               numberOfParticles: 40,
               gravity: 0.3,
-              colors: const [
+              colors: [
                 AppColors.primary,
                 AppColors.secondary,
                 AppColors.success,
-                Colors.white,
+                AppColors.textPrimary,
               ],
             ),
           ),

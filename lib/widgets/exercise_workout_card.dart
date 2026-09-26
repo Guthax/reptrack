@@ -100,7 +100,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                   ),
                   if (!item.isCardio)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.edit_outlined,
                         color: AppColors.secondary,
                       ),
@@ -117,7 +117,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                       },
                     ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.comment_outlined,
                       color: AppColors.secondary,
                     ),
@@ -131,7 +131,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                   ),
                   if (!item.isCardio)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.find_replace,
                         color: AppColors.secondary,
                       ),
@@ -145,7 +145,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                       ),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.history, color: AppColors.secondary),
+                    icon: Icon(Icons.history, color: AppColors.secondary),
                     onPressed: () => showDialog(
                       context: context,
                       builder: (context) => ExerciseHistoryDialog(
@@ -186,7 +186,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                   ),
                 )
               else ...[
-                const Text(
+                Text(
                   "SWITCH EQUIPMENT",
                   style: TextStyle(
                     fontSize: 10,
@@ -250,9 +250,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                               label: const Text("ADD EXTRA SET"),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: AppColors.textSecondary,
-                                side: const BorderSide(
-                                  color: AppColors.outline,
-                                ),
+                                side: BorderSide(color: AppColors.outline),
                                 shape: const RoundedRectangleBorder(),
                               ),
                             ),
@@ -284,10 +282,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                               color: AppColors.error,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
+                            child: Icon(Icons.delete, color: AppColors.onError),
                           ),
                           onDismissed: (direction) {
                             controller.removeExtraSet(
@@ -335,7 +330,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
                           color: AppColors.secondary,
                           size: 18,
@@ -343,7 +338,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           "Rest Timer: ${timeLeft}s",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: AppColors.secondary,
                             letterSpacing: 0.5,
@@ -444,7 +439,7 @@ class _CardioLogSectionState extends State<CardioLogSection> {
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
                 "Target: ${widget.item.volume.durationLabel}",
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -455,13 +450,13 @@ class _CardioLogSectionState extends State<CardioLogSection> {
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
                 "Target distance: ${widget.item.volume.distancePlanned!.toStringAsFixed(1)} ${widget.item.volume.distancePlannedUnit}",
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          const Text(
+          Text(
             "DURATION",
             style: TextStyle(
               fontSize: 10,
@@ -480,7 +475,7 @@ class _CardioLogSectionState extends State<CardioLogSection> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(23),
+                    const MaxValueInputFormatter(23),
                   ],
                   decoration: const InputDecoration(
                     labelText: "Hours",
@@ -496,7 +491,7 @@ class _CardioLogSectionState extends State<CardioLogSection> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(59),
+                    const MaxValueInputFormatter(59),
                   ],
                   decoration: const InputDecoration(
                     labelText: "Minutes",
@@ -512,7 +507,7 @@ class _CardioLogSectionState extends State<CardioLogSection> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(59),
+                    const MaxValueInputFormatter(59),
                   ],
                   decoration: const InputDecoration(
                     labelText: "Seconds",
@@ -523,7 +518,7 @@ class _CardioLogSectionState extends State<CardioLogSection> {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "DISTANCE",
             style: TextStyle(
               fontSize: 10,
@@ -669,7 +664,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "SWITCH EQUIPMENT",
           style: TextStyle(
             fontSize: 10,
@@ -702,7 +697,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Text(
+            Text(
               "DISTANCE UNIT",
               style: TextStyle(
                 fontSize: 10,
@@ -751,7 +746,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
                       label: const Text("ADD EXTRA SET"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textSecondary,
-                        side: const BorderSide(color: AppColors.outline),
+                        side: BorderSide(color: AppColors.outline),
                         shape: const RoundedRectangleBorder(),
                       ),
                     ),
@@ -783,7 +778,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    child: Icon(Icons.delete, color: AppColors.onError),
                   ),
                   onDismissed: (_) => controller.removeExtraSet(
                     widget.exerciseIndex,
@@ -828,7 +823,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.timer_outlined,
                   color: AppColors.secondary,
                   size: 18,
@@ -836,7 +831,7 @@ class _HybridLogSectionState extends State<HybridLogSection> {
                 const SizedBox(width: 8),
                 Text(
                   "Rest Timer: ${timeLeft}s",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.secondary,
                     letterSpacing: 0.5,
@@ -884,7 +879,7 @@ class _DistanceUnitSelector extends StatelessWidget {
             onSelected: enabled ? (_) => onChanged(unit) : null,
             labelStyle: TextStyle(
               fontSize: 12,
-              color: isSelected ? Colors.black : AppColors.textSecondary,
+              color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 4),
           ),
@@ -1080,9 +1075,9 @@ class _SetLogRowState extends State<SetLogRow> {
               backgroundColor: isSaved ? AppColors.success : AppColors.outline,
               child: Text(
                 "${widget.setNum}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white,
+                  color: isSaved ? AppColors.onSuccess : AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1097,7 +1092,7 @@ class _SetLogRowState extends State<SetLogRow> {
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  MaxValueInputFormatter(100000),
+                  const MaxValueInputFormatter(100000),
                 ],
                 decoration: InputDecoration(
                   labelText: unitLabel,
@@ -1114,7 +1109,7 @@ class _SetLogRowState extends State<SetLogRow> {
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
-                  MaxValueInputFormatter(100000),
+                  const MaxValueInputFormatter(100000),
                 ],
                 decoration: const InputDecoration(
                   labelText: "Reps",
@@ -1292,9 +1287,9 @@ class _HybridSetRowState extends State<HybridSetRow> {
               backgroundColor: isSaved ? AppColors.success : AppColors.outline,
               child: Text(
                 "${widget.setNum}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white,
+                  color: isSaved ? AppColors.onSuccess : AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1309,7 +1304,7 @@ class _HybridSetRowState extends State<HybridSetRow> {
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  MaxValueInputFormatter(100000),
+                  const MaxValueInputFormatter(100000),
                 ],
                 decoration: InputDecoration(
                   labelText: unitLabel,
@@ -1328,7 +1323,7 @@ class _HybridSetRowState extends State<HybridSetRow> {
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  MaxValueInputFormatter(100000),
+                  const MaxValueInputFormatter(100000),
                 ],
                 decoration: InputDecoration(
                   labelText: widget.distanceUnit,

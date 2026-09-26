@@ -56,7 +56,7 @@ class TrackWorkoutPage extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
-                  foregroundColor: Colors.black,
+                  foregroundColor: AppColors.onSuccess,
                   elevation: 0,
                   shape: const RoundedRectangleBorder(),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -132,7 +132,7 @@ class TrackWorkoutPage extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
-              foregroundColor: Colors.black,
+              foregroundColor: AppColors.onSuccess,
             ),
             onPressed: () {
               Get.back();
@@ -163,7 +163,7 @@ class TrackWorkoutPage extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.onError,
             ),
             onPressed: () => Get.offAll(() => const HomePage()),
             child: const Text("LEAVE"),

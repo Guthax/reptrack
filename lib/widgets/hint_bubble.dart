@@ -43,7 +43,7 @@ class HintBubble extends StatelessWidget {
           Flexible(
             child: Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textPrimary,
                 height: 1.4,

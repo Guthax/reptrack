@@ -92,7 +92,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
           return ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
+              foregroundColor: AppColors.onPrimary,
             ),
             onPressed: canConfirm
                 ? () {
@@ -148,7 +148,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 itemCount: filteredExercises.length,
                 separatorBuilder: (_, _) =>
-                    const Divider(height: 1, color: AppColors.outline),
+                    Divider(height: 1, color: AppColors.outline),
                 itemBuilder: (ctx, i) {
                   final ex = filteredExercises[i];
                   final cardio = _exerciseIsCardio(ex);
@@ -219,7 +219,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
           deleteIcon: const Icon(Icons.close),
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'EQUIPMENT',
           style: TextStyle(
             fontSize: 10,
@@ -284,7 +284,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
               : isTimed
               ? 'Timed exercise — tap Add to include it in your workout.'
               : 'No equipment options — tap Add to include it in your workout.',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
       ],
     );

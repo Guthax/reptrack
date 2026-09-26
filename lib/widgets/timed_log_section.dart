@@ -185,11 +185,11 @@ class _RestStrip extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          const Icon(Icons.timer_outlined, color: AppColors.secondary),
+          Icon(Icons.timer_outlined, color: AppColors.secondary),
           const SizedBox(width: 8),
           Text(
             'Rest ${formatDuration(seconds)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               color: AppColors.secondary,
             ),
@@ -215,7 +215,7 @@ class _AllSetsDone extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.check_circle, color: AppColors.success, size: 48),
+        Icon(Icons.check_circle, color: AppColors.success, size: 48),
         const SizedBox(height: 8),
         const Text(
           'All sets done',
@@ -287,7 +287,7 @@ class _ActiveSetBody extends StatelessWidget {
       children: [
         Text(
           'SET $setNum / $totalSets',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: AppColors.textSecondary,
@@ -345,7 +345,7 @@ class _ActiveSetBody extends StatelessWidget {
                 : 'no target',
             if (past != null) 'last ${formatDuration(past.durationSeconds)}',
           ].join(' · '),
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -356,7 +356,9 @@ class _ActiveSetBody extends StatelessWidget {
               backgroundColor: phase == TimedSetPhase.running
                   ? AppColors.error
                   : AppColors.primary,
-              foregroundColor: Colors.black,
+              foregroundColor: phase == TimedSetPhase.running
+                  ? AppColors.onError
+                  : AppColors.onPrimary,
               textStyle: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -462,11 +464,11 @@ class _HoldToResetButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.outline),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.restart_alt, size: 18, color: AppColors.textSecondary),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
                 'HOLD TO RESET',
                 style: TextStyle(
@@ -545,7 +547,7 @@ class _TimedSetList extends StatelessWidget {
               label: const Text('ADD EXTRA SET'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
-                side: const BorderSide(color: AppColors.outline),
+                side: BorderSide(color: AppColors.outline),
               ),
             ),
           );
@@ -574,7 +576,7 @@ class _TimedSetList extends StatelessWidget {
               color: AppColors.error,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.delete, color: Colors.white),
+            child: Icon(Icons.delete, color: AppColors.onError),
           ),
           onDismissed: (_) =>
               controller.removeExtraSet(exerciseIndex, equipmentId),
@@ -687,7 +689,7 @@ class _TimedSetTile extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 'SET $setNum',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textSecondary,
@@ -854,7 +856,7 @@ class _TimedWeightSheetState extends State<_TimedWeightSheet> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
             decoration: InputDecoration(
               labelText: 'Weight',

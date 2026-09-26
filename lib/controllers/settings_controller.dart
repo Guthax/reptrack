@@ -1,17 +1,27 @@
 import 'package:get/get.dart';
 import 'package:reptrack/constants.dart';
+import 'package:reptrack/utils/app_palette.dart';
+import 'package:reptrack/utils/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists and exposes user preferences.
 ///
 /// Registered as a permanent singleton in [main] so the setting survives
-/// navigation resets. The unit preference is persisted via [SharedPreferences].
+/// navigation resets. The unit and theme preferences are persisted via
+/// [SharedPreferences].
 class SettingsController extends GetxController {
   static const _keyUseImperial = 'use_imperial';
   static const _keyOnboardingSeen = 'onboarding_seen';
   static const _keyExpandDayHintSeen = 'expand_day_hint_seen';
+  static const _keyThemeId = 'theme_id';
   final RxBool useImperial = false.obs;
   final RxBool isFirstLaunch = true.obs;
+
+  /// The selected color theme.
+  final Rx<AppThemeId> themeId = AppThemeId.charcoalLime.obs;
+
+  /// The palette of the selected color theme.
+  AppPalette get palette => appPalettes[themeId.value]!;
 
   /// Set after onboarding; drives the coach-mark bubble on [ProgramsPage].
   final RxBool showAddProgramHint = false.obs;
@@ -26,6 +36,8 @@ class SettingsController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     useImperial.value = prefs.getBool(_keyUseImperial) ?? false;
     isFirstLaunch.value = !(prefs.getBool(_keyOnboardingSeen) ?? false);
+    themeId.value = appThemeIdFromName(prefs.getString(_keyThemeId));
+    AppColors.palette = palette;
     if (prefs.getBool(_keyExpandDayHintSeen) ?? false) {
       showExpandDayHint.value = false;
     }
@@ -71,6 +83,14 @@ class SettingsController extends GetxController {
     useImperial.value = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyUseImperial, value);
+  }
+
+  /// Selects the color theme [id], applies it to [AppColors] and persists it.
+  Future<void> setTheme(AppThemeId id) async {
+    themeId.value = id;
+    AppColors.palette = palette;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyThemeId, id.name);
   }
 
   /// Converts a kg value to the currently selected display unit.

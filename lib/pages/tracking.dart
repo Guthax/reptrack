@@ -184,7 +184,7 @@ class _ExerciseProgressView extends StatelessWidget {
                           equipment.name,
                           style: TextStyle(
                             fontSize: 12,
-                            color: isSelected ? Colors.black : null,
+                            color: isSelected ? AppColors.onPrimary : null,
                             fontWeight: isSelected ? FontWeight.w600 : null,
                           ),
                         ),
@@ -528,7 +528,7 @@ class _BodyweightView extends StatelessWidget {
                   ),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
-                    MaxValueInputFormatter(100000),
+                    const MaxValueInputFormatter(100000),
                   ],
                   decoration: InputDecoration(
                     hintText: 'Weight in ${settings.unitLabel}',
@@ -739,11 +739,11 @@ class _WeightChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (val) =>
-                const FlLine(color: AppColors.outline, strokeWidth: 1),
+                FlLine(color: AppColors.outline, strokeWidth: 1),
           ),
           borderData: FlBorderData(
             show: true,
-            border: const Border(
+            border: Border(
               bottom: BorderSide(color: AppColors.outline),
               left: BorderSide(color: AppColors.outline),
             ),
@@ -790,8 +790,8 @@ class _WeightChart extends StatelessWidget {
                 if (idx < 0 || idx >= data.length) return null;
                 return LineTooltipItem(
                   '${dateFormat.format(data[idx].key)}\n${fmtTooltip(s.y, unit)}',
-                  const TextStyle(
-                    color: Colors.white,
+                  TextStyle(
+                    color: AppColors.textPrimary,
                     fontSize: 12,
                     height: 1.5,
                   ),

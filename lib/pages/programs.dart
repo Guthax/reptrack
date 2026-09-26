@@ -68,7 +68,7 @@ class ProgramsPage extends StatelessWidget {
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.fitness_center,
                                 color: AppColors.primary,
                                 size: 22,
@@ -83,7 +83,7 @@ class ProgramsPage extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.delete_outline,
                                 color: AppColors.error,
                               ),
@@ -101,7 +101,7 @@ class ProgramsPage extends StatelessWidget {
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.error,
-                                        foregroundColor: Colors.white,
+                                        foregroundColor: AppColors.onError,
                                       ),
                                       onPressed: () {
                                         controller.deleteProgram(program);

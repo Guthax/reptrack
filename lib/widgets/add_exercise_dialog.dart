@@ -366,7 +366,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             deleteIcon: const Icon(Icons.close),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'PLANNED DURATION (optional)',
             style: TextStyle(
               fontSize: 10,
@@ -384,7 +384,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(23),
+                    const MaxValueInputFormatter(23),
                   ],
                   decoration: const InputDecoration(
                     labelText: 'Hours',
@@ -400,7 +400,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    MaxValueInputFormatter(59),
+                    const MaxValueInputFormatter(59),
                   ],
                   decoration: const InputDecoration(
                     labelText: 'Minutes',
@@ -412,7 +412,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'PLANNED DISTANCE (optional)',
             style: TextStyle(
               fontSize: 10,
@@ -529,7 +529,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     width: 60,
                     child: Text(
                       "Set ${i + 1}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
@@ -545,7 +545,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                         FilteringTextInputFormatter.allow(
                           RegExp(r'^\d*\.?\d*'),
                         ),
-                        MaxValueInputFormatter(100000),
+                        const MaxValueInputFormatter(100000),
                       ],
                       decoration: InputDecoration(
                         labelText: 'Distance',
@@ -557,7 +557,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   ),
                   if (distanceControllers.length > 1)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.remove_circle_outline,
                         color: AppColors.error,
                       ),
@@ -591,7 +591,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],
@@ -675,7 +675,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],
@@ -727,7 +727,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     width: 60,
                     child: Text(
                       "Set ${i + 1}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
                       ),
@@ -739,7 +739,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        MaxValueInputFormatter(100000),
+                        const MaxValueInputFormatter(100000),
                       ],
                       decoration: const InputDecoration(
                         labelText: "Reps",
@@ -750,7 +750,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                   ),
                   if (setControllers.length > 1)
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.remove_circle_outline,
                         color: AppColors.error,
                       ),
@@ -784,7 +784,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              MaxValueInputFormatter(100000),
+              const MaxValueInputFormatter(100000),
             ],
           ),
         ],

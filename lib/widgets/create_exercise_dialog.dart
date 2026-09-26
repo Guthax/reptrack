@@ -64,7 +64,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Exercise Name (Required)
-              const Text(
+              Text(
                 'Exercise Name *',
                 style: TextStyle(
                   fontSize: 12,
@@ -92,7 +92,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               const SizedBox(height: 20),
 
               // Exercise Type Section (List Style)
-              const Text(
+              Text(
                 'Exercise Type',
                 style: TextStyle(
                   fontSize: 12,
@@ -149,11 +149,11 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                                   )
                                 : null,
                             trailing: isSelected
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check_circle,
                                     color: AppColors.primary,
                                   )
-                                : const Icon(
+                                : Icon(
                                     Icons.circle_outlined,
                                     color: AppColors.surfaceVariant,
                                   ),
@@ -167,7 +167,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               const SizedBox(height: 20),
 
               // Muscle Group (Optional)
-              const Text(
+              Text(
                 'Muscle Group',
                 style: TextStyle(
                   fontSize: 12,
@@ -227,7 +227,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Compatible Equipment',
                             style: TextStyle(
                               fontSize: 12,
@@ -258,7 +258,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
                                     color:
                                         controller.selectedEquipmentIds
                                             .contains(equipment.id)
-                                        ? Colors.black
+                                        ? AppColors.onPrimary
                                         : null,
                                     fontWeight:
                                         controller.selectedEquipmentIds
@@ -276,7 +276,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
               ),
 
               // Note (Optional)
-              const Text(
+              Text(
                 'Note',
                 style: TextStyle(
                   fontSize: 12,
@@ -310,7 +310,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: Colors.black,
+            foregroundColor: AppColors.onPrimary,
           ),
           onPressed: () async {
             final exercise = await controller.createExercise(

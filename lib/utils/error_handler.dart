@@ -50,11 +50,11 @@ abstract final class AppErrorHandler {
 
     Get.dialog(
       AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.error_outline, color: AppColors.error, size: 20),
-            SizedBox(width: 8),
-            Text('Something went wrong'),
+            const SizedBox(width: 8),
+            const Text('Something went wrong'),
           ],
         ),
         content: SingleChildScrollView(
@@ -67,7 +67,7 @@ abstract final class AppErrorHandler {
                 'and send them to the developer.',
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 _kDeveloperEmail,
                 style: TextStyle(
                   color: AppColors.primary,
@@ -85,7 +85,7 @@ abstract final class AppErrorHandler {
                 ),
                 child: SelectableText(
                   details,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontFamily: 'monospace',
                     color: AppColors.textSecondary,

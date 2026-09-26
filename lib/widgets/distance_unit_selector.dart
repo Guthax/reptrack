@@ -26,7 +26,7 @@ class DistanceUnitSelector extends StatelessWidget {
           onSelected: (_) => onChanged(unit),
           labelStyle: TextStyle(
             fontSize: 12,
-            color: isSelected ? Colors.black : AppColors.textSecondary,
+            color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 4),
         );
