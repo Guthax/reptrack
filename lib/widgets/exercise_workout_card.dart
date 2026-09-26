@@ -9,6 +9,7 @@ import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/widgets/exercise_history_card_widget.dart';
 import 'package:reptrack/widgets/edit_exercise_dialog.dart';
 import 'package:reptrack/widgets/swap_exercise_dialog.dart';
+import 'package:reptrack/widgets/timed_log_section.dart';
 
 double distanceUnitToMeters(double value, String unit) {
   switch (unit) {
@@ -89,6 +90,8 @@ class ExerciseSwipeCard extends StatelessWidget {
                               ? 'Cardio'
                               : item.isHybrid
                               ? 'Hybrid'
+                              : item.isTimed
+                              ? 'Timed'
                               : (item.primaryMuscleGroup ?? 'General'),
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
@@ -150,6 +153,7 @@ class ExerciseSwipeCard extends StatelessWidget {
                         exerciseName: item.exercise.name,
                         isCardio: item.isCardio,
                         isHybrid: item.isHybrid,
+                        isTimed: item.isTimed,
                       ),
                     ),
                   ),
@@ -168,6 +172,14 @@ class ExerciseSwipeCard extends StatelessWidget {
               else if (item.isHybrid)
                 Expanded(
                   child: HybridLogSection(
+                    item: item,
+                    exerciseIndex: exerciseIndex,
+                    alternatives: alternatives,
+                  ),
+                )
+              else if (item.isTimed)
+                Expanded(
+                  child: TimedLogSection(
                     item: item,
                     exerciseIndex: exerciseIndex,
                     alternatives: alternatives,

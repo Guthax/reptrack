@@ -47,6 +47,7 @@ class _CreateExerciseDialogState extends State<CreateExerciseDialog> {
     if (name.contains('strength')) return 'Reps & Weight';
     if (name.contains('cardio')) return 'Distance & Time';
     if (name.contains('hybrid')) return 'Distance & Weight';
+    if (name.contains('timed')) return 'Time';
     return '';
   }
 

@@ -92,10 +92,11 @@ class BuildProgramController extends GetxController {
 
   /// Adds [exercise] to the workout day identified by [dayId].
   ///
-  /// Routes to cardio, hybrid, or strength storage based on [exercise.exerciseTypeId].
+  /// Routes to cardio, hybrid, timed, or strength storage based on [exercise.exerciseTypeId].
   /// Cardio exercises ('2') use [durationSeconds]. Hybrid exercises ('3') use
-  /// [setsDistances], [distanceUnit], [equipmentId], and [restTimer]. Strength
-  /// exercises use [setsReps], [equipmentId], and [restTimer].
+  /// [setsDistances], [distanceUnit], [equipmentId], and [restTimer]. Timed
+  /// exercises ('4') use [setsSeconds], [equipmentId], and [restTimer].
+  /// Strength exercises use [setsReps], [equipmentId], and [restTimer].
   Future<void> addExerciseToDay(
     String dayId,
     Exercise exercise,
@@ -107,10 +108,12 @@ class BuildProgramController extends GetxController {
     String distancePlannedCardioUnit = 'km',
     List<double> setsDistances = const [100.0],
     String distanceUnit = 'm',
+    List<int> setsSeconds = const [60],
   }) async {
     try {
       final isHybrid = exercise.exerciseTypeId == '3';
       final isCardio = exercise.exerciseTypeId == '2';
+      final isTimed = exercise.exerciseTypeId == '4';
 
       if (isCardio) {
         await db.addCardioExerciseToDay(
@@ -127,6 +130,14 @@ class BuildProgramController extends GetxController {
           equipmentId: equipmentId,
           setsDistances: setsDistances,
           distanceUnit: distanceUnit,
+          restTimer: restTimer,
+        );
+      } else if (isTimed) {
+        await db.addTimedExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: exercise.id,
+          equipmentId: equipmentId,
+          setsSeconds: setsSeconds,
           restTimer: restTimer,
         );
       } else {
@@ -151,6 +162,8 @@ class BuildProgramController extends GetxController {
         await db.deleteProgramCardioExercise(volume.id);
       } else if (volume.isHybrid) {
         await db.deleteProgramHybridExercise(volume.id);
+      } else if (volume.isTimed) {
+        await db.deleteProgramTimedExercise(volume.id);
       } else {
         await db.deleteProgramStrengthExercise(volume.id);
       }
@@ -186,6 +199,7 @@ class BuildProgramController extends GetxController {
   /// For cardio: updates [exerciseId] and planned [durationSeconds].
   /// For hybrid: updates [exerciseId], [equipmentId], [setsDistances],
   /// [distanceUnit], and [restTimer].
+  /// For timed: updates [exerciseId], [equipmentId], [setsSeconds], and [restTimer].
   /// For strength: updates [exerciseId], [equipmentId], [setsReps], and [restTimer].
   Future<void> updateExerciseInDay(
     ProgramExerciseVolume volume,
@@ -198,6 +212,7 @@ class BuildProgramController extends GetxController {
     String distancePlannedCardioUnit = 'km',
     List<double> setsDistances = const [100.0],
     String distanceUnit = 'm',
+    List<int> setsSeconds = const [60],
   }) async {
     try {
       if (volume.isCardio) {
@@ -217,6 +232,16 @@ class BuildProgramController extends GetxController {
             equipmentId: drift.Value(equipmentId),
             setsDistances: drift.Value(jsonEncode(setsDistances)),
             distanceUnit: drift.Value(distanceUnit),
+            restTimer: drift.Value(restTimer),
+          ),
+          volume.id,
+        );
+      } else if (volume.isTimed) {
+        await db.updateProgramTimedExercise(
+          ProgramTimedExercisesCompanion(
+            exerciseId: drift.Value(exercise.id),
+            equipmentId: drift.Value(equipmentId),
+            setsSeconds: drift.Value(jsonEncode(setsSeconds)),
             restTimer: drift.Value(restTimer),
           ),
           volume.id,

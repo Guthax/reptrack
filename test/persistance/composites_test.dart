@@ -53,6 +53,21 @@ ProgramHybridExercise _hybrid({
   weight: weight,
 );
 
+ProgramTimedExercise _timed({
+  String setsSeconds = '[60,45,30]',
+  int? restTimer,
+  String? equipmentId,
+  int order = 3,
+}) => ProgramTimedExercise(
+  id: 'te1',
+  workoutDayId: 'day1',
+  equipmentId: equipmentId,
+  exerciseId: 'ex4',
+  orderInProgram: order,
+  setsSeconds: setsSeconds,
+  restTimer: restTimer,
+);
+
 void main() {
   group('ProgramExerciseVolume – strength variant', () {
     late ProgramExerciseVolume vol;
@@ -295,6 +310,76 @@ void main() {
     });
   });
 
+  group('ProgramExerciseVolume – timed variant', () {
+    late ProgramExerciseVolume vol;
+
+    setUp(() {
+      vol = ProgramExerciseVolume.timed(
+        _timed(restTimer: 60, equipmentId: 'eq1'),
+      );
+    });
+
+    test('isTimed is true', () => expect(vol.isTimed, isTrue));
+    test('isCardio is false', () => expect(vol.isCardio, isFalse));
+    test('isHybrid is false', () => expect(vol.isHybrid, isFalse));
+    test('timed accessor returns the row', () => expect(vol.timed, isNotNull));
+    test('strength accessor is null', () => expect(vol.strength, isNull));
+    test('id returns timed id', () => expect(vol.id, 'te1'));
+    test('workoutDayId returns timed value', () {
+      expect(vol.workoutDayId, 'day1');
+    });
+    test('exerciseId returns timed value', () => expect(vol.exerciseId, 'ex4'));
+    test('orderInProgram returns timed value', () {
+      expect(vol.orderInProgram, 3);
+    });
+    test('equipmentId returns timed value', () {
+      expect(vol.equipmentId, 'eq1');
+    });
+    test('restTimer returns timed value', () => expect(vol.restTimer, 60));
+    test('weight is 0.0 for timed', () => expect(vol.weight, 0.0));
+    test('isTimed is false for other variants', () {
+      expect(ProgramExerciseVolume.strength(_strength()).isTimed, isFalse);
+      expect(ProgramExerciseVolume.cardio(_cardio()).isTimed, isFalse);
+      expect(ProgramExerciseVolume.hybrid(_hybrid()).isTimed, isFalse);
+    });
+  });
+
+  group('setsSecondsList', () {
+    test('parses a JSON list of seconds', () {
+      final vol = ProgramExerciseVolume.timed(_timed());
+      expect(vol.setsSecondsList, [60, 45, 30]);
+    });
+
+    test('falls back to [60] on invalid JSON', () {
+      final vol = ProgramExerciseVolume.timed(_timed(setsSeconds: 'oops'));
+      expect(vol.setsSecondsList, [60]);
+    });
+
+    test('defaults to [60] for non-timed variants', () {
+      final vol = ProgramExerciseVolume.strength(_strength());
+      expect(vol.setsSecondsList, [60]);
+    });
+  });
+
+  group('setsSecondsLabel', () {
+    test('uses N × duration when all targets are equal', () {
+      final vol = ProgramExerciseVolume.timed(
+        _timed(setsSeconds: '[60,60,60]'),
+      );
+      expect(vol.setsSecondsLabel, '3 × 1:00');
+    });
+
+    test('lists every target when they differ', () {
+      final vol = ProgramExerciseVolume.timed(_timed());
+      expect(vol.setsSecondsLabel, '1:00, 0:45, 0:30');
+    });
+
+    test('shows the set count when no target is set', () {
+      final vol = ProgramExerciseVolume.timed(_timed(setsSeconds: '[0,0,0]'));
+      expect(vol.setsSecondsLabel, '3 sets');
+    });
+  });
+
   group('ExerciseWithVolume', () {
     test('isCardio delegates to volume', () {
       final exercise = Exercise(id: 'ex1', name: 'Run', exerciseTypeId: '2');
@@ -314,6 +399,16 @@ void main() {
       final exercise = Exercise(id: 'ex1', name: 'Bench', exerciseTypeId: '1');
       final vol = ProgramExerciseVolume.strength(_strength());
       final ewv = ExerciseWithVolume(exercise: exercise, volume: vol);
+      expect(ewv.isCardio, isFalse);
+      expect(ewv.isHybrid, isFalse);
+      expect(ewv.isTimed, isFalse);
+    });
+
+    test('isTimed delegates to volume', () {
+      final exercise = Exercise(id: 'ex4', name: 'Plank', exerciseTypeId: '4');
+      final vol = ProgramExerciseVolume.timed(_timed());
+      final ewv = ExerciseWithVolume(exercise: exercise, volume: vol);
+      expect(ewv.isTimed, isTrue);
       expect(ewv.isCardio, isFalse);
       expect(ewv.isHybrid, isFalse);
     });

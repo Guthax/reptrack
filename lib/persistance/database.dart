@@ -166,6 +166,29 @@ class ProgramHybridExercises extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A timed exercise entry within a workout day, planned as a target duration
+/// per set.
+///
+/// [setsSeconds] is a JSON list of target seconds per set, e.g. `"[60,45,30]"`;
+/// a target of `0` means no target was set.
+class ProgramTimedExercises extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get workoutDayId =>
+      text().references(WorkoutDays, #id, onDelete: KeyAction.cascade)();
+  TextColumn get equipmentId => text().nullable().references(
+    Equipments,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
+  TextColumn get exerciseId => text().references(Exercises, #id)();
+  IntColumn get orderInProgram => integer().withDefault(const Constant(0))();
+  TextColumn get setsSeconds => text().withDefault(const Constant('[60]'))();
+  IntColumn get restTimer => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// A bodyweight log entry recorded by the user on a given date.
 class BodyweightEntries extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
@@ -238,6 +261,27 @@ class WorkoutHybridSets extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// An individual timed set logged during a workout (duration + optional weight).
+///
+/// [durationSeconds] is greater than zero when logged by the user; `0` only
+/// occurs for sets converted from strength history and means no time was
+/// recorded. [weight] is in kg, or `null` when no weight was used.
+class WorkoutTimedSets extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get workoutId =>
+      text().references(Workouts, #id, onDelete: KeyAction.cascade)();
+  TextColumn get exerciseId => text().references(Exercises, #id)();
+  TextColumn get equipmentId => text().nullable().references(Equipments, #id)();
+  IntColumn get setNumber => integer()();
+  IntColumn get durationSeconds => integer()();
+  RealColumn get weight => real().nullable()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get dateLogged => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Exercises,
@@ -251,10 +295,12 @@ class WorkoutHybridSets extends Table {
     ProgramStrengthExercises,
     ProgramCardioExercises,
     ProgramHybridExercises,
+    ProgramTimedExercises,
     Workouts,
     WorkoutStrengthSets,
     WorkoutCardioSets,
     WorkoutHybridSets,
+    WorkoutTimedSets,
     BodyweightEntries,
   ],
 )
@@ -266,7 +312,106 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// Creates all tables on a fresh install and upgrades older schemas step
+  /// by step.
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await _migrateToV2(m);
+      }
+    },
+  );
+
+  /// Lower-cased names of the built-in hold exercises that become Timed.
+  static const _holdExerciseNames = {
+    'plank',
+    'side plank',
+    'copenhagen plank',
+    'wall sit',
+    'hollow body hold',
+    'l-sit',
+    'isometric curl hold',
+  };
+
+  /// Upgrades a schema v1 database to v2 in a single transaction.
+  ///
+  /// Creates the timed program and set tables, registers the Timed exercise
+  /// type and converts the built-in hold exercises (see [_convertHoldsToTimed]).
+  Future<void> _migrateToV2(Migrator m) => transaction(() async {
+    await m.createTable(programTimedExercises);
+    await m.createTable(workoutTimedSets);
+    await into(exerciseTypes).insertOnConflictUpdate(
+      ExerciseTypesCompanion.insert(id: const Value('4'), name: 'Timed'),
+    );
+    await _convertHoldsToTimed();
+  });
+
+  /// Converts every exercise named in [_holdExerciseNames] to the Timed type.
+  ///
+  /// Their strength sets become timed sets with `durationSeconds = 0` (no time
+  /// recorded), keeping a weight above 0 kg. Their strength program entries
+  /// become timed entries with one empty target per planned set. The original
+  /// strength rows are deleted. Row ids, ordering and rest timers are kept.
+  Future<void> _convertHoldsToTimed() async {
+    final holdIds = (await select(exercises).get())
+        .where((e) => _holdExerciseNames.contains(e.name.trim().toLowerCase()))
+        .map((e) => e.id)
+        .toList();
+    if (holdIds.isEmpty) return;
+
+    final sets = await (select(
+      workoutStrengthSets,
+    )..where((s) => s.exerciseId.isIn(holdIds))).get();
+    for (final set in sets) {
+      await into(workoutTimedSets).insert(
+        WorkoutTimedSetsCompanion.insert(
+          id: Value(set.id),
+          workoutId: set.workoutId,
+          exerciseId: set.exerciseId,
+          equipmentId: Value(set.equipmentId),
+          setNumber: set.setNumber,
+          durationSeconds: 0,
+          weight: Value(set.weight > 0 ? set.weight : null),
+          isCompleted: Value(set.isCompleted),
+          dateLogged: Value(set.dateLogged),
+        ),
+      );
+    }
+
+    final entries = await (select(
+      programStrengthExercises,
+    )..where((p) => p.exerciseId.isIn(holdIds))).get();
+    for (final entry in entries) {
+      final setCount = ProgramExerciseVolume.strength(
+        entry,
+      ).setsRepsList.length;
+      await into(programTimedExercises).insert(
+        ProgramTimedExercisesCompanion.insert(
+          id: Value(entry.id),
+          workoutDayId: entry.workoutDayId,
+          exerciseId: entry.exerciseId,
+          equipmentId: Value(entry.equipmentId),
+          orderInProgram: Value(entry.orderInProgram),
+          setsSeconds: Value(jsonEncode(List.filled(setCount, 0))),
+          restTimer: Value(entry.restTimer),
+        ),
+      );
+    }
+
+    await (delete(
+      workoutStrengthSets,
+    )..where((s) => s.exerciseId.isIn(holdIds))).go();
+    await (delete(
+      programStrengthExercises,
+    )..where((p) => p.exerciseId.isIn(holdIds))).go();
+    await (update(exercises)..where((e) => e.id.isIn(holdIds))).write(
+      const ExercisesCompanion(exerciseTypeId: Value('4')),
+    );
+  }
 
   // ── Programs ──────────────────────────────────────────────────────────────
 
@@ -298,6 +443,9 @@ class AppDatabase extends _$AppDatabase {
         )..where((pe) => pe.workoutDayId.isIn(dayIds))).go();
         await (delete(
           programHybridExercises,
+        )..where((pe) => pe.workoutDayId.isIn(dayIds))).go();
+        await (delete(
+          programTimedExercises,
         )..where((pe) => pe.workoutDayId.isIn(dayIds))).go();
       }
 
@@ -356,6 +504,25 @@ class AppDatabase extends _$AppDatabase {
 
   // ── Program exercises ─────────────────────────────────────────────────────
 
+  /// Returns the number of program exercises of every type on [workoutDayId].
+  ///
+  /// Used as the `orderInProgram` of a newly added entry so it lands last.
+  Future<int> _countExercisesInDay(String workoutDayId) async {
+    final strength = await (select(
+      programStrengthExercises,
+    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final cardio = await (select(
+      programCardioExercises,
+    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final hybrid = await (select(
+      programHybridExercises,
+    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final timed = await (select(
+      programTimedExercises,
+    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    return strength.length + cardio.length + hybrid.length + timed.length;
+  }
+
   Future<String> addStrengthExerciseToDay({
     required String workoutDayId,
     required String exerciseId,
@@ -365,19 +532,14 @@ class AppDatabase extends _$AppDatabase {
     double weight = 0.0,
   }) async {
     final id = _uuid.v4();
-    final existing = await (select(
-      programStrengthExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
-    final cardioCount = await (select(
-      programCardioExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final order = await _countExercisesInDay(workoutDayId);
     await into(programStrengthExercises).insert(
       ProgramStrengthExercisesCompanion(
         id: Value(id),
         workoutDayId: Value(workoutDayId),
         exerciseId: Value(exerciseId),
         equipmentId: Value(equipmentId),
-        orderInProgram: Value(existing.length + cardioCount.length),
+        orderInProgram: Value(order),
         setsReps: Value(jsonEncode(setsReps)),
         restTimer: Value(restTimer),
         weight: Value(weight),
@@ -394,18 +556,13 @@ class AppDatabase extends _$AppDatabase {
     String distancePlannedUnit = 'km',
   }) async {
     final id = _uuid.v4();
-    final strengthCount = await (select(
-      programStrengthExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
-    final cardioCount = await (select(
-      programCardioExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final order = await _countExercisesInDay(workoutDayId);
     await into(programCardioExercises).insert(
       ProgramCardioExercisesCompanion(
         id: Value(id),
         workoutDayId: Value(workoutDayId),
         exerciseId: Value(exerciseId),
-        orderInProgram: Value(strengthCount.length + cardioCount.length),
+        orderInProgram: Value(order),
         seconds: Value(seconds),
         distancePlanned: Value(distancePlanned),
         distancePlannedUnit: Value(distancePlannedUnit),
@@ -446,24 +603,14 @@ class AppDatabase extends _$AppDatabase {
     double weight = 0.0,
   }) async {
     final id = _uuid.v4();
-    final strengthCount = await (select(
-      programStrengthExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
-    final cardioCount = await (select(
-      programCardioExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
-    final hybridCount = await (select(
-      programHybridExercises,
-    )..where((tbl) => tbl.workoutDayId.equals(workoutDayId))).get();
+    final order = await _countExercisesInDay(workoutDayId);
     await into(programHybridExercises).insert(
       ProgramHybridExercisesCompanion(
         id: Value(id),
         workoutDayId: Value(workoutDayId),
         exerciseId: Value(exerciseId),
         equipmentId: Value(equipmentId),
-        orderInProgram: Value(
-          strengthCount.length + cardioCount.length + hybridCount.length,
-        ),
+        orderInProgram: Value(order),
         setsDistances: Value(jsonEncode(setsDistances)),
         distanceUnit: Value(distanceUnit),
         restTimer: Value(restTimer),
@@ -485,6 +632,45 @@ class AppDatabase extends _$AppDatabase {
     programHybridExercises,
   )..where((tbl) => tbl.id.equals(id))).write(companion);
 
+  /// Inserts a new timed exercise entry at the end of [workoutDayId] and
+  /// returns its id.
+  ///
+  /// [setsSeconds] holds the target seconds per set; `0` means no target.
+  Future<String> addTimedExerciseToDay({
+    required String workoutDayId,
+    required String exerciseId,
+    String? equipmentId,
+    required List<int> setsSeconds,
+    int? restTimer,
+  }) async {
+    final id = _uuid.v4();
+    final order = await _countExercisesInDay(workoutDayId);
+    await into(programTimedExercises).insert(
+      ProgramTimedExercisesCompanion(
+        id: Value(id),
+        workoutDayId: Value(workoutDayId),
+        exerciseId: Value(exerciseId),
+        equipmentId: Value(equipmentId),
+        orderInProgram: Value(order),
+        setsSeconds: Value(jsonEncode(setsSeconds)),
+        restTimer: Value(restTimer),
+      ),
+    );
+    return id;
+  }
+
+  /// Deletes a timed program exercise by its [id].
+  Future<int> deleteProgramTimedExercise(String id) =>
+      (delete(programTimedExercises)..where((tbl) => tbl.id.equals(id))).go();
+
+  /// Updates a timed program exercise identified by [id] with [companion].
+  Future<int> updateProgramTimedExercise(
+    ProgramTimedExercisesCompanion companion,
+    String id,
+  ) => (update(
+    programTimedExercises,
+  )..where((tbl) => tbl.id.equals(id))).write(companion);
+
   Future<void> reorderExercisesInDay(
     List<ProgramExerciseVolume> volumes,
   ) async {
@@ -499,6 +685,10 @@ class AppDatabase extends _$AppDatabase {
           await (update(programHybridExercises)
                 ..where((tbl) => tbl.id.equals(vol.id)))
               .write(ProgramHybridExercisesCompanion(orderInProgram: Value(i)));
+        } else if (vol.isTimed) {
+          await (update(programTimedExercises)
+                ..where((tbl) => tbl.id.equals(vol.id)))
+              .write(ProgramTimedExercisesCompanion(orderInProgram: Value(i)));
         } else {
           await (update(
             programStrengthExercises,
@@ -800,6 +990,25 @@ class AppDatabase extends _$AppDatabase {
             ..limit(1))
           .getSingleOrNull();
 
+  /// Returns all completed timed sets for [exerciseId], newest first.
+  ///
+  /// Includes converted sets with `durationSeconds == 0`; callers decide
+  /// whether to show or skip them.
+  Future<List<WorkoutTimedSet>> getTimedSetsForExercise(String exerciseId) =>
+      (select(workoutTimedSets)
+            ..where(
+              (tbl) =>
+                  tbl.exerciseId.equals(exerciseId) &
+                  tbl.isCompleted.equals(true),
+            )
+            ..orderBy([
+              (u) => OrderingTerm(
+                expression: u.dateLogged,
+                mode: OrderingMode.desc,
+              ),
+            ]))
+          .get();
+
   // ── Bodyweight ────────────────────────────────────────────────────────────
 
   Future<void> addBodyweightEntry(DateTime date, double weight) =>
@@ -891,11 +1100,34 @@ class AppDatabase extends _$AppDatabase {
         ),
       ])..where(programHybridExercises.workoutDayId.isIn(dayIds));
 
-      return CombineLatestStream.combine3(
+      final timedQuery = select(programTimedExercises).join([
+        leftOuterJoin(
+          exercises,
+          exercises.id.equalsExp(programTimedExercises.exerciseId),
+        ),
+        leftOuterJoin(
+          equipments,
+          equipments.id.equalsExp(programTimedExercises.equipmentId),
+        ),
+        leftOuterJoin(
+          exerciseMuscleGroup,
+          exerciseMuscleGroup.exerciseId.equalsExp(
+                programTimedExercises.exerciseId,
+              ) &
+              exerciseMuscleGroup.focus.equals('primary'),
+        ),
+        leftOuterJoin(
+          muscleGroups,
+          muscleGroups.id.equalsExp(exerciseMuscleGroup.muscleGroupId),
+        ),
+      ])..where(programTimedExercises.workoutDayId.isIn(dayIds));
+
+      return CombineLatestStream.combine4(
         strengthQuery.watch(),
         cardioQuery.watch(),
         hybridQuery.watch(),
-        (strengthRows, cardioRows, hybridRows) {
+        timedQuery.watch(),
+        (strengthRows, cardioRows, hybridRows, timedRows) {
           final resultMap = <String, List<ExerciseWithVolume>>{};
 
           for (final row in strengthRows) {
@@ -947,6 +1179,25 @@ class AppDatabase extends _$AppDatabase {
                     ExerciseWithVolume(
                       exercise: exercise,
                       volume: ProgramExerciseVolume.hybrid(volume),
+                      equipment: equipment,
+                      primaryMuscleGroup: muscleGroupRow?.name,
+                    ),
+                  );
+            }
+          }
+
+          for (final row in timedRows) {
+            final exercise = row.readTableOrNull(exercises);
+            final volume = row.readTableOrNull(programTimedExercises);
+            final equipment = row.readTableOrNull(equipments);
+            final muscleGroupRow = row.readTableOrNull(muscleGroups);
+            if (exercise != null && volume != null) {
+              resultMap
+                  .putIfAbsent(volume.workoutDayId, () => [])
+                  .add(
+                    ExerciseWithVolume(
+                      exercise: exercise,
+                      volume: ProgramExerciseVolume.timed(volume),
                       equipment: equipment,
                       primaryMuscleGroup: muscleGroupRow?.name,
                     ),

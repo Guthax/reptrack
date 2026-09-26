@@ -6,10 +6,45 @@ import 'package:drift/drift.dart' as d;
 import 'package:reptrack/persistance/database.dart';
 import 'package:reptrack/persistance/composites.dart';
 import 'package:flutter/services.dart';
+import 'package:reptrack/utils/app_theme.dart';
 import 'package:reptrack/utils/error_handler.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
+
+/// Time and weight entered or measured for one timed set.
+///
+/// [seconds] is always greater than zero; an entry of zero seconds is removed
+/// instead of stored. [weightKg] is copied from the exercise's current weight
+/// when the set is logged.
+class TimedSetEntry {
+  /// Entered or measured duration in whole seconds.
+  final int seconds;
+
+  /// Weight in kg used for the set, or null when none was used.
+  final double? weightKg;
+
+  /// Creates an entry of [seconds] with an optional [weightKg].
+  const TimedSetEntry({required this.seconds, this.weightKg});
+
+  /// Returns a copy with the given fields replaced.
+  TimedSetEntry copyWith({int? seconds, double? weightKg}) => TimedSetEntry(
+    seconds: seconds ?? this.seconds,
+    weightKg: weightKg ?? this.weightKg,
+  );
+}
+
+/// Where a timed set is in its time-then-log flow.
+enum TimedSetPhase {
+  /// No time entered yet and the stopwatch is not running for the set.
+  idle,
+
+  /// The stopwatch is running for the set.
+  running,
+
+  /// A time is entered or measured and the set can be logged.
+  ready,
+}
 
 /// Controller for an active workout session.
 ///
@@ -37,8 +72,14 @@ class ActiveWorkoutController extends GetxController {
   /// The workout day being performed.
   final String workoutDayId;
 
+  /// Returns the current time; injectable so the stopwatch can be tested.
+  final DateTime Function() _clock;
+
   /// Creates an [ActiveWorkoutController] for the given [workoutDayId].
-  ActiveWorkoutController(this.workoutDayId);
+  ///
+  /// [clock] defaults to [DateTime.now] and is only overridden in tests.
+  ActiveWorkoutController(this.workoutDayId, {DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
 
   /// Exercises (with volume/equipment) for this workout day, in program order.
   var exercisesWithVolume = <ExerciseWithVolume>[].obs;
@@ -67,6 +108,37 @@ class ActiveWorkoutController extends GetxController {
   /// All past hybrid sets for each hybrid exercise, keyed by exercise ID,
   /// ordered newest first (mirrors [lastWorkoutSets] for strength).
   final lastHybridSets = RxMap<String, List<WorkoutHybridSet>>({});
+
+  /// All past completed timed sets for each timed exercise, keyed by exercise
+  /// ID, ordered newest first.
+  final lastTimedSets = RxMap<String, List<WorkoutTimedSet>>({});
+
+  /// Key (`"$exerciseIndex-$equipmentId-$setNum"`) of the set row whose
+  /// stopwatch is running, or null when no stopwatch runs.
+  final runningStopwatchKey = RxnString();
+
+  /// Whole seconds elapsed on the running stopwatch, refreshed every second.
+  final stopwatchElapsedSeconds = 0.obs;
+
+  /// Entered, measured and logged timed set entries, keyed like
+  /// [runningStopwatchKey]. Entries are kept after logging so logged sets can
+  /// show their values and an unlogged set keeps its time.
+  final timedEntries = RxMap<String, TimedSetEntry>({});
+
+  /// Seconds already counted for the running set before the current run,
+  /// so that resuming continues from the stopped time.
+  int _stopwatchOffsetSeconds = 0;
+
+  /// Set number the user selected as active, per timed exercise index.
+  final _activeTimedOverride = RxMap<int, int>({});
+
+  /// Current weight in kg per timed exercise index, carried over to the
+  /// following sets; null when no weight is used.
+  final timedWeightKg = RxMap<int, double?>({});
+
+  DateTime? _stopwatchStartedAt;
+
+  Timer? _stopwatchTicker;
 
   /// Keys of the form `"exerciseId-equipmentId-setNum"` for every set that
   /// has been logged during this session.
@@ -173,9 +245,32 @@ class ActiveWorkoutController extends GetxController {
         ),
       ])..where(db.programHybridExercises.workoutDayId.equals(workoutDayId));
 
+      final timedQuery = db.select(db.programTimedExercises).join([
+        d.innerJoin(
+          db.exercises,
+          db.exercises.id.equalsExp(db.programTimedExercises.exerciseId),
+        ),
+        d.leftOuterJoin(
+          db.equipments,
+          db.equipments.id.equalsExp(db.programTimedExercises.equipmentId),
+        ),
+        d.leftOuterJoin(
+          db.exerciseMuscleGroup,
+          db.exerciseMuscleGroup.exerciseId.equalsExp(
+                db.programTimedExercises.exerciseId,
+              ) &
+              db.exerciseMuscleGroup.focus.equals('primary'),
+        ),
+        d.leftOuterJoin(
+          db.muscleGroups,
+          db.muscleGroups.id.equalsExp(db.exerciseMuscleGroup.muscleGroupId),
+        ),
+      ])..where(db.programTimedExercises.workoutDayId.equals(workoutDayId));
+
       final strengthRows = await strengthQuery.get();
       final cardioRows = await cardioQuery.get();
       final hybridRows = await hybridQuery.get();
+      final timedRows = await timedQuery.get();
 
       final List<ExerciseWithVolume> items =
           [
@@ -209,6 +304,16 @@ class ActiveWorkoutController extends GetxController {
                 primaryMuscleGroup: row.readTableOrNull(db.muscleGroups)?.name,
               ),
             ),
+            ...timedRows.map(
+              (row) => ExerciseWithVolume(
+                exercise: row.readTable(db.exercises),
+                volume: ProgramExerciseVolume.timed(
+                  row.readTable(db.programTimedExercises),
+                ),
+                equipment: row.readTableOrNull(db.equipments),
+                primaryMuscleGroup: row.readTableOrNull(db.muscleGroups)?.name,
+              ),
+            ),
           ]..sort(
             (a, b) =>
                 a.volume.orderInProgram.compareTo(b.volume.orderInProgram),
@@ -226,9 +331,18 @@ class ActiveWorkoutController extends GetxController {
         } else if (item.isHybrid) {
           final sets = await db.getHybridSetsForExercise(item.exercise.id);
           if (sets.isNotEmpty) lastHybridSets[item.exercise.id] = sets;
+        } else if (item.isTimed) {
+          final sets = await db.getTimedSetsForExercise(item.exercise.id);
+          if (sets.isNotEmpty) lastTimedSets[item.exercise.id] = sets;
         } else {
           final sets = await db.getStrengthSetsForExercise(item.exercise.id);
           if (sets.isNotEmpty) lastWorkoutSets[item.exercise.id] = sets;
+        }
+      }
+
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].isTimed) {
+          timedWeightKg[i] = getLastTimedWeight(items[i].exercise.id);
         }
       }
 
@@ -567,6 +681,247 @@ class ActiveWorkoutController extends GetxController {
     );
   }
 
+  /// Validates and logs a completed timed set into [workoutTimedSets].
+  ///
+  /// Rejects a [durationSeconds] below one second or a negative [weightKg]
+  /// with a snackbar. Stops this row's stopwatch if it is still running,
+  /// marks the set done locally and starts the rest timer when
+  /// [restSeconds] is given. Returns whether the set was logged.
+  Future<bool> logTimedSet({
+    required int exerciseIndex,
+    required String exerciseId,
+    required String equipmentId,
+    required int durationSeconds,
+    double? weightKg,
+    required int setNum,
+    int? restSeconds,
+  }) async {
+    if (currentWorkoutId == null) return false;
+    if (durationSeconds < 1) {
+      AppSnackbar.error('Enter a duration');
+      return false;
+    }
+    if (weightKg != null && weightKg < 0) {
+      AppSnackbar.error("Weight can't be negative");
+      return false;
+    }
+    final key = "$exerciseIndex-$equipmentId-$setNum";
+    if (runningStopwatchKey.value == key) stopStopwatch();
+    try {
+      await db
+          .into(db.workoutTimedSets)
+          .insert(
+            WorkoutTimedSetsCompanion.insert(
+              workoutId: currentWorkoutId!,
+              exerciseId: exerciseId,
+              equipmentId: d.Value(equipmentId),
+              setNumber: setNum,
+              durationSeconds: durationSeconds,
+              weight: d.Value(weightKg),
+              isCompleted: const d.Value(true),
+            ),
+          );
+
+      completedSets.add(key);
+      timedEntries[key] = TimedSetEntry(
+        seconds: durationSeconds,
+        weightKg: weightKg,
+      );
+      _activeTimedOverride.remove(exerciseIndex);
+
+      if (restSeconds != null) {
+        startRestTimer(restSeconds);
+      }
+      return true;
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+      return false;
+    }
+  }
+
+  /// Marks a previously logged timed set as incomplete in the database.
+  ///
+  /// Does nothing if [currentWorkoutId] is `null`.
+  Future<void> unlogTimedSet({
+    required int exerciseIndex,
+    required String exerciseId,
+    required String equipmentId,
+    required int setNum,
+  }) async {
+    if (currentWorkoutId == null) return;
+    try {
+      await (db.update(db.workoutTimedSets)..where(
+            (tbl) =>
+                tbl.workoutId.equals(currentWorkoutId!) &
+                tbl.exerciseId.equals(exerciseId) &
+                tbl.equipmentId.equals(equipmentId) &
+                tbl.setNumber.equals(setNum),
+          ))
+          .write(const WorkoutTimedSetsCompanion(isCompleted: d.Value(false)));
+      completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+      selectTimedSet(exerciseIndex, equipmentId, setNum);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+    }
+  }
+
+  /// Returns the most recent past [WorkoutTimedSet] for [exerciseId] /
+  /// [setNum] / [equipmentId] that has a recorded time, or `null`.
+  ///
+  /// Converted sets with `durationSeconds == 0` are skipped.
+  WorkoutTimedSet? getPastTimedSetData(
+    String exerciseId,
+    int setNum,
+    String? equipmentId,
+  ) {
+    final sets = lastTimedSets[exerciseId];
+    if (sets == null) return null;
+    return sets.firstWhereOrNull(
+      (s) =>
+          s.setNumber == setNum &&
+          s.equipmentId == equipmentId &&
+          s.durationSeconds > 0,
+    );
+  }
+
+  /// Loads all completed timed sets of [exerciseId] for the history dialog,
+  /// newest first, including sets logged in this session.
+  Future<List<WorkoutTimedSet>> loadTimedHistory(String exerciseId) async {
+    try {
+      return await db.getTimedSetsForExercise(exerciseId);
+    } catch (e, st) {
+      AppErrorHandler.showSystemError(e, st);
+      return [];
+    }
+  }
+
+  /// Returns the weight in kg of the most recent timed set of [exerciseId]
+  /// that had a weight, or `null` when none did.
+  double? getLastTimedWeight(String exerciseId) => lastTimedSets[exerciseId]
+      ?.firstWhereOrNull((s) => s.weight != null)
+      ?.weight;
+
+  /// Returns the whole seconds counted on the running stopwatch, including
+  /// the time counted before it was resumed.
+  int _stopwatchElapsed() =>
+      _stopwatchOffsetSeconds +
+      _clock().difference(_stopwatchStartedAt!).inSeconds;
+
+  /// Starts or resumes the stopwatch for the set identified by [key].
+  ///
+  /// Skips a running rest timer. A stopwatch running for another set is
+  /// stopped first and its time is stored in [timedEntries]. Counting
+  /// continues from the set's existing entry time, or from zero.
+  void startStopwatch(String key) {
+    skipRestTimer();
+    if (runningStopwatchKey.value != null) stopStopwatch();
+    _stopwatchOffsetSeconds = timedEntries[key]?.seconds ?? 0;
+    runningStopwatchKey.value = key;
+    _stopwatchStartedAt = _clock();
+    stopwatchElapsedSeconds.value = _stopwatchOffsetSeconds;
+    _stopwatchTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      stopwatchElapsedSeconds.value = _stopwatchElapsed();
+    });
+  }
+
+  /// Stops the running stopwatch, stores its total whole seconds in the
+  /// set's [timedEntries] entry (keeping any weight) and returns them.
+  ///
+  /// Returns 0 when no stopwatch is running; a total of 0 removes the entry.
+  int stopStopwatch() {
+    final key = runningStopwatchKey.value;
+    if (key == null) return 0;
+    final elapsed = _stopwatchElapsed();
+    _clearStopwatch();
+    setTimedEntrySeconds(key, elapsed);
+    return elapsed;
+  }
+
+  /// Sets the time of the entry for [key]; zero or less removes the entry.
+  ///
+  /// An existing weight is kept.
+  void setTimedEntrySeconds(String key, int seconds) {
+    if (seconds <= 0) {
+      timedEntries.remove(key);
+      return;
+    }
+    final existing = timedEntries[key];
+    timedEntries[key] = existing == null
+        ? TimedSetEntry(seconds: seconds)
+        : existing.copyWith(seconds: seconds);
+  }
+
+  /// Removes the entry for [key] so the set is idle again.
+  void resetTimedEntry(String key) => timedEntries.remove(key);
+
+  /// Returns the phase of the set identified by [key].
+  TimedSetPhase timedPhase(String key) {
+    if (runningStopwatchKey.value == key) return TimedSetPhase.running;
+    if (timedEntries.containsKey(key) && !completedSets.contains(key)) {
+      return TimedSetPhase.ready;
+    }
+    return TimedSetPhase.idle;
+  }
+
+  /// Returns the set number the focus panel of the timed exercise at
+  /// [exerciseIndex] operates on, or null when all [totalSets] are logged.
+  ///
+  /// A still-unlogged set selected by the user wins; otherwise the first
+  /// unlogged set in order is active.
+  int? activeTimedSetNum(int exerciseIndex, String equipmentId, int totalSets) {
+    bool isOpen(int setNum) =>
+        !completedSets.contains("$exerciseIndex-$equipmentId-$setNum");
+    final selected = _activeTimedOverride[exerciseIndex];
+    if (selected != null &&
+        selected >= 1 &&
+        selected <= totalSets &&
+        isOpen(selected)) {
+      return selected;
+    }
+    for (var setNum = 1; setNum <= totalSets; setNum++) {
+      if (isOpen(setNum)) return setNum;
+    }
+    return null;
+  }
+
+  /// Makes [setNum] the active set of the timed exercise at [exerciseIndex].
+  ///
+  /// Does nothing for a logged set. A stopwatch running for another set is
+  /// stopped and keeps its time as an entry.
+  void selectTimedSet(int exerciseIndex, String equipmentId, int setNum) {
+    final key = "$exerciseIndex-$equipmentId-$setNum";
+    if (completedSets.contains(key)) return;
+    final running = runningStopwatchKey.value;
+    if (running != null && running != key) stopStopwatch();
+    _activeTimedOverride[exerciseIndex] = setNum;
+  }
+
+  /// Sets the current weight of the timed exercise at [exerciseIndex], or
+  /// clears it when [weightKg] is null.
+  void setTimedWeight(int exerciseIndex, double? weightKg) {
+    timedWeightKg[exerciseIndex] = weightKg;
+  }
+
+  /// Selects [equipmentId] for the exercise at [exerciseIndex], discarding a
+  /// running stopwatch because set keys depend on the equipment.
+  void selectEquipment(int exerciseIndex, String equipmentId) {
+    discardStopwatch();
+    selectedEquipments[exerciseIndex] = equipmentId;
+  }
+
+  /// Discards a running stopwatch without reporting a result.
+  void discardStopwatch() => _clearStopwatch();
+
+  /// Cancels the stopwatch ticker and resets the stopwatch state.
+  void _clearStopwatch() {
+    _stopwatchTicker?.cancel();
+    _stopwatchTicker = null;
+    _stopwatchStartedAt = null;
+    _stopwatchOffsetSeconds = 0;
+    runningStopwatchKey.value = null;
+    stopwatchElapsedSeconds.value = 0;
+  }
+
   /// Replaces the exercise at the position of [oldExerciseId] with
   /// [newExercise] using [newEquipmentId].
   Future<void> swapExercise({
@@ -578,8 +933,10 @@ class ActiveWorkoutController extends GetxController {
       if (exerciseIndex < 0 || exerciseIndex >= exercisesWithVolume.length) {
         return;
       }
+      discardStopwatch();
       final isNewCardio = newExercise.exerciseTypeId == '2';
       final isNewHybrid = newExercise.exerciseTypeId == '3';
+      final isNewTimed = newExercise.exerciseTypeId == '4';
 
       Equipment? newEquip;
       if (!isNewCardio) {
@@ -625,6 +982,29 @@ class ActiveWorkoutController extends GetxController {
             distanceUnit: lastHybrid?.distanceUnit ?? 'm',
             restTimer: originalItem.volume.restTimer,
             weight: lastHybrid?.weight ?? 0.0,
+          ),
+        );
+      } else if (isNewTimed) {
+        final timedSets = await db.getTimedSetsForExercise(newExercise.id);
+        if (timedSets.isNotEmpty) lastTimedSets[newExercise.id] = timedSets;
+        timedWeightKg[exerciseIndex] = getLastTimedWeight(newExercise.id);
+        final original = originalItem.volume;
+        final setCount = original.isCardio
+            ? 1
+            : original.isHybrid
+            ? original.setsDistancesList.length
+            : original.isTimed
+            ? original.setsSecondsList.length
+            : original.setsRepsList.length;
+        newVolume = ProgramExerciseVolume.timed(
+          ProgramTimedExercise(
+            id: original.id,
+            workoutDayId: workoutDayId,
+            exerciseId: newExercise.id,
+            equipmentId: newEquip?.id,
+            orderInProgram: original.orderInProgram,
+            setsSeconds: jsonEncode(List.filled(setCount, 0)),
+            restTimer: original.restTimer,
           ),
         );
       } else {
@@ -701,11 +1081,10 @@ class ActiveWorkoutController extends GetxController {
     try {
       final isCardio = exercise.exerciseTypeId == '2';
       final isHybrid = exercise.exerciseTypeId == '3';
+      final isTimed = exercise.exerciseTypeId == '4';
 
       Equipment? equipment;
-      if (!isCardio && !isHybrid && equipmentId != null) {
-        equipment = await db.getEquipmentById(equipmentId);
-      } else if (isHybrid && equipmentId != null) {
+      if (!isCardio && equipmentId != null) {
         equipment = await db.getEquipmentById(equipmentId);
       }
 
@@ -746,6 +1125,21 @@ class ActiveWorkoutController extends GetxController {
             distanceUnit: last?.distanceUnit ?? 'm',
             restTimer: null,
             weight: lastWeight,
+          ),
+        );
+      } else if (isTimed) {
+        final timedSets = await db.getTimedSetsForExercise(exercise.id);
+        if (timedSets.isNotEmpty) lastTimedSets[exercise.id] = timedSets;
+        timedWeightKg[newIndex] = getLastTimedWeight(exercise.id);
+        volume = ProgramExerciseVolume.timed(
+          ProgramTimedExercise(
+            id: _uuid.v4(),
+            workoutDayId: workoutDayId,
+            exerciseId: exercise.id,
+            equipmentId: equipmentId,
+            orderInProgram: newIndex,
+            setsSeconds: jsonEncode([60, 60, 60]),
+            restTimer: null,
           ),
         );
       } else {
@@ -801,6 +1195,7 @@ class ActiveWorkoutController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
+    discardStopwatch();
     pageController.dispose();
     super.onClose();
   }

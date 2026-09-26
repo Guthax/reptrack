@@ -2,8 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+/// Shows styled success and error snackbars.
+///
+/// The [_errorHandler] hook is intended for tests only — override it in a
+/// `setUp` block and reset it in `tearDown`.
 abstract final class AppSnackbar {
+  static void Function(String)? _errorHandler;
+
+  /// Replaces the error snackbar with [handler] for testing.
+  ///
+  /// Must be paired with [resetForTest] in `tearDown`.
+  @visibleForTesting
+  static void overrideErrorForTest(void Function(String) handler) {
+    _errorHandler = handler;
+  }
+
+  /// Restores the default production behaviour after a test.
+  @visibleForTesting
+  static void resetForTest() {
+    _errorHandler = null;
+  }
+
+  /// Shows [message] as a user-fixable validation error.
   static void error(String message) {
+    if (_errorHandler != null) {
+      _errorHandler!(message);
+      return;
+    }
     Get.snackbar(
       '',
       '',

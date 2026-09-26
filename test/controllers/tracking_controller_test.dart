@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' as d;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -58,6 +59,24 @@ WorkoutHybridSet _hybridSet({
   distance: distanceMeters,
   distanceUnit: 'm',
   distanceMeters: distanceMeters,
+  isCompleted: true,
+  dateLogged: date,
+);
+
+WorkoutTimedSet _timedSet({
+  required String id,
+  required int durationSeconds,
+  required DateTime date,
+  String? equipmentId,
+  double? weight,
+}) => WorkoutTimedSet(
+  id: id,
+  workoutId: 'w1',
+  exerciseId: 'plank',
+  equipmentId: equipmentId,
+  setNumber: 1,
+  durationSeconds: durationSeconds,
+  weight: weight,
   isCompleted: true,
   dateLogged: date,
 );
@@ -538,6 +557,128 @@ void main() {
     });
   });
 
+  group('Timed exercise', () {
+    final day3 = DateTime(2024, 1, 3);
+    final eqA = Equipment(
+      id: 'eqA',
+      name: 'Bodyweight',
+      iconName: 'bodyweight',
+    );
+
+    void seedSets() {
+      controller.timedSets.assignAll([
+        _timedSet(
+          id: 't1',
+          durationSeconds: 60,
+          date: day1,
+          equipmentId: 'eqA',
+        ),
+        _timedSet(
+          id: 't2',
+          durationSeconds: 45,
+          date: day1,
+          equipmentId: 'eqA',
+        ),
+        _timedSet(
+          id: 't3',
+          durationSeconds: 30,
+          date: day1,
+          equipmentId: 'eqB',
+        ),
+        _timedSet(id: 't4', durationSeconds: 0, date: day2, equipmentId: 'eqA'),
+        _timedSet(id: 't5', durationSeconds: 0, date: day2, equipmentId: 'eqA'),
+        _timedSet(
+          id: 't6',
+          durationSeconds: 90,
+          date: day3,
+          equipmentId: 'eqA',
+        ),
+      ]);
+    }
+
+    test('timedLongestHoldData is empty without sets', () {
+      expect(controller.timedLongestHoldData, isEmpty);
+      expect(controller.timedTotalTimeData, isEmpty);
+    });
+
+    test('timedLongestHoldData takes the longest set per day', () {
+      seedSets();
+      controller.selectedEquipment.value = eqA;
+      final data = controller.timedLongestHoldData;
+      expect(data.map((e) => e.key), [day1, day3]);
+      expect(data.map((e) => e.value), [60.0, 90.0]);
+    });
+
+    test('timedTotalTimeData sums set durations per day', () {
+      seedSets();
+      controller.selectedEquipment.value = eqA;
+      final data = controller.timedTotalTimeData;
+      expect(data.map((e) => e.key), [day1, day3]);
+      expect(data.map((e) => e.value), [105.0, 90.0]);
+    });
+
+    test('without an equipment filter all sets count', () {
+      seedSets();
+      expect(controller.timedTotalTimeData.first.value, 135.0);
+    });
+
+    test('activeChartData follows the selected timed chart type', () {
+      seedSets();
+      controller.selectedEquipment.value = eqA;
+      controller.selectedChartType.value = ChartType.timedLongestHold;
+      expect(controller.activeChartData.map((e) => e.value), [60.0, 90.0]);
+      controller.selectedChartType.value = ChartType.timedTotalTime;
+      expect(controller.activeChartData.map((e) => e.value), [105.0, 90.0]);
+    });
+
+    test('selectExercise loads timed sets oldest first', () async {
+      final db = Get.find<AppDatabase>();
+      final progId = await db.addProgram('P');
+      final dayId = await db.addWorkoutDay(progId, 'D');
+      await db
+          .into(db.equipments)
+          .insert(
+            EquipmentsCompanion.insert(
+              id: const d.Value('eqA'),
+              name: 'Bodyweight',
+              iconName: 'bodyweight',
+            ),
+          );
+      final plankId = await db.addExercise('Plank', exerciseTypeId: '4');
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: const d.Value('w1'),
+              workoutDayId: dayId,
+            ),
+          );
+      for (final (i, date) in [day2, day1].indexed) {
+        await db
+            .into(db.workoutTimedSets)
+            .insert(
+              WorkoutTimedSetsCompanion.insert(
+                workoutId: 'w1',
+                exerciseId: plankId,
+                equipmentId: const d.Value('eqA'),
+                setNumber: i + 1,
+                durationSeconds: 30 + i,
+                dateLogged: d.Value(date),
+              ),
+            );
+      }
+      final plank = (await db.getExerciseByName('Plank'))!;
+
+      await controller.selectExercise(plank);
+
+      expect(controller.selectedExerciseTypeId.value, '4');
+      expect(controller.timedSets.map((s) => s.dateLogged), [day1, day2]);
+      expect(controller.selectedChartType.value, ChartType.timedLongestHold);
+      expect(controller.availableEquipment.map((e) => e.id), ['eqA']);
+      expect(controller.selectedEquipment.value?.id, 'eqA');
+    });
+  });
+
   // ── clearSelection ─────────────────────────────────────────────────────────
 
   group('clearSelection', () {
@@ -563,6 +704,7 @@ void main() {
       expect(controller.exerciseSets, isEmpty);
       expect(controller.cardioSets, isEmpty);
       expect(controller.hybridSets, isEmpty);
+      expect(controller.timedSets, isEmpty);
       expect(controller.availableEquipment, isEmpty);
       expect(controller.selectedEquipment.value, isNull);
     });

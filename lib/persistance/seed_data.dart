@@ -11,13 +11,18 @@ const _uuid = Uuid();
 /// that already exist by name. Safe to call on every app start.
 ///
 /// Seeds:
-/// - Exercise types (Strength, Cardio)
+/// - Exercise types (Strength, Cardio, Hybrid, Timed)
 /// - Muscle groups (Chest, Back, …)
 /// - Equipment types (Bodyweight, Barbell, …)
 /// - Exercises from `assets/data/exercises.csv`
 Future<void> seedDatabase(AppDatabase db) async {
   await db.transaction(() async {
-    final exerciseTypes = {'1': 'Strength', '2': 'Cardio', '3': 'Hybrid'};
+    final exerciseTypes = {
+      '1': 'Strength',
+      '2': 'Cardio',
+      '3': 'Hybrid',
+      '4': 'Timed',
+    };
     for (var entry in exerciseTypes.entries) {
       await db
           .into(db.exerciseTypes)

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:reptrack/persistance/composites.dart';
 import 'package:reptrack/persistance/database.dart';
 import '../test_helpers.dart';
 
@@ -406,6 +407,239 @@ void main() {
     test('getLastHybridSetForExercise returns null when empty', () async {
       final result = await db.getLastHybridSetForExercise(exId);
       expect(result, isNull);
+    });
+  });
+
+  group('Timed program exercises', () {
+    late String progId;
+    late String dayId;
+    late String exId;
+
+    setUp(() async {
+      progId = await db.addProgram('Prog');
+      dayId = await db.addWorkoutDay(progId, 'Day');
+      exId = await db.addExercise('Plank', exerciseTypeId: '4');
+    });
+
+    Future<List<ProgramTimedExercise>> timedRows() => (db.select(
+      db.programTimedExercises,
+    )..where((r) => r.workoutDayId.equals(dayId))).get();
+
+    test('schemaVersion is 2', () {
+      expect(db.schemaVersion, 2);
+    });
+
+    test('addTimedExerciseToDay stores setsSeconds as JSON', () async {
+      final id = await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        equipmentId: '1',
+        setsSeconds: [60, 45],
+        restTimer: 30,
+      );
+      final rows = await timedRows();
+      expect(id, isNotEmpty);
+      expect(rows, hasLength(1));
+      expect(rows.first.id, id);
+      expect(rows.first.setsSeconds, '[60,45]');
+      expect(rows.first.restTimer, 30);
+      expect(rows.first.equipmentId, '1');
+    });
+
+    test('orderInProgram counts every exercise type on the day', () async {
+      final benchId = await db.addExercise('Bench');
+      final runId = await db.addExercise('Run');
+      final sledId = await db.addExercise('Sled');
+      await db.addStrengthExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: benchId,
+        setsReps: [10],
+      );
+      await db.addCardioExerciseToDay(workoutDayId: dayId, exerciseId: runId);
+      await db.addHybridExerciseToDay(workoutDayId: dayId, exerciseId: sledId);
+      await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      final rows = await timedRows();
+      expect(rows.single.orderInProgram, 3);
+    });
+
+    test('other add methods count timed entries', () async {
+      await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      final benchId = await db.addExercise('Bench');
+      final runId = await db.addExercise('Run');
+      final sledId = await db.addExercise('Sled');
+      await db.addStrengthExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: benchId,
+        setsReps: [10],
+      );
+      await db.addCardioExerciseToDay(workoutDayId: dayId, exerciseId: runId);
+      await db.addHybridExerciseToDay(workoutDayId: dayId, exerciseId: sledId);
+      final strength = await db.select(db.programStrengthExercises).getSingle();
+      final cardio = await db.select(db.programCardioExercises).getSingle();
+      final hybrid = await db.select(db.programHybridExercises).getSingle();
+      expect(strength.orderInProgram, 1);
+      expect(cardio.orderInProgram, 2);
+      expect(hybrid.orderInProgram, 3);
+    });
+
+    test('updateProgramTimedExercise writes the companion', () async {
+      final id = await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      await db.updateProgramTimedExercise(
+        const ProgramTimedExercisesCompanion(
+          setsSeconds: Value('[30,30]'),
+          restTimer: Value(90),
+        ),
+        id,
+      );
+      final row = (await timedRows()).single;
+      expect(row.setsSeconds, '[30,30]');
+      expect(row.restTimer, 90);
+    });
+
+    test('deleteProgramTimedExercise removes the row', () async {
+      final id = await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      await db.deleteProgramTimedExercise(id);
+      expect(await timedRows(), isEmpty);
+    });
+
+    test('deleteProgram removes timed entries of its days', () async {
+      await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      await db.deleteProgram(progId);
+      expect(await db.select(db.programTimedExercises).get(), isEmpty);
+    });
+
+    test('reorderExercisesInDay writes the timed order', () async {
+      final benchId = await db.addExercise('Bench');
+      await db.addStrengthExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: benchId,
+        setsReps: [10],
+      );
+      await db.addTimedExerciseToDay(
+        workoutDayId: dayId,
+        exerciseId: exId,
+        setsSeconds: [60],
+      );
+      final days = await db.watchWorkoutDaysWithExercises(progId).first;
+      final volumes = days.single.exercises.map((e) => e.volume).toList();
+      await db.reorderExercisesInDay(volumes.reversed.toList());
+      final timed = (await timedRows()).single;
+      final strength = await db.select(db.programStrengthExercises).getSingle();
+      expect(timed.orderInProgram, 0);
+      expect(strength.orderInProgram, 1);
+    });
+
+    test(
+      'watchWorkoutDaysWithExercises emits timed volumes in order',
+      () async {
+        final benchId = await db.addExercise('Bench');
+        await db.addStrengthExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: benchId,
+          setsReps: [10],
+        );
+        await db.addTimedExerciseToDay(
+          workoutDayId: dayId,
+          exerciseId: exId,
+          equipmentId: '1',
+          setsSeconds: [45, 45],
+        );
+        final days = await db.watchWorkoutDaysWithExercises(progId).first;
+        final exercises = days.single.exercises;
+        expect(exercises, hasLength(2));
+        expect(exercises[0].exercise.name, 'Bench');
+        expect(exercises[1].isTimed, isTrue);
+        expect(exercises[1].volume, isA<ProgramExerciseVolume>());
+        expect(exercises[1].volume.setsSecondsList, [45, 45]);
+      },
+    );
+  });
+
+  group('Workout timed sets', () {
+    late String workoutId;
+    late String exId;
+
+    setUp(() async {
+      final progId = await db.addProgram('Prog');
+      final dayId = await db.addWorkoutDay(progId, 'Day');
+      exId = await db.addExercise('Plank', exerciseTypeId: '4');
+      await db
+          .into(db.workouts)
+          .insert(WorkoutsCompanion.insert(workoutDayId: dayId));
+      workoutId = (await db.select(db.workouts).getSingle()).id;
+    });
+
+    Future<void> insertSet({
+      required int setNumber,
+      required int seconds,
+      double? weight,
+      bool completed = true,
+      required DateTime logged,
+    }) => db
+        .into(db.workoutTimedSets)
+        .insert(
+          WorkoutTimedSetsCompanion.insert(
+            workoutId: workoutId,
+            exerciseId: exId,
+            setNumber: setNumber,
+            durationSeconds: seconds,
+            weight: Value(weight),
+            isCompleted: Value(completed),
+            dateLogged: Value(logged),
+          ),
+        );
+
+    test(
+      'getTimedSetsForExercise returns completed sets newest first',
+      () async {
+        await insertSet(
+          setNumber: 1,
+          seconds: 60,
+          logged: DateTime(2024, 1, 1),
+        );
+        await insertSet(
+          setNumber: 2,
+          seconds: 45,
+          weight: 10.0,
+          logged: DateTime(2024, 1, 2),
+        );
+        await insertSet(
+          setNumber: 3,
+          seconds: 30,
+          completed: false,
+          logged: DateTime(2024, 1, 3),
+        );
+        final sets = await db.getTimedSetsForExercise(exId);
+        expect(sets.map((s) => s.setNumber), [2, 1]);
+        expect(sets.first.weight, 10.0);
+        expect(sets.last.weight, isNull);
+      },
+    );
+
+    test('getTimedSetsForExercise includes converted 0-second sets', () async {
+      await insertSet(setNumber: 1, seconds: 0, logged: DateTime(2024, 1, 1));
+      final sets = await db.getTimedSetsForExercise(exId);
+      expect(sets.single.durationSeconds, 0);
     });
   });
 

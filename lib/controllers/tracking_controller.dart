@@ -16,6 +16,12 @@ enum ChartType {
   hybridMaxWeight,
   hybridTotalDistance,
   hybridVolume,
+
+  /// Timed: longest single set per day.
+  timedLongestHold,
+
+  /// Timed: sum of all set durations per day.
+  timedTotalTime,
 }
 
 /// Controller for the Tracking screen.
@@ -48,7 +54,11 @@ class TrackingController extends GetxController {
   /// All historical [WorkoutHybridSet]s for the selected hybrid exercise.
   final RxList<WorkoutHybridSet> hybridSets = <WorkoutHybridSet>[].obs;
 
-  /// The exerciseTypeId of the currently selected exercise ('1'=strength, '2'=cardio, '3'=hybrid).
+  /// All historical [WorkoutTimedSet]s for the selected timed exercise, in
+  /// chronological order.
+  final RxList<WorkoutTimedSet> timedSets = <WorkoutTimedSet>[].obs;
+
+  /// The exerciseTypeId of the currently selected exercise ('1'=strength, '2'=cardio, '3'=hybrid, '4'=timed).
   final RxString selectedExerciseTypeId = '1'.obs;
 
   /// Map from equipment ID to [Equipment] for every set in [exerciseSets].
@@ -110,6 +120,7 @@ class TrackingController extends GetxController {
       exerciseSets.clear();
       cardioSets.clear();
       hybridSets.clear();
+      timedSets.clear();
       availableEquipment.clear();
       setEquipment.clear();
       selectedEquipment.value = null;
@@ -154,6 +165,15 @@ class TrackingController extends GetxController {
               (e) => e.id == lastSet?.equipmentId,
             ) ??
             equipmentList.firstOrNull;
+      } else if (typeId == '4') {
+        final sets = await db.getTimedSetsForExercise(exercise.id);
+        timedSets.assignAll(sets.reversed.toList());
+        selectedChartType.value = ChartType.timedLongestHold;
+        await _loadEquipment(
+          exercise,
+          timedSets.map((s) => s.equipmentId),
+          timedSets.isNotEmpty ? timedSets.last.equipmentId : null,
+        );
       } else {
         // Strength
         final sets = await db.getStrengthSetsForExercise(exercise.id);
@@ -195,12 +215,39 @@ class TrackingController extends GetxController {
     }
   }
 
+  /// Builds [availableEquipment] from [setEquipmentIds] and the equipment
+  /// defined on [exercise], sorted by name, and selects the equipment of the
+  /// most recent set ([lastEquipmentId]) or the first one.
+  Future<void> _loadEquipment(
+    Exercise exercise,
+    Iterable<String?> setEquipmentIds,
+    String? lastEquipmentId,
+  ) async {
+    final equipmentIds = <String>{...setEquipmentIds.nonNulls};
+    final exerciseEquipment = await db.getEquipmentForExercise(exercise.id);
+    equipmentIds.addAll(exerciseEquipment.map((e) => e.id));
+    final equipmentList = <Equipment>[];
+    for (final id in equipmentIds) {
+      final equipment = await db.getEquipmentById(id);
+      if (equipment != null) {
+        setEquipment[id] = equipment;
+        equipmentList.add(equipment);
+      }
+    }
+    equipmentList.sort((a, b) => a.name.compareTo(b.name));
+    availableEquipment.assignAll(equipmentList);
+    selectedEquipment.value =
+        equipmentList.firstWhereOrNull((e) => e.id == lastEquipmentId) ??
+        equipmentList.firstOrNull;
+  }
+
   /// Resets the exercise selection and clears all related state.
   void clearSelection() {
     selectedExercise.value = null;
     exerciseSets.clear();
     cardioSets.clear();
     hybridSets.clear();
+    timedSets.clear();
     availableEquipment.clear();
     selectedEquipment.value = null;
     setEquipment.clear();
@@ -408,9 +455,57 @@ class TrackingController extends GetxController {
       ..sort((a, b) => a.key.compareTo(b.key));
   }
 
+  // ── Timed getters ────────────────────────────────────────────────────────
+
+  /// Groups timed sets with a recorded time by calendar day, filtered by
+  /// [selectedEquipment], and reduces each day's durations with [aggregate].
+  ///
+  /// Converted sets with `durationSeconds == 0` are skipped, so a day holding
+  /// only such sets has no point.
+  List<MapEntry<DateTime, double>> _groupTimedByDay(
+    int Function(List<int>) aggregate,
+  ) {
+    final Map<String, List<int>> byDay = {};
+    final Map<String, DateTime> dateByKey = {};
+    final selectedEquip = selectedEquipment.value;
+    for (final s in timedSets) {
+      if (s.durationSeconds == 0) continue;
+      if (selectedEquip != null && s.equipmentId != selectedEquip.id) continue;
+      final key = _dayKey(s.dateLogged);
+      dateByKey[key] = DateTime(
+        s.dateLogged.year,
+        s.dateLogged.month,
+        s.dateLogged.day,
+      );
+      byDay.putIfAbsent(key, () => []).add(s.durationSeconds);
+    }
+    return byDay.entries
+        .map((e) => MapEntry(dateByKey[e.key]!, aggregate(e.value).toDouble()))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  /// Longest single timed set per day, in seconds.
+  List<MapEntry<DateTime, double>> get timedLongestHoldData => _groupTimedByDay(
+    (durations) => durations.reduce((a, b) => a > b ? a : b),
+  );
+
+  /// Sum of all timed set durations per day, in seconds.
+  List<MapEntry<DateTime, double>> get timedTotalTimeData =>
+      _groupTimedByDay((durations) => durations.fold(0, (a, b) => a + b));
+
   /// Returns the active chart data based on [selectedChartType].
   List<MapEntry<DateTime, double>> get activeChartData =>
-      selectedChartType.value == ChartType.maxWeight
-      ? weightProgressData
-      : volumeProgressData;
+      switch (selectedChartType.value) {
+        ChartType.maxWeight => weightProgressData,
+        ChartType.totalVolume => volumeProgressData,
+        ChartType.duration => cardioDurationData,
+        ChartType.distance => cardioDistanceData,
+        ChartType.pace => cardioPaceData,
+        ChartType.hybridMaxWeight => hybridMaxWeightData,
+        ChartType.hybridTotalDistance => hybridTotalDistanceData,
+        ChartType.hybridVolume => hybridVolumeData,
+        ChartType.timedLongestHold => timedLongestHoldData,
+        ChartType.timedTotalTime => timedTotalTimeData,
+      };
 }

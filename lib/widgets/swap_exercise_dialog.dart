@@ -40,6 +40,8 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
 
   bool _isCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
+  bool _isTimed(Exercise ex) => ex.exerciseTypeId == '4';
+
   @override
   Widget build(BuildContext context) {
     final activeController = Get.find<ActiveWorkoutController>();
@@ -90,9 +92,14 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                     itemBuilder: (ctx, i) {
                       final ex = filteredExercises[i];
                       final cardio = _isCardio(ex);
+                      final timed = _isTimed(ex);
                       return ListTile(
                         leading: Icon(
-                          cardio ? Icons.directions_run : Icons.fitness_center,
+                          cardio
+                              ? Icons.directions_run
+                              : timed
+                              ? Icons.timer_outlined
+                              : Icons.fitness_center,
                           size: 20,
                           color: AppColors.textSecondary,
                         ),
@@ -100,7 +107,11 @@ class _SwapExerciseDialogState extends State<SwapExerciseDialog> {
                           ex.name,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        subtitle: cardio ? const Text("Cardio") : null,
+                        subtitle: cardio
+                            ? const Text("Cardio")
+                            : timed
+                            ? const Text("Timed")
+                            : null,
                         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                         onTap: () async {
                           String defaultEquipId = '';

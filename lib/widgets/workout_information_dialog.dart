@@ -37,6 +37,9 @@ int _equipmentC(String? equipmentId) {
 ///   `(sets × restTimer) + (sets × 60) + C`
 ///
 /// Per cardio exercise: uses the planned duration (`seconds`) directly.
+///
+/// Per timed exercise:
+///   `sum(setsSeconds) + (sets × restTimer) + C`
 int _estimatedDurationSeconds(List<ExerciseWithVolume> exercises) {
   var total = 0;
   for (final ex in exercises) {
@@ -47,6 +50,11 @@ int _estimatedDurationSeconds(List<ExerciseWithVolume> exercises) {
       final sets = vol.setsDistancesList.length;
       final c = _equipmentC(vol.equipmentId);
       total += (sets * 60) + c;
+    } else if (vol.isTimed) {
+      final targets = vol.setsSecondsList;
+      final rest = vol.restTimer ?? 0;
+      final c = _equipmentC(vol.equipmentId);
+      total += targets.fold(0, (a, b) => a + b) + (targets.length * rest) + c;
     } else {
       final sets = vol.setsRepsList.length;
       final rest = vol.restTimer ?? 0;

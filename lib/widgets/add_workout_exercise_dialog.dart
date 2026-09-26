@@ -35,6 +35,10 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
 
   bool _exerciseIsCardio(Exercise ex) => ex.exerciseTypeId == '2';
 
+  bool _isTimed(Exercise? ex) => ex?.exerciseTypeId == '4';
+
+  bool _exerciseIsTimed(Exercise ex) => ex.exerciseTypeId == '4';
+
   @override
   void initState() {
     super.initState();
@@ -149,12 +153,15 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
                   final ex = filteredExercises[i];
                   final cardio = _exerciseIsCardio(ex);
                   final hybrid = _exerciseIsHybrid(ex);
+                  final timed = _exerciseIsTimed(ex);
                   return ListTile(
                     leading: Icon(
                       cardio
                           ? Icons.directions_run
                           : hybrid
                           ? Icons.merge_type
+                          : timed
+                          ? Icons.timer_outlined
                           : Icons.fitness_center,
                       size: 20,
                       color: AppColors.textSecondary,
@@ -164,6 +171,8 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
                         ? const Text('Cardio')
                         : hybrid
                         ? const Text('Hybrid')
+                        : timed
+                        ? const Text('Timed')
                         : null,
                     onTap: () async {
                       selectedExercise.value = ex;
@@ -195,7 +204,11 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
         Chip(
           label: Text(ex.name),
           avatar: Icon(
-            _isHybrid(ex) ? Icons.merge_type : Icons.fitness_center,
+            _isHybrid(ex)
+                ? Icons.merge_type
+                : _isTimed(ex)
+                ? Icons.timer_outlined
+                : Icons.fitness_center,
             size: 18,
           ),
           onDeleted: () {
@@ -238,6 +251,7 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
   Widget _buildConfirmStep(Exercise ex) {
     final isCardio = _isCardio(ex);
     final isHybrid = _isHybrid(ex);
+    final isTimed = _isTimed(ex);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,6 +263,8 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
                 ? Icons.directions_run
                 : isHybrid
                 ? Icons.merge_type
+                : isTimed
+                ? Icons.timer_outlined
                 : Icons.fitness_center,
             size: 18,
           ),
@@ -265,6 +281,8 @@ class _AddWorkoutExerciseDialogState extends State<AddWorkoutExerciseDialog> {
               ? 'Cardio exercise — tap Add to include it in your workout.'
               : isHybrid
               ? 'Hybrid exercise — tap Add to include it in your workout.'
+              : isTimed
+              ? 'Timed exercise — tap Add to include it in your workout.'
               : 'No equipment options — tap Add to include it in your workout.',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
