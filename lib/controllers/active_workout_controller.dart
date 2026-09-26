@@ -265,6 +265,38 @@ class ActiveWorkoutController extends GetxController {
     return plannedSets + (extraSetsCount[key] ?? 0);
   }
 
+  /// Returns whether every set of the exercise at [exerciseIndex] with
+  /// [equipmentId] has been logged, counting both the [plannedSets] and any
+  /// extra sets the user added during this session.
+  bool isExerciseComplete(
+    int exerciseIndex,
+    int plannedSets,
+    String equipmentId,
+  ) {
+    final totalSets = getTotalSetsForExercise(
+      exerciseIndex,
+      plannedSets,
+      equipmentId,
+    );
+    for (var setNum = 1; setNum <= totalSets; setNum++) {
+      if (!isSetCompleted(exerciseIndex, equipmentId, setNum)) return false;
+    }
+    return true;
+  }
+
+  /// Returns whether the workout should move on to the next exercise after a
+  /// set is logged for the exercise at [exerciseIndex] with [equipmentId].
+  ///
+  /// This is true only when [isExerciseComplete] holds and a next exercise
+  /// exists, so it is always false for the last exercise.
+  bool shouldAutoAdvance({
+    required int exerciseIndex,
+    required int plannedSets,
+    required String equipmentId,
+  }) =>
+      isExerciseComplete(exerciseIndex, plannedSets, equipmentId) &&
+      exerciseIndex < exercisesWithVolume.length - 1;
+
   /// Returns the last [WorkoutStrengthSetsCompanion] logged for the exercise at
   /// [exerciseIndex] with [equipmentId] in this session, or `null` if none.
   WorkoutStrengthSetsCompanion? getLastLoggedSet(
