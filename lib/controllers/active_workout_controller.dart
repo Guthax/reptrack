@@ -158,6 +158,10 @@ class ActiveWorkoutController extends GetxController {
   /// after mutations so that [Obx] listeners are notified.
   final sessionLoggedSets = RxMap<int, List<WorkoutStrengthSetsCompanion>>({});
 
+  /// Hybrid sets logged during this session, keyed by
+  /// `"$exerciseIndex-$equipmentId-$setNum"`.
+  final sessionLoggedHybridSets = <String, WorkoutHybridSetsCompanion>{};
+
   /// Page controller for the horizontal exercise swipe view.
   final PageController pageController = PageController();
 
@@ -425,6 +429,32 @@ class ActiveWorkoutController extends GetxController {
     return null;
   }
 
+  /// Returns the strength set logged in this session for [setNum] of the
+  /// exercise at [exerciseIndex] with [equipmentId], or `null` if none.
+  WorkoutStrengthSetsCompanion? getLoggedSet(
+    int exerciseIndex,
+    String equipmentId,
+    int setNum,
+  ) {
+    final list = sessionLoggedSets[exerciseIndex];
+    if (list == null) return null;
+    for (var i = list.length - 1; i >= 0; i--) {
+      if (list[i].equipmentId.value == equipmentId &&
+          list[i].setNumber.value == setNum) {
+        return list[i];
+      }
+    }
+    return null;
+  }
+
+  /// Returns the hybrid set logged in this session for [setNum] of the
+  /// exercise at [exerciseIndex] with [equipmentId], or `null` if none.
+  WorkoutHybridSetsCompanion? getLoggedHybridSet(
+    int exerciseIndex,
+    String equipmentId,
+    int setNum,
+  ) => sessionLoggedHybridSets["$exerciseIndex-$equipmentId-$setNum"];
+
   /// Starts a countdown timer for [seconds] and plays an alert when it ends.
   ///
   /// Any previously running timer is cancelled first.
@@ -542,23 +572,22 @@ class ActiveWorkoutController extends GetxController {
     if (currentWorkoutId == null) return;
     try {
       final distanceMeters = _unitToMeters(distance, distanceUnit);
-      await db
-          .into(db.workoutHybridSets)
-          .insert(
-            WorkoutHybridSetsCompanion.insert(
-              workoutId: currentWorkoutId!,
-              exerciseId: exerciseId,
-              equipmentId: d.Value(equipmentId),
-              setNumber: setNum,
-              weight: weight,
-              distance: distance,
-              distanceUnit: d.Value(distanceUnit),
-              distanceMeters: d.Value(distanceMeters),
-              isCompleted: const d.Value(true),
-            ),
-          );
+      final entry = WorkoutHybridSetsCompanion.insert(
+        workoutId: currentWorkoutId!,
+        exerciseId: exerciseId,
+        equipmentId: d.Value(equipmentId),
+        setNumber: setNum,
+        weight: weight,
+        distance: distance,
+        distanceUnit: d.Value(distanceUnit),
+        distanceMeters: d.Value(distanceMeters),
+        isCompleted: const d.Value(true),
+      );
+      await db.into(db.workoutHybridSets).insert(entry);
 
-      completedSets.add("$exerciseIndex-$equipmentId-$setNum");
+      final key = "$exerciseIndex-$equipmentId-$setNum";
+      sessionLoggedHybridSets[key] = entry;
+      completedSets.add(key);
 
       if (restSeconds != null) {
         startRestTimer(restSeconds);
@@ -648,6 +677,7 @@ class ActiveWorkoutController extends GetxController {
           ))
           .write(const WorkoutHybridSetsCompanion(isCompleted: d.Value(false)));
       completedSets.remove("$exerciseIndex-$equipmentId-$setNum");
+      sessionLoggedHybridSets.remove("$exerciseIndex-$equipmentId-$setNum");
     } catch (e, st) {
       AppErrorHandler.showSystemError(e, st);
     }

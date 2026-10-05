@@ -188,6 +188,37 @@ void main() {
     });
   });
 
+  group('getLoggedSet', () {
+    test('returns the set matching the set number, not the last one', () {
+      final first = WorkoutStrengthSetsCompanion.insert(
+        workoutId: 'w1',
+        exerciseId: 'ex1',
+        equipmentId: const d.Value('eq1'),
+        reps: 10,
+        weight: 100.0,
+        setNumber: 1,
+      );
+      final second = WorkoutStrengthSetsCompanion.insert(
+        workoutId: 'w1',
+        exerciseId: 'ex1',
+        equipmentId: const d.Value('eq1'),
+        reps: 6,
+        weight: 120.0,
+        setNumber: 2,
+      );
+      controller.sessionLoggedSets[0] = [first, second];
+      controller.sessionLoggedSets.refresh();
+
+      final result = controller.getLoggedSet(0, 'eq1', 1);
+      expect(result?.reps.value, 10);
+      expect(result?.weight.value, 100.0);
+    });
+
+    test('returns null when the set number was not logged', () {
+      expect(controller.getLoggedSet(0, 'eq1', 3), isNull);
+    });
+  });
+
   group('rest timer', () {
     test('startRestTimer with 0 seconds does nothing', () {
       controller.startRestTimer(0);
