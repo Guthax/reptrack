@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import '../persistance/database.dart';
 import '../utils/error_handler.dart';
@@ -5,9 +7,9 @@ import '../utils/error_handler.dart';
 /// Controller for the Programs screen.
 ///
 /// Manages the full list of training programs and exposes create/delete
-/// operations. State is re-fetched from [AppDatabase] after every mutation
-/// rather than maintained via a stream, so [loadPrograms] is called
-/// explicitly where needed.
+/// operations. The list is kept up-to-date via a Drift stream subscribed in
+/// [onInit], so changes made elsewhere (e.g. renaming a program on the Build
+/// Program screen) are reflected immediately.
 class ProgramsController extends GetxController {
   /// Reactive list of all programs stored in the database.
   var programs = <Program>[].obs;
@@ -15,10 +17,23 @@ class ProgramsController extends GetxController {
   /// Whether an async database operation is in progress.
   var isLoading = true.obs;
 
+  StreamSubscription<List<Program>>? _programsSubscription;
+
   @override
   void onInit() {
     super.onInit();
     loadPrograms();
+    _programsSubscription = Get.find<AppDatabase>().watchAllPrograms().listen(
+      programs.assignAll,
+      onError: (Object e, StackTrace st) =>
+          AppErrorHandler.showSystemError(e, st),
+    );
+  }
+
+  @override
+  void onClose() {
+    _programsSubscription?.cancel();
+    super.onClose();
   }
 
   /// Fetches all programs from the database and refreshes [programs].

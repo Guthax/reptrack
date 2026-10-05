@@ -991,10 +991,20 @@ class _SetLogRowState extends State<SetLogRow> {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
 
-    final lastSessionSet = controller.getLastLoggedSet(
-      widget.exerciseIndex,
-      widget.equipmentId,
-    );
+    // A logged row must show its own values; only unlogged rows are
+    // pre-filled from the most recent set logged this session.
+    final lastSessionSet =
+        controller.isSetCompleted(
+          widget.exerciseIndex,
+          widget.equipmentId,
+          widget.setNum,
+        )
+        ? controller.getLoggedSet(
+            widget.exerciseIndex,
+            widget.equipmentId,
+            widget.setNum,
+          )
+        : controller.getLastLoggedSet(widget.exerciseIndex, widget.equipmentId);
     final pastWorkoutSet = controller.getPastSetData(
       widget.exerciseId,
       widget.setNum,
@@ -1208,25 +1218,46 @@ class _HybridSetRowState extends State<HybridSetRow> {
   void initState() {
     super.initState();
     final controller = Get.find<ActiveWorkoutController>();
+    final logged =
+        controller.isSetCompleted(
+          widget.exerciseIndex,
+          widget.equipmentId,
+          widget.setNum,
+        )
+        ? controller.getLoggedHybridSet(
+            widget.exerciseIndex,
+            widget.equipmentId,
+            widget.setNum,
+          )
+        : null;
     final past = controller.getPastHybridSetData(
       widget.exerciseId,
       widget.setNum,
       widget.equipmentId,
     );
 
+    // A logged row shows its own values; otherwise fall back to history.
+    final double? sourceWeight = logged?.weight.value ?? past?.weight;
+    final double? sourceDist = logged?.distance.value ?? past?.distance;
+    final String? sourceUnit = logged != null
+        ? logged.distanceUnit.value
+        : past?.distanceUnit;
+
     final settings = Get.find<SettingsController>();
-    _currentKg = past?.weight ?? widget.plannedWeight;
+    _currentKg = sourceWeight ?? widget.plannedWeight;
     final displayWeight = settings.displayWeight(_currentKg);
     final initialWeight = displayWeight == displayWeight.truncateToDouble()
         ? displayWeight.toInt().toString()
         : displayWeight.toStringAsFixed(1);
 
     double rawDist;
-    if (past != null && past.distanceUnit != widget.distanceUnit) {
-      final meters = distanceUnitToMeters(past.distance, past.distanceUnit);
+    if (sourceDist != null &&
+        sourceUnit != null &&
+        sourceUnit != widget.distanceUnit) {
+      final meters = distanceUnitToMeters(sourceDist, sourceUnit);
       rawDist = metersToDistanceUnit(meters, widget.distanceUnit);
     } else {
-      rawDist = past?.distance ?? widget.plannedDistance;
+      rawDist = sourceDist ?? widget.plannedDistance;
     }
     final initialDist = rawDist == rawDist.truncateToDouble()
         ? rawDist.toInt().toString()
